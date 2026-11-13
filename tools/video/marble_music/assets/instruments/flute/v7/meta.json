@@ -1,0 +1,92 @@
+{
+ "name": "flute",
+ "section": 7,
+ "tracks_regex": "flute",
+ "description": "v7: one continuous sterling-silver flute at the striker angle (head + body + foot in the same plane). The tube itself is the hit surface; top flush with the contact face. No behind-plane aligned head, no board.",
+ "slots": [
+  "body",
+  "pad",
+  "rod",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.85,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.18,
+   "z": -0.02,
+   "y_start": 0.07,
+   "radius": 0.022
+  },
+  {
+   "x": 0.18,
+   "z": -0.02,
+   "y_start": 0.07,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v7",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04491,
+   "bbox": [
+    [
+     -0.33799999952316284,
+     -0.07750000059604645,
+     -0.09099999815225601
+    ],
+    [
+     0.39100000262260437,
+     0.3100000023841858,
+     0.050999999046325684
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.33799999952316284,
+     -0.07670000195503235,
+     -0.09099999815225601
+    ],
+    [
+     0.39100000262260437,
+     0.07100000232458115,
+     0.050999999046325684
+    ]
+   ],
+   "probe_points": 32209,
+   "triangles": 3954
+  }
+ }
+}

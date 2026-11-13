@@ -1,6 +1,6 @@
 """Blender scene builder/renderer for marble music.
 blender -b -P scene.py -- --plan plan.json --out frames/ [--start 0 --end 450 --samples 24 --res 1080x1920 --look v3 --device AUTO]
-Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks.
+Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks, v7 = v6 colour+bloom without particles; flute/xylophone/steel drums/guitar are the hit surface.
 Device: --device AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP, or env MARBLE_DEVICE (GPU/AUTO tries Metal, then OptiX/CUDA/HIP, then CPU).
 """
 import bpy, json, sys, math, argparse, os
@@ -9,7 +9,7 @@ argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.add_argument('--out',default='frames/')
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
-ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks')
+ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks, v7 = v6 colour + bloom (no snow/sparks; tamer chrome bloom); flute/xylophone/steel drums/guitar are themselves the hit surface')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
@@ -76,7 +76,8 @@ LOOKN=int(a.look.lstrip('v'))
 V2=(LOOKN>=2)
 V3=(LOOKN>=3)
 V4=(LOOKN>=4)   # v4 behaviour (kept material slots, override assets, hanging parts) also applies to v5+
-V6=(LOOKN>=6)   # Phase 3 effects; v5 geometry/assets unchanged
+V6=(LOOKN==6)   # Phase 3 batch 1: backdrop + bloom + snow + sparks (v7 must not inherit particles)
+V7=(LOOKN>=7)   # backdrop + tamer bloom; instrument-as-striker overrides for a test subset
 PIANO_IDX={}
 for _k in P['keys']:
     if 'piano' in _k['track'].lower(): PIANO_IDX[_k['i']]=len(PIANO_IDX)
@@ -285,7 +286,10 @@ _here=os.path.dirname(os.path.abspath(__file__))
 if _here not in sys.path: sys.path.insert(0,_here)
 from blender_compat import set_path_keyframe_interpolation
 set_path_keyframe_interpolation()
-if V6:
+if V7:
+    from effects_v6 import apply_v7
+    apply_v7(sc, P, fps, R, wd, bg, wall, wb, mb, mm, mbsdf, rig, cam, look_for, FLASH)
+elif V6:
     from effects_v6 import apply_v6
     apply_v6(sc, P, fps, R, wd, bg, wall, wb, mb, mm, mbsdf, rig, cam, look_for, FLASH)
 if a.save_blend: bpy.ops.wm.save_as_mainfile(filepath=a.save_blend)

@@ -438,3 +438,13 @@ def apply_v6(sc, P, fps, R, wd, bg, wall, wall_bsdf, mb, mm, mbsdf, rig, cam, lo
     apply_snow(sc, rig, cam)
     apply_sparks(sc, P, fps, R, look_for, FLASH)
     print('v6 effects applied', flush=True)
+
+
+def apply_v7(sc, P, fps, R, wd, bg, wall, wall_bsdf, mb, mm, mbsdf, rig, cam, look_for, FLASH):
+    """v7: same per-section backdrop and marble glow as v6, but no snow or sparks,
+    and a higher bloom threshold so chrome/silver strikers (flute, steel drums) do not blow out.
+    """
+    apply_backdrop(wall_bsdf, bg, P, fps, look_for)
+    apply_marble_glow(mm, mbsdf)
+    apply_bloom(sc, threshold=1.30, size=6, mix=0.0, strength=0.50)
+    print('v7 effects applied (backdrop + tamer bloom; no snow/sparks)', flush=True)

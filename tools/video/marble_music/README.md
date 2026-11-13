@@ -12,6 +12,8 @@
 
 `--look v6` 是阶段 3 第一批特效（需显式指定；默认仍是 v5，v5 可原样复现）：每个乐器段落换一墙面主题色（换段约 0.5 秒渐变，颜色偏暗，不压过弹珠和击打件）、合成器 Bloom（4.2 / 5.x 的 Glare 节点，作用在弹珠高光和被击中的挡板上）、背景缓缓落下的雪花（Jingle Bells 主题，弹珠轨道上没有雪，前景雪只出现在画面左右和上下边）、以及每次撞击同步的短促火花。击打件几何与 v5 相同，`library.metas('v6')` 沿用不超过 v6 的最新资产覆盖（即 v5）。禁入和互碰检查与 v5 一致。
 
+`--look v7` 在 v6 的段落主题色和 Bloom 上继续（默认仍是 v5，v6 可原样复现，不含雪花和火花；银/铬的 Bloom 更克制）。试验子集里，笛子、木琴、钢鼓、吉他不再用“木板 + 后面的轮廓”，而是乐器本身作为击打面（笛子一根连续的管子按挡板角度倾斜，木琴就是细琴条，钢鼓是倾斜的鼓面，吉他是倾斜的琴面），接触点和法线仍与规划器挡板一致。
+
 `--look v4` 是 v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
 
 > 规划器和场景脚本不再写死机器路径。MIDI、输出目录用参数传入；Blender 用环境变量 `BLENDER`；计算设备用 `--device` 或 `MARBLE_DEVICE`。
@@ -141,6 +143,20 @@ python3 tools/video/marble_music/compare_sheet.py \
   work/plan_zz_v2.json work/stills_v5 work/stills_v6 work/instrument_stills_v5_vs_v6.png v5 v6 \
   --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
 ```
+
+`--look v7` 几何试验（默认仍是 v5；v6 可原样复现）。只改了笛子、木琴、钢鼓、吉他四种击打件，所以静帧只渲这四段对应帧，再拼 v6 vs v7 对比图（不要用 12 格对比图，其余 8 格是空的）：
+
+```bash
+mkdir -p work/stills_v7
+"$BLENDER" -b -P tools/video/marble_music/scene.py -- \
+  --look v7 \
+  --plan work/plan_zz_v2.json \
+  --out work/stills_v7 \
+  --frames 2089,2677,4427,4734 \
+  --samples 12 --res 1080x1920 --device "${MARBLE_DEVICE:-GPU}"
+```
+
+对比图见 `work/instrument_stills_v6_vs_v7.png` 和撞击点特写 `work/instrument_stills_v6_vs_v7_contact.png`。
 
 只渲其中一张（例如钢琴，低采样试跑）：
 

@@ -1,0 +1,79 @@
+{
+ "name": "xylophone",
+ "section": 8,
+ "tracks_regex": "xylo",
+ "description": "v7: the coloured bar itself is the striker \u2014 a slim rounded xylophone bar (top flush with the contact face). The bulky 0.30-deep board, felt strips and birch frame are removed.",
+ "slots": [
+  "body",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.95,
+  0.85
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.18,
+   "z": -0.01,
+   "y_start": 0.055,
+   "radius": 0.022
+  },
+  {
+   "x": 0.18,
+   "z": -0.01,
+   "y_start": 0.055,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v7",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.054999999701976776,
+     -0.04500000178813934
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 9048,
+   "triangles": 134
+  }
+ }
+}
