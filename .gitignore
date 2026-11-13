@@ -1,5 +1,22 @@
+# large / generated (do not commit)
 *.sf2
+*.wav
+*.mp4
+!projects/**/source/*.mp4
 frames/
 **/frames/
-*.wav
+frames_zz_*/
+**/frames_zz_*/
+work_*/
+**/om_zigzag_*/
 __pycache__/
+*.pyc
+venv/
+.venv/
+blender-*/
+*.bak
+*.orig
+*.log
+tsf/
+midi2wav
+.DS_Store

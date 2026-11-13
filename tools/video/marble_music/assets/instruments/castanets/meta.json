@@ -1,0 +1,91 @@
+{
+ "name": "castanets",
+ "section": 1,
+ "tracks_regex": "castanet",
+ "description": "Pair of lacquered dark-rosewood castanet shells (two half-ellipsoids with a dark seam), hung from the wall pegs by a red cord loop; the marble strikes the crown of the upper shell.",
+ "slots": [
+  "body",
+  "dark",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.55,
+  0.25
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.12,
+   "z": -0.015,
+   "y_start": 0.12,
+   "radius": 0.022
+  },
+  {
+   "x": 0.12,
+   "z": -0.015,
+   "y_start": 0.12,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.17000000178813934,
+     -0.08299999684095383
+    ],
+    [
+     0.28999999165534973,
+     0.3100000023841858,
+     0.05299999937415123
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.30799999833106995,
+     -0.14790000021457672,
+     -0.08299999684095383
+    ],
+    [
+     0.2522999942302704,
+     0.15489999949932098,
+     0.05299999937415123
+    ]
+   ],
+   "probe_points": 31860,
+   "triangles": 1674
+  }
+ }
+}

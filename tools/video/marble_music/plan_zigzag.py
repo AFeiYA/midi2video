@@ -22,14 +22,22 @@ def dist_rect_xy(p,c,nn):
     u,v=abs(d@tt)-PL/2, abs(d@nn)-PT/2
     return math.hypot(max(u,0),max(v,0))+min(max(u,v),0)
 def seg_hits(seg,paddles,skip_first):
+    # vectorised + spatially culled (same semantics as the original O(n^2) loop)
     t0,x0,z0,vx,vz,dt=seg
-    for u in np.linspace(0,dt,int(dt*fps*8)+2):
-        if skip_first and u<1.2/fps: continue
-        if dt-u<1.2/fps: continue
-        p=(x0+vx*u, z0+vz*u-0.5*g*u*u)
-        for j,(c,nn) in enumerate(paddles):
-            if dist_rect_xy(p,c,nn)<R*1.05: return True
-    return False
+    u=np.linspace(0,dt,int(dt*fps*8)+2)
+    m=(u>=dt*0+(1.2/fps if skip_first else -1))&(dt-u>=1.2/fps)
+    u=u[m]
+    if not len(u) or not paddles: return False
+    px=x0+vx*u; pz=z0+vz*u-0.5*g*u*u
+    lo,hi=pz.min()-PL-R,pz.max()+PL+R
+    C=np.array([c for c,_ in paddles]); N=np.array([nn for _,nn in paddles])
+    sel=(C[:,1]>lo)&(C[:,1]<hi)
+    if not sel.any(): return False
+    C=C[sel]; N=N[sel]
+    dx=px[:,None]-C[None,:,0]; dz=pz[:,None]-C[None,:,1]
+    tu=np.abs(dx*N[None,:,1]-dz*N[None,:,0])-PL/2; tv=np.abs(dx*N[None,:,0]+dz*N[None,:,1])-PT/2
+    d=np.hypot(np.maximum(tu,0),np.maximum(tv,0))+np.minimum(np.maximum(tu,tv),0)
+    return bool((d<R*1.05).any())
 def normal(vin,vout):
     nrm=vout/np.linalg.norm(vout)-vin/np.linalg.norm(vin); return nrm/np.linalg.norm(nrm)
 # entry segment from opposite side
@@ -70,11 +78,14 @@ def dist_rect(p,k):
     u,v=abs(d@tt)-PL/2, abs(d@nn)-PT/2
     return math.hypot(max(u,0),max(v,0))+min(max(u,v),0)
 bad=[]
-for s in np.arange(0,dur,1/(fps*8)):
-    p=pos(s)
-    for k in keys:
-        if abs(s-k['t'])<1.2/fps: continue
-        if dist_rect(p,k)<R*0.97: bad.append((round(s*fps,2),k['i'],round(dist_rect(p,k),3)))
+_ts=np.arange(0,dur,1/(fps*8)); _P=np.array([pos(t) for t in _ts])
+for k in keys:
+    near=np.abs(_P[:,1]-k['z'])<PL+R
+    near&=np.abs(_ts-k['t'])>=1.2/fps
+    for s,p in zip(_ts[near],_P[near]):
+        dd=dist_rect(p,k)
+        if dd<R*0.97: bad.append((round(s*fps,2),k['i'],round(dd,3)))
+bad.sort()
 print('collisions (frame,key,dist):',bad[:20],'total',len(bad))
 arr=np.array(frames)
 sig=fps*0.35; kk=np.arange(-int(3*sig),int(3*sig)+1); w=np.exp(-kk**2/(2*sig*sig)); w/=w.sum()

@@ -1,0 +1,92 @@
+{
+ "name": "glockenspiel",
+ "section": 10,
+ "tracks_regex": "glock",
+ "description": "Thin polished-steel glockenspiel bar on two dark walnut frame rails, fixed by two small domed screws with red felt washers.",
+ "slots": [
+  "body",
+  "wood",
+  "screw",
+  "felt",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.55,
+  0.8,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.02,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.02,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.16500000655651093,
+     -0.04500000178813934
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.052000001072883606
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.22200000286102295,
+     -0.02199999988079071,
+     0.045099999755620956
+    ],
+    [
+     0.22200000286102295,
+     0.02199999988079071,
+     0.052000001072883606
+    ]
+   ],
+   "probe_points": 19292,
+   "triangles": 782
+  }
+ }
+}

@@ -24,8 +24,8 @@ stages:
   - name: trajectory_plan
     description: "Inverse-plan zig-zag paddles and ballistic marble path so each hit lands on its note frame (plan_zigzag.py)."
   - name: sample_render
-    description: "Render a 15s sample first; check contact sheet for paddle contact, flash, framing and A/V sync."
+    description: "Confirm the plan and keep-out check, render 12 instrument stills (look v3), then a 15s sample; check contact sheet for paddle contact, flash, framing and A/V sync."
   - name: full_render
-    description: "Render the full song with run_marble.sh (resumable, Metal GPU on Apple Silicon)."
+    description: "Render the full song with run_zigzag.sh / run_marble.sh (resumable; MARBLE_DEVICE=GPU uses Metal on Apple Silicon)."
   - name: mux_delivery
     description: "FluidSynth audio render + ffmpeg mux to H.264/AAC 1080x1920."

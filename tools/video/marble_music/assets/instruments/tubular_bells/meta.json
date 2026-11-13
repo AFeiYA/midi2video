@@ -1,0 +1,92 @@
+{
+ "name": "tubular_bells",
+ "section": 4,
+ "tracks_regex": "tubular",
+ "description": "Polished-brass tubular-bell chime (tube of radius 0.075 lying along the paddle), crown cap ring at the upper end, hollow dark bore at the open end, hung by a cord to the wall.",
+ "slots": [
+  "body",
+  "cap",
+  "dark",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.75,
+  0.35
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.03,
+   "y_start": 0.07,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.03,
+   "y_start": 0.07,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04494,
+   "bbox": [
+    [
+     -0.32499998807907104,
+     -0.08399999886751175,
+     -0.11400000005960464
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.05400000140070915
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32499998807907104,
+     -0.08399999886751175,
+     -0.11400000005960464
+    ],
+    [
+     0.3100000023841858,
+     0.1535000056028366,
+     0.05400000140070915
+    ]
+   ],
+   "probe_points": 14957,
+   "triangles": 486
+  }
+ }
+}

@@ -6,8 +6,31 @@ fps=p['fps']; keys=p['keys']; step=max(1,len(keys)//n); sel=keys[::step][:n]
 NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
 tw,th=270,480; cols=6; rows=(len(sel)+cols-1)//cols
 sheet=Image.new('RGB',(cols*tw,rows*(th+34)),(20,20,20)); d=ImageDraw.Draw(sheet)
-try: font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf',18)
-except: font=ImageFont.load_default()
+
+def _font(size, bold=False):
+    from PIL import ImageFont
+    names = []
+    if bold:
+        names += ['DejaVuSans-Bold.ttf','Arial Bold.ttf','Arial Unicode.ttf','LiberationSans-Bold.ttf','Helvetica.ttc']
+    else:
+        names += ['DejaVuSans.ttf','Arial.ttf','Arial Unicode.ttf','LiberationSans-Regular.ttf','Helvetica.ttc']
+    roots = [
+        '/usr/share/fonts/truetype/dejavu',
+        '/usr/share/fonts/truetype/liberation',
+        '/usr/share/fonts/truetype/freefont',
+        '/System/Library/Fonts/Supplemental',
+        '/System/Library/Fonts',
+        '/Library/Fonts',
+    ]
+    for root in roots:
+        for name in names:
+            path = os.path.join(root, name)
+            if os.path.isfile(path):
+                try: return ImageFont.truetype(path, size)
+                except Exception: continue
+    return ImageFont.load_default()
+
+font=_font(18)
 for idx,k in enumerate(sel):
     f=int(round(k['t']*fps)); path=f"{fd}/{f:05d}.png"
     if not os.path.exists(path): continue

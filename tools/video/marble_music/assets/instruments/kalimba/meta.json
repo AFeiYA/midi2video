@@ -1,0 +1,92 @@
+{
+ "name": "kalimba",
+ "section": 6,
+ "tracks_regex": "kalimba",
+ "description": "Kalimba section: a spring-steel tine (struck, top flush with contact face) flanked by two shorter tines, resting on a steel bridge rod over a lacquered walnut soundboard with a sound hole behind the marble plane.",
+ "slots": [
+  "body",
+  "steel",
+  "wood",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.75,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.025,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.025,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3199999928474426,
+     -0.17499999701976776,
+     -0.04699999839067459
+    ],
+    [
+     0.3199999928474426,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3199999928474426,
+     -0.15459999442100525,
+     -0.04439999908208847
+    ],
+    [
+     0.3199999928474426,
+     0.1550000011920929,
+     -0.0006000000284984708
+    ]
+   ],
+   "probe_points": 29291,
+   "triangles": 480
+  }
+ }
+}
