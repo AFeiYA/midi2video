@@ -1,0 +1,31 @@
+name: marble-music
+version: "1.0"
+description: >
+  MIDI-driven 3D marble music (Virtual 3D style). A glass marble ricochets between alternating
+  left/right angled paddles while falling; every impact is locked to a MIDI note-on frame.
+  Inverse-planned trajectories (time first, geometry second) + Blender Cycles + FluidSynth audio.
+category: music-visualization
+stability: beta
+default_checkpoint_policy: guided
+
+orchestration:
+  mode: executive-producer
+  budget_default_usd: 0.00
+  max_revisions_per_stage: 3
+
+tools_required:
+  - blender
+  - fluidsynth
+  - ffmpeg
+
+stages:
+  - name: midi_analysis
+    description: "Parse MIDI tempo map, pick melody tracks, extract merged note-on hits (tools/video/marble_music/extract_hits.py)."
+  - name: trajectory_plan
+    description: "Inverse-plan zig-zag paddles and ballistic marble path so each hit lands on its note frame (plan_zigzag.py)."
+  - name: sample_render
+    description: "Render a 15s sample first; check contact sheet for paddle contact, flash, framing and A/V sync."
+  - name: full_render
+    description: "Render the full song with run_marble.sh (resumable, Metal GPU on Apple Silicon)."
+  - name: mux_delivery
+    description: "FluidSynth audio render + ffmpeg mux to H.264/AAC 1080x1920."

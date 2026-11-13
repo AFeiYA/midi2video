@@ -1,0 +1,5 @@
+*.sf2
+frames/
+**/frames/
+*.wav
+__pycache__/
