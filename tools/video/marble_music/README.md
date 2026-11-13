@@ -10,6 +10,8 @@
 
 弹珠接触面几何不变，禁入检查 0 违规，新增的击打件之间互碰检查 `check_pairs.py --strict` 也没有新的冲突（唯一一对已知的马林巴共鸣管写在 `assets/instruments/pairs_whitelist.json`，有任何新冲突流水线就会停）。
 
+`--look v6` 是阶段 3 第一批特效（需显式指定；默认仍是 v5，v5 可原样复现）：每个乐器段落换一墙面主题色（换段约 0.5 秒渐变，颜色偏暗，不压过弹珠和击打件）、合成器 Bloom（4.2 / 5.x 的 Glare 节点，作用在弹珠高光和被击中的挡板上）、背景缓缓落下的雪花（Jingle Bells 主题，弹珠轨道上没有雪，前景雪只出现在画面左右和上下边）、以及每次撞击同步的短促火花。击打件几何与 v5 相同，`library.metas('v6')` 沿用不超过 v6 的最新资产覆盖（即 v5）。禁入和互碰检查与 v5 一致。
+
 `--look v4` 是 v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
 
 > 规划器和场景脚本不再写死机器路径。MIDI、输出目录用参数传入；Blender 用环境变量 `BLENDER`；计算设备用 `--device` 或 `MARBLE_DEVICE`。
@@ -61,11 +63,11 @@ brew install python ffmpeg fluid-synth
 
 1. **提取击打点** `extract_hits.py`：读 MIDI，建立 tempo map，只取 `01.`–`12.` 主旋律轨（13–16 伴奏只出声不出画），60ms 内叠音合并为一次击打（取最高音）。
 2. **逆向规划轨迹** `plan_zigzag.py`：先定时间再反推几何；左右交替挡板；段间是抛物线；挡板法线为入射反向与出射方向的角平分线。全曲规划约 0 次穿模。
-3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3 及以后必做，按 `--look` 读取对应外观的资产，`--strict` 有违规会退出；竖直悬挂件也会一起检查）。v5 再跑 `check_pairs.py --strict`，检查击打件之间（含悬挂铜管、长笛笛头）是否小于 1 cm。v4 起就有的一对马林巴共鸣管（间距 9 mm，没有碰到）写在白名单 `assets/instruments/pairs_whitelist.json` 里，只要间距不变小就放行；其他任何新冲突都会让脚本退出 1，`run_zigzag.sh` 会停下。
+3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3 及以后必做，按 `--look` 读取对应外观的资产，`--strict` 有违规会退出；竖直悬挂件也会一起检查）。v5 及以后再跑 `check_pairs.py --strict`，检查击打件之间（含悬挂铜管、长笛笛头）是否小于 1 cm。v4 起就有的一对马林巴共鸣管（间距 9 mm，没有碰到）写在白名单 `assets/instruments/pairs_whitelist.json` 里，只要间距不变小就放行；其他任何新冲突都会让脚本退出 1，`run_zigzag.sh` 会停下。
 4. **渲 12 张乐器静帧**（材质/外形确认）：帧号为各段落中段的击打帧。
 5. **渲 15 秒小样**，再合成音频、出接触点拼图。
 6. **全曲渲染**（可断点续渲，已有帧会跳过），然后 `mux.sh` 合成。
-7. **v5 字幕合成**：`titles.py` 生成每帧 RGBA 字幕层，`composite.sh` 把渲染帧、字幕层和对应时段的音频合成为成片。`run_zigzag.sh` 在 v5 下会自动做，输出 `*_titled.mp4`。
+7. **v5 / v6 字幕合成**：`titles.py` 生成每帧 RGBA 字幕层，`composite.sh` 把渲染帧、字幕层和对应时段的音频合成为成片。`run_zigzag.sh` 在 v5 及以后会自动做，输出 `*_titled.mp4`。
 
 规划器可调参数：`--g` 重力，`--half-gap` 左右间距，`--drop-rate` 最大下落速度，`--frac` 弹跳高度系数（越小越平），`--frame-margin` 镜头跟随裕度（v2 及以后用 0.8）。
 
@@ -121,6 +123,22 @@ python3 tools/video/marble_music/instrument_sheet.py \
 # v4 / v5 对比（先按同样参数把 v4 渲到 work/stills_v4）
 python3 tools/video/marble_music/compare_sheet.py \
   work/plan_zz_v2.json work/stills_v4 work/stills_v5 work/instrument_stills_v4_vs_v5.png v4 v5 \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
+```
+
+阶段 3 特效小样（`--look v6`，默认仍是 v5；先确认 12 张静帧和一段换段小样再考虑全曲）：
+
+```bash
+mkdir -p work/stills_v6
+"$BLENDER" -b -P tools/video/marble_music/scene.py -- \
+  --look v6 \
+  --plan work/plan_zz_v2.json \
+  --out work/stills_v6 \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
+  --samples 12 --res 1080x1920 --device "${MARBLE_DEVICE:-GPU}"
+
+python3 tools/video/marble_music/compare_sheet.py \
+  work/plan_zz_v2.json work/stills_v5 work/stills_v6 work/instrument_stills_v5_vs_v6.png v5 v6 \
   --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
 ```
 

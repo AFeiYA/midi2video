@@ -3,16 +3,23 @@ Look overrides: an instrument folder may contain a sub-folder named after a look
 build.py / material.py / meta.json / probe_*.npy; it replaces the base asset for that look only (base = v3, untouched)."""
 import os, json, re
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOOK_ORDER = ['v3', 'v4', 'v5']
+LOOK_ORDER = ['v3', 'v4', 'v5', 'v6']
+def look_num(look):
+    '''Numeric look index so v6 (and later) inherit the newest override <= the requested look.'''
+    try:
+        return int(str(look).lstrip('vV'))
+    except ValueError:
+        return 0
 def metas(look='v3'):
     out = {}
+    want = look_num(look)
     for d in sorted(os.listdir(HERE)):
         base = os.path.join(HERE, d)
         if not os.path.isfile(os.path.join(base, 'meta.json')): continue
         use = base
-        # newest override not newer than the requested look
-        for lk in LOOK_ORDER[1:LOOK_ORDER.index(look)+1] if look in LOOK_ORDER else []:
-            if os.path.isfile(os.path.join(base, lk, 'meta.json')): use = os.path.join(base, lk)
+        # newest override whose version is not newer than the requested look
+        for lk in LOOK_ORDER[1:]:
+            if look_num(lk) <= want and os.path.isfile(os.path.join(base, lk, 'meta.json')): use = os.path.join(base, lk)
         m = json.load(open(os.path.join(use, 'meta.json'))); m['_dir'] = use; out[d] = m
     return out
 def asset_dirs():
