@@ -279,9 +279,11 @@ if V2:
     wl.new(tcw.outputs['Generated'],sep.inputs[0]); wl.new(sep.outputs['Z'],mp2.inputs[0]); wl.new(mp2.outputs[0],rmp.inputs[0]); wl.new(rmp.outputs[0],bg2.inputs[0])
     wl.new(lp.outputs['Is Glossy Ray'],mx.inputs[0]); wl.new(bg.outputs[0],mx.inputs[1]); wl.new(bg2.outputs[0],mx.inputs[2])
     wl.new(mx.outputs[0],wn['World Output'].inputs[0])
-for fc in [o.animation_data.action.fcurves for o in bpy.data.objects if o.animation_data and o.animation_data.action]:
-    for c in fc:
-        for kp in c.keyframe_points: kp.interpolation='LINEAR' if c.data_path in('location','rotation_euler') and len(c.keyframe_points)>40 else 'BEZIER'
+# Blender 5.x (incl. macOS 5.3): Action.fcurves removed — slotted channelbags
+_here=os.path.dirname(os.path.abspath(__file__))
+if _here not in sys.path: sys.path.insert(0,_here)
+from blender_compat import set_path_keyframe_interpolation
+set_path_keyframe_interpolation()
 if a.save_blend: bpy.ops.wm.save_as_mainfile(filepath=a.save_blend)
 import time
 frames=[int(x) for x in a.frames.split(',') if x.strip()] or list(range(a.start,(a.end if a.end>=0 else sc.frame_end)+1))

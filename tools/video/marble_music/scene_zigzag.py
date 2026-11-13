@@ -139,9 +139,12 @@ def light(name,typ,loc,energy,size,color=(1,1,1)):
 kl=light('key','AREA',(-3.0,-4.0,4.0),380,3.0,(1.0,0.95,0.88)); kl.data.spread=math.radians(70)
 light('fill','AREA',(4.0,-5.0,0.0),70,5.0,(0.85,0.9,1.0))
 light('rim','AREA',(0.5,-0.8,5.0),90,2.0)
-for fc in [o.animation_data.action.fcurves for o in bpy.data.objects if o.animation_data and o.animation_data.action]:
-    for c in fc:
-        for kp in c.keyframe_points: kp.interpolation='LINEAR' if c.data_path in('location','rotation_euler') and len(c.keyframe_points)>40 else 'BEZIER'
+# Blender 5.x (incl. macOS 5.3): Action.fcurves removed — slotted channelbags
+import os as _os
+_here=_os.path.dirname(_os.path.abspath(__file__))
+if _here not in sys.path: sys.path.insert(0,_here)
+from blender_compat import set_path_keyframe_interpolation
+set_path_keyframe_interpolation()
 if a.save_blend: bpy.ops.wm.save_as_mainfile(filepath=a.save_blend)
 import time
 frames=[int(x) for x in a.frames.split(',') if x.strip()] or list(range(a.start,(a.end if a.end>=0 else sc.frame_end)+1))

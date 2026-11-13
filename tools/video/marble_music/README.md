@@ -50,8 +50,9 @@ brew install python ffmpeg fluid-synth
   `$BLENDER -b -P tools/video/marble_music/assets/instruments/build_library.py`
 - 布尔引擎：4.2 用 `EXACT`，4.5/5.x 已改为 `MANIFOLD`，脚本会自动回退。
 - 按角度平滑：4.x 用 `shade_smooth_by_angle`，5.x 可能要用 `shade_auto_smooth`，脚本会自动回退。
+- **Action 动画曲线（macOS Blender 5.3 必看）**：5.0 起 `Action.fcurves` 已移除，改为 slotted channelbags。`scene.py` / `scene_zigzag.py` 通过 `blender_compat.py` 兼容 4.2 与 5.x；未打此补丁时，在设关键插值处会直接 `AttributeError`，一帧都渲不出来。
 - Blender 5 的工作色域默认可能不再是 Linear Rec.709，同一帧的颜色会和 4.2 参考图有细微差别。若要对齐参考，可在 Blender 里把 Working Space 设为 Linear Rec.709 再渲。
-- macOS：官方 Blender 5.0+ 只支持 Apple Silicon，不再提供 Intel Mac 安装包。
+- macOS：官方 Blender 5.0+ 只支持 Apple Silicon，不再提供 Intel Mac 安装包。GPU 渲染用 `MARBLE_DEVICE=GPU`（会优先选 Metal）。
 - 全片如果 4.2 和 5.3 混渲，建议先对比同一帧再拼接。
 
 ## 2. 运行顺序
