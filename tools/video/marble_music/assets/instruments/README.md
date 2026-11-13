@@ -10,3 +10,11 @@
 - 碰撞检查（可在仓库根目录执行，脚本按自身位置找资产，不依赖当前工作目录）：
   `python3 tools/video/marble_music/check_keepout.py work/plan_zz_v2.json --strict`
 - 渲染：`scene.py --look v3`（也可用 `--look v2` / `--look v1`）。默认 v3。
+
+## v4 覆盖版本（外观 `--look v4`，默认）
+
+部分乐器有 `<乐器>/v4/` 子文件夹（同样包含 build.py / material.py / meta.json / model.blend / model.glb / probe_default.npy），只在 v4 里替换基础版本，v3 不受影响（`library.metas(look)` 负责挑选）：
+guitar（日落色面板、深色琴弦、深色音孔花环、短指板、琴弦闪光）、ocarina（饱和青瓷、大号深色指孔）、vibraphone / marimba（共鸣管从击打件里拿出来，改成 `meta.hanging` 描述的世界坐标竖直悬挂件）、flute（更粗的银色管身、镀金按键、深色皮垫）、glockenspiel（加厚钢条、红色支架、黄铜螺钉）。
+- 只重建 v4：`blender -b -P assets/instruments/build_library.py -- --only /v4`
+- 额外闪光槽：`meta.flash_slots`（如吉他 `["body","strings"]`）
+- 悬挂件：`meta.hanging = [{attach, radius, inner, length, role}]`，check_keepout.py 会在世界坐标里一起检查

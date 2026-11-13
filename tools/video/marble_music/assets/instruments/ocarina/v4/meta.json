@@ -1,0 +1,91 @@
+{
+ "name": "ocarina",
+ "section": 9,
+ "tracks_regex": "ocarina",
+ "description": "v4: deep saturated celadon glaze (satin clearcoat so the softbox reflection does not wash it out), four larger (r 0.036) near-black finger holes on the camera-facing flank, mouthpiece and windway (kept inside the contact length).",
+ "slots": [
+  "body",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.7,
+  1.0,
+  0.8
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.1,
+   "z": -0.04,
+   "y_start": 0.12,
+   "radius": 0.022
+  },
+  {
+   "x": 0.1,
+   "z": -0.04,
+   "y_start": 0.12,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v4",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.27000001072883606,
+     -0.15000000596046448,
+     -0.125
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.2687999904155731,
+     -0.149399995803833,
+     -0.125
+    ],
+    [
+     0.3084000051021576,
+     0.15489999949932098,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 18010,
+   "triangles": 2709
+  }
+ }
+}

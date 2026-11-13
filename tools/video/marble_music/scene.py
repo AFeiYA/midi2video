@@ -1,6 +1,6 @@
 """Blender scene builder/renderer for marble music.
 blender -b -P scene.py -- --plan plan.json --out frames/ [--start 0 --end 450 --samples 24 --res 1080x1920 --look v3 --device AUTO]
-Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library (default).
+Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass (default).
 Device: --device AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP, or env MARBLE_DEVICE (GPU/AUTO tries Metal, then OptiX/CUDA/HIP, then CPU).
 """
 import bpy, json, sys, math, argparse, os
@@ -9,7 +9,7 @@ argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.add_argument('--out',default='frames/')
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
-ap.add_argument('--look',default='v3',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers')
+ap.add_argument('--look',default='v4',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash)')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
@@ -72,8 +72,9 @@ FLASH={'rosewood':(1.0,0.55,0.25),'ivory':(1.0,0.85,0.55),'alu':(0.45,0.7,1.0),'
        'kalimba':(0.75,0.9,1.0),'silver':(0.85,0.9,1.0),'rainbow':(1.0,0.95,0.85),'ceramic':(1.0,0.65,0.4),'steel':(0.55,0.8,1.0),
        'chrome':(1.0,0.85,0.4),'spruce':(1.0,0.78,0.45),'metal':(0.45,0.7,1.0),'wood':(1.0,0.6,0.3)}
 import colorsys
-V2=(a.look in ('v2','v3'))
-V3=(a.look=='v3')
+V2=(a.look in ('v2','v3','v4'))
+V3=(a.look in ('v3','v4'))
+V4=(a.look=='v4')
 PIANO_IDX={}
 for _k in P['keys']:
     if 'piano' in _k['track'].lower(): PIANO_IDX[_k['i']]=len(PIANO_IDX)
@@ -126,12 +127,18 @@ if V3:
     import os as _os
     sys.path.insert(0,_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'assets','instruments'))
     import _common as AC, library as ALIB
-    _AM=ALIB.metas(); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}
-    for (an,av,_j) in set(_ASG):
-        if an not in _MODS: _MODS[an]=AC.load_asset(_os.path.join(ALIB.HERE,an)); _SH[an]=_MODS[an][2].shared(AC)
-        meta,bmod,mmod=_MODS[an]; t=AC.make_asset(meta,bmod,av,f'tmpl_{an}_{av}'); me=t.data
-        for role in meta['slots']:
-            me.materials.append(pinm if role=='pin' else (mmod.body(AC,f'{an}_{av}_placeholder',0,60,None) if role=='body' else _SH[an][role]))
+    _AM=ALIB.metas('v4' if V4 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}
+    for (an,av,_j) in sorted(set(_ASG)):
+        if an not in _MODS:
+            _MODS[an]=AC.load_asset(_AM[an]['_dir']); _SH[an]=_MODS[an][2].shared(AC)
+            for hi,h in enumerate(_AM[an].get('hanging',[])):   # world-vertical parts (e.g. resonator tubes): top at origin, hanging along -Z
+                tb=AC.prim('cyl',0,loc=(0,0,-h['length']/2),scale=(h['radius'],h['radius'],h['length']),verts=40)
+                AC.cut(tb,AC.prim('cyl',1,loc=(0,0,0),scale=(h['inner'],h['inner'],0.12),verts=40))
+                AC.set_slots(tb.data,[_SH[an][h['role']],_SH[an].get('dark',pinm)])
+                while len(tb.data.materials)>2: tb.data.materials.pop(index=len(tb.data.materials)-1)
+                _HANG[(an,hi)]=tb.data; bpy.data.objects.remove(tb,do_unlink=True)
+        meta,bmod,mmod=_MODS[an]; t=AC.make_asset(meta,bmod,av,f'tmpl_{an}_{av}',keep_slots=V4); me=t.data   # v3 kept the join-collapsed slots
+        AC.set_slots(me,[pinm if role=='pin' else (mmod.body(AC,f'{an}_{av}_placeholder',0,60,None) if role=='body' else _SH[an][role]) for role in meta['slots']])
         bpy.data.objects.remove(t,do_unlink=True); _MESH[(an,av)]=me
 for _ki,k in enumerate(P['keys']):
     if V3:
@@ -140,14 +147,23 @@ for _ki,k in enumerate(P['keys']):
         o.location=(k['x'],0,k['z']); o.rotation_euler=(0,k['ang'],0)
         bi=meta['slots'].index('body'); m=mmod.body(AC,f"key{k['i']}",j,k['note'],None if av=='default' else av)
         o.material_slots[bi].link='OBJECT'; o.material_slots[bi].material=m
-        rim,em=AC.add_flash(m,tuple(meta['flash_color']))
+        flashes=[AC.add_flash(m,tuple(meta['flash_color']))]
+        for role in meta.get('flash_slots',['body']):           # v4: extra per-key flashing slots (e.g. guitar strings)
+            if role=='body': continue
+            si=meta['slots'].index(role); m2=_SH[an][role].copy(); m2.name=f"key{k['i']}_{role}"
+            o.material_slots[si].link='OBJECT'; o.material_slots[si].material=m2; flashes.append(AC.add_flash(m2,tuple(meta['flash_color'])))
         fh=frame_of(k['t']); x0,z0,nx,nz=k['x'],k['z'],k['nx'],k['nz']
         for f,dd in [(fh-1,0),(fh,0),(fh+1.0,-0.05),(fh+3,-0.012),(fh+7,0)]:
             o.location.x=x0+nx*dd; o.location.z=z0+nz*dd; o.keyframe_insert('location',index=0,frame=f); o.keyframe_insert('location',index=2,frame=f)
-        for f,v in [(fh-0.5,0),(fh,2.5),(fh+4,0.8),(fh+12,0)]:      # v3: weaker edge flash (less pale wash on impact)
-            rim.default_value=v; rim.keyframe_insert('default_value',frame=f)
-        for f,v in [(fh-0.5,0),(fh,0.1),(fh+4,0.03),(fh+10,0)]:
-            em.default_value=v; em.keyframe_insert('default_value',frame=f)
+        for fi,(rim,em) in enumerate(flashes):
+            pk=(2.5 if fi==0 else 6.0)                       # strings: thin, so a stronger edge flash to read
+            for f,v in [(fh-0.5,0),(fh,pk),(fh+4,pk*0.32),(fh+12,0)]:      # v3: weaker edge flash (less pale wash on impact)
+                rim.default_value=v; rim.keyframe_insert('default_value',frame=f)
+            for f,v in [(fh-0.5,0),(fh,0.1 if fi==0 else 1.5),(fh+4,0.03 if fi==0 else 0.4),(fh+10,0)]:
+                em.default_value=v; em.keyframe_insert('default_value',frame=f)
+        for hi,h in enumerate(meta.get('hanging',[])):
+            ho=bpy.data.objects.new(f"key{k['i']}_hang{hi}",_HANG[(an,hi)]); sc.collection.objects.link(ho)
+            ho.location=ALIB.hanging_world(k,h)                 # stays world-vertical regardless of the bar tilt
         continue
     kind=look_for(k['track'],k['drum'])
     ZZ=('ang' in k)

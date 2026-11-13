@@ -1,0 +1,96 @@
+{
+ "name": "marimba",
+ "section": 5,
+ "tracks_regex": "marimba",
+ "description": "Honduras-rosewood marimba bar with the traditional carved arch underneath, suspension cords at the nodes and a dark-bronze resonator tube that hangs straight down in world space (v4) behind the marble plane.",
+ "slots": [
+  "body",
+  "cord",
+  "resonator",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.6,
+  0.3
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.14,
+   "z": -0.015,
+   "y_start": 0.17,
+   "radius": 0.022
+  },
+  {
+   "x": 0.14,
+   "z": -0.015,
+   "y_start": 0.17,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "hanging": [
+  {
+   "attach": [
+    0.0,
+    0.222,
+    -0.03
+   ],
+   "radius": 0.064,
+   "inner": 0.054,
+   "length": 0.52,
+   "slot": "resonator",
+   "role": "resonator"
+  }
+ ],
+ "look": "v4",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.17000000178813934,
+     -0.04500000178813934
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 18174,
+   "triangles": 267
+  }
+ }
+}

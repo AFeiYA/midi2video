@@ -1,0 +1,99 @@
+{
+ "name": "guitar",
+ "section": 12,
+ "tracks_regex": "guitar",
+ "description": "v4: amber-to-dark sunburst spruce top, sound hole moved towards the camera with a wide dark rosette and cream inlay line, thick black-coated strings for contrast on the amber top (strings and top flash on hit), rosewood bridge with bone saddle, short fingerboard stub with two frets (inside the contact length), cream binding on the camera-facing edge.",
+ "slots": [
+  "body",
+  "strings",
+  "bridge",
+  "dark",
+  "bone",
+  "fret",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.45
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.02,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.02,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "flash_slots": [
+  "body",
+  "strings"
+ ],
+ "look": "v4",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04204,
+   "bbox": [
+    [
+     -0.32249999046325684,
+     -0.1835000067949295,
+     -0.08500000089406967
+    ],
+    [
+     0.32249999046325684,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3199999928474426,
+     -0.1550000011920929,
+     -0.08470000326633453
+    ],
+    [
+     0.3199999928474426,
+     0.15489999949932098,
+     0.014999999664723873
+    ]
+   ],
+   "probe_points": 40785,
+   "triangles": 1562
+  }
+ }
+}

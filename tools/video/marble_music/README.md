@@ -2,7 +2,7 @@
 
 参考：Virtual 3D《iPhone Ringtone - Marble Music》。弹珠在左右交替的斜挡板之间来回碰撞下落，每次碰撞精确落在一个 MIDI 音符的帧上。
 
-当前默认外观是 **v3**（工作室灯光 + 12 种程序化乐器击打件）。`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
+当前默认外观是 **v4**（v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架）。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
 
 > 规划器和场景脚本不再写死机器路径。MIDI、输出目录用参数传入；Blender 用环境变量 `BLENDER`；计算设备用 `--device` 或 `MARBLE_DEVICE`。
 
@@ -34,7 +34,7 @@ brew install python ffmpeg fluid-synth
 | `MARBLE_DEVICE` | Cycles 设备：`AUTO`/`GPU`/`CPU`/`METAL`/`CUDA`/`OPTIX`/`HIP` | `AUTO`（`GPU` 等同 `AUTO`：先 Metal，再 OptiX/CUDA/HIP，没有则回退 CPU） |
 | `SF2` | Soundfont 路径 | `tools/video/marble_music/GeneralUser.sf2` |
 | `PY` | Python 解释器 | `python3` |
-| `LOOK` | 仅 `run_marble.sh`：外观版本 | `v3` |
+| `LOOK` | 仅 `run_marble.sh`：外观版本 | `v4` |
 
 ### Blender 5.x 兼容说明
 
@@ -52,12 +52,12 @@ brew install python ffmpeg fluid-synth
 
 1. **提取击打点** `extract_hits.py`：读 MIDI，建立 tempo map，只取 `01.`–`12.` 主旋律轨（13–16 伴奏只出声不出画），60ms 内叠音合并为一次击打（取最高音）。
 2. **逆向规划轨迹** `plan_zigzag.py`：先定时间再反推几何；左右交替挡板；段间是抛物线；挡板法线为入射反向与出射方向的角平分线。全曲规划约 0 次穿模。
-3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3 必做，`--strict` 有违规会退出）。
+3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3/v4 必做，按 `--look` 读取对应外观的资产，`--strict` 有违规会退出；v4 的竖直共鸣管也会一起检查）。
 4. **渲 12 张乐器静帧**（材质/外形确认）：帧号为各段落中段的击打帧。
 5. **渲 15 秒小样**，再合成音频、出接触点拼图。
 6. **全曲渲染**（可断点续渲，已有帧会跳过），然后 `mux.sh` 合成。
 
-规划器可调参数：`--g` 重力，`--half-gap` 左右间距，`--drop-rate` 最大下落速度，`--frac` 弹跳高度系数（越小越平），`--frame-margin` 镜头跟随裕度（v2/v3 用 0.8）。
+规划器可调参数：`--g` 重力，`--half-gap` 左右间距，`--drop-rate` 最大下落速度，`--frac` 弹跳高度系数（越小越平），`--frame-margin` 镜头跟随裕度（v2/v3/v4 用 0.8）。
 
 ## 3. 具体命令
 
@@ -81,34 +81,38 @@ python3 tools/video/marble_music/plan_zigzag.py \
   work/hits.json --fps 30 --frame-margin 0.8 -o work/plan_zz_v2.json
 
 python3 tools/video/marble_music/check_keepout.py \
-  work/plan_zz_v2.json --out work/keepout_report.json --strict
+  work/plan_zz_v2.json --look v4 --out work/keepout_report_v4.json --strict
+
+# 自动挑 12 张静帧的帧号（打印每段的画面内击打件数和最后一行逗号分隔的帧列表）
+python3 tools/video/marble_music/select_stills.py work/plan_zz_v2.json
 ```
 
 可选：画出整条轨迹总览 `python3 tools/video/marble_music/plot_trajectory.py work/plan_zz_v2.json work/trajectory.png`
 
 ### 3.2 十二张乐器静帧（推荐先做）
 
-帧号对应 12 个乐器段落的中段击打：响板 73、钢琴 257、电颤琴 597、管钟 1010、马林巴 1460、卡林巴 1763、长笛 2186、木琴 2654、陶笛 3086、钟琴 3655、钢鼓 4280、吉他 4895。
+帧号由 `select_stills.py work/plan_zz_v2.json` 自动挑选：每个乐器段落里画面内同乐器击打件最多、弹珠在画面中上部的击打帧（避开长距离下落）：响板 92、钢琴 230、电颤琴 597、管钟 928、马林巴 1341、卡林巴 1772、长笛 2089、木琴 2677、陶笛 3233、钟琴 3572、钢鼓 4427、吉他 4734。（v3 用的是旧的中段帧 73,257,597,1010,1460,1763,2186,2654,3086,3655,4280,4895。）
 
 ```bash
-mkdir -p work/stills_v3
+mkdir -p work/stills_v4
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v3 \
+  --look v4 \
   --plan work/plan_zz_v2.json \
-  --out work/stills_v3 \
-  --frames 73,257,597,1010,1460,1763,2186,2654,3086,3655,4280,4895 \
+  --out work/stills_v4 \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
   --samples 12 --res 1080x1920 --device "${MARBLE_DEVICE:-GPU}"
 
 python3 tools/video/marble_music/instrument_sheet.py \
-  work/plan_zz_v2.json work/stills_v3 work/instrument_stills_v3.png
+  work/plan_zz_v2.json work/stills_v4 work/instrument_stills_v4.png \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
 ```
 
 只渲其中一张（例如钢琴，低采样试跑）：
 
 ```bash
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v3 --plan work/plan_zz_v2.json --out work/stills_v3 \
-  --frames 257 --samples 4 --res 540x960 --device "${MARBLE_DEVICE:-GPU}"
+  --look v4 --plan work/plan_zz_v2.json --out work/stills_v4 \
+  --frames 230 --samples 4 --res 540x960 --device "${MARBLE_DEVICE:-GPU}"
 ```
 
 ### 3.3 15 秒小样
@@ -117,14 +121,14 @@ python3 tools/video/marble_music/instrument_sheet.py \
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
-  0 15 30 12 1080x1920 v3 "${MARBLE_DEVICE:-GPU}"
-# 输出：.../om_zigzag_0_15/marble_zigzag_v3_0_15.mp4
+  0 15 30 12 1080x1920 v4 "${MARBLE_DEVICE:-GPU}"
+# 输出：.../om_zigzag_0_15/marble_zigzag_v4_0_15.mp4
 ```
 
-或用旧入口（第 8 个参数仍是设备；外观用 `LOOK=v3`，默认就是 v3）：
+或用旧入口（第 8 个参数仍是设备；外观用 `LOOK=v4`，默认就是 v4）：
 
 ```bash
-LOOK=v3 tools/video/marble_music/run_marble.sh \
+LOOK=v4 tools/video/marble_music/run_marble.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
   0 15 30 12 1080x1920 "${MARBLE_DEVICE:-GPU}"
@@ -137,28 +141,28 @@ LOOK=v3 tools/video/marble_music/run_marble.sh \
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_full \
-  0 176.3 30 12 1080x1920 v3 "${MARBLE_DEVICE:-GPU}"
+  0 176.3 30 12 1080x1920 v4 "${MARBLE_DEVICE:-GPU}"
 
 # 或后台启动 / 续渲
-tools/video/marble_music/resume_full.sh v3
-# 日志：projects/jingle-bells-marble-music/om_zigzag_full/render_v3.log
+tools/video/marble_music/resume_full.sh v4
+# 日志：projects/jingle-bells-marble-music/om_zigzag_full/render_v4.log
 ```
 
 若只想把已渲好的帧和音频合成（默认 `render_audio.sh` 会在流水线里自动做）：
 
 ```bash
 tools/video/marble_music/mux.sh \
-  projects/jingle-bells-marble-music/om_zigzag_full/frames_zz_v3 \
+  projects/jingle-bells-marble-music/om_zigzag_full/frames_zz_v4 \
   projects/jingle-bells-marble-music/om_zigzag_full/audio.wav \
   30 \
-  projects/jingle-bells-marble-music/om_zigzag_full/marble_zigzag_v3_0_176.3.mp4
+  projects/jingle-bells-marble-music/om_zigzag_full/marble_zigzag_v4_0_176.3.mp4
 ```
 
 ## 4. 做法说明（4 步）
 
 1. **提取击打点** `extract_hits.py` — 见上文。
 2. **逆向规划轨迹** `plan_zigzag.py` — 向量化碰撞检测；输出每帧弹珠位置、挡板位姿、相机路径到 `plan_zz_v2.json`。
-3. **Blender 渲染** `scene.py` — 程序化建场景：灰墙、翡翠绿玻璃弹珠、柔光；v3 从 `assets/instruments/` 实例化 12 种击打件；击打帧挡板下沉 + 边缘闪光；相机平滑下摇。Cycles + OIDN + 运动模糊 + AgX。已存在且大于 1KB 的帧自动跳过。
+3. **Blender 渲染** `scene.py` — 程序化建场景：灰墙、翡翠绿玻璃弹珠、柔光；v3/v4 从 `assets/instruments/` 实例化 12 种击打件（v4 优先用 `<乐器>/v4/` 里的覆盖版本，共鸣管作为世界坐标竖直的悬挂件单独生成）；击打帧挡板下沉 + 边缘闪光；相机平滑下摇。Cycles + OIDN + 运动模糊 + AgX。已存在且大于 1KB 的帧自动跳过。
 4. **音频与合成** `render_audio.sh` + `mux.sh` — FluidSynth + GeneralUser GS 把整份 MIDI（全部 17 轨）合成 48k WAV 并裁到同一时间窗；ffmpeg 合成 H.264 + AAC。
 
 升级路线和特效规划见同目录 `UPGRADE_PLAN.md`。历史脚本 `scene_zigzag.py` 是最早的 v1 快照，新流程请用 `scene.py`。
@@ -183,18 +187,18 @@ python3 tools/video/marble_music/extract_hits.py \
 python3 tools/video/marble_music/plan_zigzag.py \
   work/hits.json --fps 30 --frame-margin 0.8 -o work/plan_zz_v2.json
 python3 tools/video/marble_music/check_keepout.py \
-  work/plan_zz_v2.json --out work/keepout_report.json --strict
+  work/plan_zz_v2.json --look v4 --out work/keepout_report_v4.json --strict
 
 # 12 张乐器静帧
-mkdir -p work/stills_v3
+mkdir -p work/stills_v4
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v3 --plan work/plan_zz_v2.json --out work/stills_v3 \
-  --frames 73,257,597,1010,1460,1763,2186,2654,3086,3655,4280,4895 \
+  --look v4 --plan work/plan_zz_v2.json --out work/stills_v4 \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
   --samples 12 --res 1080x1920 --device GPU
 
 # 15 秒小样
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
-  0 15 30 12 1080x1920 v3 GPU
+  0 15 30 12 1080x1920 v4 GPU
 ```

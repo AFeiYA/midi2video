@@ -1,0 +1,96 @@
+{
+ "name": "vibraphone",
+ "section": 3,
+ "tracks_regex": "vibra",
+ "description": "Brushed-aluminium vibraphone bar with rounded edges, two maroon suspension cords through the nodal points, and a gold anodised resonator tube that hangs straight down in world space (v4) hanging behind the marble plane.",
+ "slots": [
+  "body",
+  "cord",
+  "resonator",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.45,
+  0.7,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.14,
+   "z": 0.0,
+   "y_start": 0.17,
+   "radius": 0.022
+  },
+  {
+   "x": 0.14,
+   "z": 0.0,
+   "y_start": 0.17,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "hanging": [
+  {
+   "attach": [
+    0.0,
+    0.222,
+    -0.03
+   ],
+   "radius": 0.062,
+   "inner": 0.052,
+   "length": 0.4,
+   "slot": "resonator",
+   "role": "resonator"
+  }
+ ],
+ "look": "v4",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.17000000178813934,
+     -0.04500000178813934
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 18284,
+   "triangles": 162
+  }
+ }
+}

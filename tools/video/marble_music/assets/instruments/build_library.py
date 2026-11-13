@@ -3,20 +3,22 @@ contact / keep-out data back into meta.json.   usage: blender -b -P assets/instr
 import bpy, sys, os, json, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import _common as C
-names = sorted(d for d in os.listdir(HERE) if os.path.isfile(os.path.join(HERE, d, 'meta.json')))
+import library
+dirs = library.asset_dirs() if '--only' not in sys.argv else [d for d in library.asset_dirs() if any(o in d for o in sys.argv[sys.argv.index('--only')+1].split(','))]
 report = []
-for n in names:
-    d = os.path.join(HERE, n); meta, bmod, mmod = C.load_asset(d)
+for d in dirs:
+    meta, bmod, mmod = C.load_asset(d); n = meta['name'] + ('' if os.path.dirname(d) == HERE else '_' + os.path.basename(d))
     meta['measured'] = {}
     for var in meta['variants']:
         bpy.ops.wm.read_factory_settings(use_empty=True)
         o = C.make_asset(meta, bmod, var, f'{n}_{var}')
-        sh = mmod.shared(C)
+        sh = mmod.shared(C); mats = []
         for role in meta['slots']:
             if role == 'body': m = mmod.body(C, f'{n}_body_{var}', 0, 60, None if var == 'default' else var)
             elif role == 'pin': m = C.mat('pin', (0.7,0.7,0.72), rough=0.25, metal=1.0)
             else: m = sh[role]
-            o.data.materials.append(m)
+            mats.append(m)
+        C.set_slots(o.data, mats)
         P = C.surface_points(o); np.save(os.path.join(d, f'probe_{var}.npy'), P)
         slab = np.abs(P[:,1]) < C.R + 0.005
         centre = slab & (np.abs(P[:,0]) < 0.012) & (np.abs(P[:,1]) < 0.012)

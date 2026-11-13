@@ -12,13 +12,21 @@ def _activate(o):
     for s in bpy.context.selected_objects: s.select_set(False)
     bpy.context.view_layer.objects.active = o; o.select_set(True)
 
+NSLOT = 8
+def _ensure_slots(o, n=NSLOT):
+    """placeholder material slots __slot0..__slot{n-1} (same datablocks on every part): Blender clamps material_index to the
+    slot count whenever a modifier/transform is applied or objects are joined, so parts need real slots from creation."""
+    me = o.data
+    while len(me.materials) < n:
+        i = len(me.materials); me.materials.append(bpy.data.materials.get(f'__slot{i}') or bpy.data.materials.new(f'__slot{i}'))
+
 def prim(kind, mi=0, loc=(0,0,0), rot=(0,0,0), scale=(1,1,1), bevel=0.0, seg=3, verts=32, smooth=True, angle=0.6):
     """kind: cube (size 1), cyl (radius 1, depth 1 along local Z), sphere (radius 1), torus(major,minor in scale)."""
     if kind == 'cube': bpy.ops.mesh.primitive_cube_add(size=1)
     elif kind == 'cyl': bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=1, vertices=verts)
     elif kind == 'sphere': bpy.ops.mesh.primitive_uv_sphere_add(radius=1, segments=verts, ring_count=max(8, verts//2))
     elif kind == 'torus': bpy.ops.mesh.primitive_torus_add(major_radius=scale[0], minor_radius=scale[1], major_segments=verts, minor_segments=12); scale = (1,1,1)
-    o = bpy.context.object
+    o = bpy.context.object; _ensure_slots(o)
     o.location = loc; o.rotation_euler = rot; o.scale = scale
     _activate(o); bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     for p in o.data.polygons: p.material_index = mi
@@ -74,7 +82,7 @@ def shape_profile(name, pts_xz, depth, y0, mi=0, bevel=0.0):
     n = len(pts_xz); bm.faces.new(a[::-1]); bm.faces.new(b)
     for i in range(n): bm.faces.new((a[i], a[(i+1)%n], b[(i+1)%n], b[i]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:]); bm.to_mesh(me); bm.free()
-    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
+    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o); _ensure_slots(o)
     for p in me.polygons: p.material_index = mi
     if bevel > 0:
         _activate(o); m = o.modifiers.new('bev', 'BEVEL'); m.width = bevel; m.segments = 3; m.limit_method = 'ANGLE'; bpy.ops.object.modifier_apply(modifier=m.name)
@@ -118,7 +126,7 @@ def load_asset(dirpath):
     import importlib.util
     def imp(fn, nm):
         sp = importlib.util.spec_from_file_location(nm, os.path.join(dirpath, fn)); m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m
-    name = os.path.basename(dirpath.rstrip('/'))
+    name = os.path.relpath(dirpath, os.path.dirname(os.path.abspath(__file__))).replace(os.sep, '_')
     return json.load(open(os.path.join(dirpath, 'meta.json'))), imp('build.py', f'asset_{name}_build'), imp('material.py', f'asset_{name}_mat')
 
 def add_pins(meta):
@@ -128,13 +136,23 @@ def add_pins(meta):
         out.append(prim('cyl', pi, loc=(p['x'], (y0+y1)/2, p['z']), rot=(math.pi/2,0,0), scale=(p['radius'],p['radius'],y1-y0), verts=16))
     return out
 
-def make_asset(meta, build_mod, variant, name):
-    """Build one striker mesh object (geometry + pins joined), material slots ordered as meta['slots'] (left empty)."""
+def make_asset(meta, build_mod, variant, name, keep_slots=True):
+    """Build one striker mesh object (geometry + pins joined), material slots ordered as meta['slots'] (left empty for the caller).
+    keep_slots=True keeps each part's material index (needs the __slot placeholders, see _ensure_slots).
+    keep_slots=False reproduces the v3 behaviour, where every part rendered in slot 0 (the body material) -
+    used only by --look v3 so its renders stay reproducible."""
     parts = build_mod.build(__import__(__name__), None if variant == 'default' else variant)
     parts += add_pins(meta)
-    o = join(parts, name)
-    for p in o.data.polygons: p.material_index = min(p.material_index, len(meta['slots'])-1)
+    o = join(parts, name); n = len(meta['slots'])
+    for p in o.data.polygons: p.material_index = min(p.material_index, n-1) if keep_slots else 0
+    while len(o.data.materials) > n: o.data.materials.pop(index=len(o.data.materials)-1)   # (materials.clear() would reset indices)
     return o
+
+def set_slots(me, mats):
+    """fill a make_asset mesh's slots (placeholders) with real materials, in meta['slots'] order"""
+    for i, m in enumerate(mats):
+        if i < len(me.materials): me.materials[i] = m
+        else: me.materials.append(m)
 
 def surface_points(o, spacing=0.006):
     """area-uniform surface samples of an object's evaluated mesh (local coords) -> numpy (N,3)."""

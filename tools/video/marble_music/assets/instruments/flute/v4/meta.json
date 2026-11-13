@@ -1,0 +1,92 @@
+{
+ "name": "flute",
+ "section": 7,
+ "tracks_regex": "flute",
+ "description": "v4: larger sterling-silver flute body (radius 0.065, top flush with the contact face), five gold-plated key cups with dark leather pads on the camera side, gold key rod and gold joint rings.",
+ "slots": [
+  "body",
+  "pad",
+  "rod",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.85,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.02,
+   "y_start": 0.06,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.02,
+   "y_start": 0.06,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v4",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04498,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.07750000059604645,
+     -0.09099999815225601
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.050999999046325684
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.07500000298023224,
+     -0.09099999815225601
+    ],
+    [
+     0.3100000023841858,
+     0.06629999727010727,
+     0.050999999046325684
+    ]
+   ],
+   "probe_points": 21519,
+   "triangles": 2110
+  }
+ }
+}

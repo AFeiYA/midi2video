@@ -1,6 +1,17 @@
-"""compare_sheet.py plan.json old_dir new_dir out.png -- per instrument: old (left) vs new (right)."""
+"""compare_sheet.py plan.json old_dir new_dir out.png [LABEL_OLD LABEL_NEW] [--frames f1,f2,...] -- per instrument: old (left) vs new (right)."""
 import json,sys,os
 from PIL import Image,ImageDraw,ImageFont
+
+_FR=None
+if '--frames' in sys.argv:
+    _i=sys.argv.index('--frames'); _FR=set(int(x) for x in sys.argv[_i+1].split(',')); del sys.argv[_i:_i+2]
+def pick_key(ks, fps):
+    """key used for a section's still: the one whose hit frame is in --frames (if given), else the mid-section hit."""
+    if _FR:
+        for k in ks:
+            if round(k['t']*fps) in _FR: return k
+    return ks[len(ks)//2]
+
 P=json.load(open(sys.argv[1])); od,nd,out=sys.argv[2:5]; fps=P['fps']
 LAB=(sys.argv[5],sys.argv[6]) if len(sys.argv)>6 else ('v1 (old)','v2 (new)')
 secs={}; [secs.setdefault(k['track'],[]).append(k) for k in P['keys']]
@@ -32,7 +43,7 @@ F=lambda s,b=False: _font(s,b)
 tw,th,hd,gap=270,480,48,14; cols=4; pw=2*tw+gap; rows=(len(secs)+cols-1)//cols
 sh=Image.new('RGB',(cols*pw,rows*(th+hd)),(18,18,18)); d=ImageDraw.Draw(sh)
 for i,(tr,ks) in enumerate(secs.items()):
-    f=round(ks[len(ks)//2]['t']*fps); x=(i%cols)*pw; y=(i//cols)*(th+hd)
+    f=round(pick_key(ks,fps)['t']*fps); x=(i%cols)*pw; y=(i//cols)*(th+hd)
     for j,dd in enumerate((od,nd)):
         p=f"{dd}/{f:05d}.png"
         if os.path.exists(p): sh.paste(Image.open(p).convert('RGB').resize((tw,th)),(x+j*tw,y+hd))
