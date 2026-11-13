@@ -6,7 +6,7 @@
 
 - **乐器轮廓**：在弹珠平面之后（y>0.155，弹珠永远碰不到的区域）加了大块可辨认的轮廓：吉他琴身+音孔+琴颈+琴头、卡林巴长短不一的扇形琴键+木板、钢鼓正面圆盘和音区凹坑、管钟竖直悬挂的 5 根铜管、钟琴红色梯形琴箱+多根钢条、陶笛加大的红薯形+吹口、长笛的笛头和笛尾、响板成对的贝壳。
 - **琴键**：木琴的琴条按音名着色（C 红、D 橙、E 黄、F 绿、G 青、A 蓝、B 紫；升降音用更暗、更灰的中间色）。暖色（红、橙、黄、绿）的亮度调低，涂层变薄，在棚拍灯光下也保持饱和。钢琴保持真实外观，按每个音符的音名决定：自然音（C D E F G A B）是象牙白键，升降音是乌木黑键，保留红色毛毡点缀。Jingle Bells 钢琴段 22 个音全是自然音，所以都是白键。白键后面还有两块乌木黑键短块，让 C 大调旋律看起来仍是键盘。
-- **乐器名字幕**：每个旋律段 01–12 开始时淡入一张半透明的小标题卡（程序化绘制的乐器图标、中文名+英文名、段落号），停留约 1.6 秒后淡出。标题卡的位置是用相机把每个击打件和弹珠投影到画面上，挑一个它们最少经过的安全区位置，全曲统一（本曲在左下，约 y=1342），不挡住弹珠的路线。开场第一张会晚 0.4 秒出现，不会在第一帧突然跳出。之后左上角一直显示小标签（如 `05 马林巴 Marimba`），中途进入或 Shorts 循环播放的观众也知道当前是什么乐器。字幕是后期合成层（`titles.py` + `composite.sh`），改文字不用重渲。
+- **乐器名字幕**：默认只在左上角显示一个小标签（程序化图标 + 段落号 + 中文名 + 英文名，如 `01 响板 Castanets`），每个旋律段从第一个击打开始就显示，换段时用 0.3 秒交叉淡入淡出切换；开场第一段从 0.2 秒开始淡入、0.5 秒完全显示，不会在第一帧突然跳出。中途进入或 Shorts 循环播放的观众随时都知道当前是什么乐器，而且不挡弹珠路线。原来的大标题卡已默认去掉，需要时用 `titles.py --cards` 打开。字幕是后期合成层（`titles.py` + `composite.sh`），改文字不用重渲。
 
 弹珠接触面几何不变，禁入检查 0 违规，新增的击打件之间互碰检查 `check_pairs.py --strict` 也没有新的冲突（唯一一对已知的马林巴共鸣管写在 `assets/instruments/pairs_whitelist.json`，有任何新冲突流水线就会停）。
 
@@ -174,18 +174,19 @@ tools/video/marble_music/mux.sh \
   projects/jingle-bells-marble-music/om_zigzag_full/marble_zigzag_v5_0_176.3.mp4
 ```
 
-### 3.5 v5 字幕层（标题卡 + 角标），后期合成
+### 3.5 v5 字幕层（角标；标题卡可选），后期合成
 
 字幕不进 Blender，单独生成一层 RGBA PNG（编号和渲染帧一致，`%05d.png`），再用 ffmpeg `overlay` 叠上去。改文字、时长、位置只需重跑下面两步，不用重渲。
 
 ```bash
-# 全曲字幕层：约 7 秒，5290 帧里只有约 300 张不同的图，其余用硬链接，约 19 MB
+# 全曲字幕层（默认只有角标）：几秒钟，5290 帧里只有约 130 张不同的图，其余用硬链接
 python3 tools/video/marble_music/titles.py work/plan_zz_v2.json work/overlay_v5
-#   --start/--end 帧范围；--no-corner 关掉左上角常驻小标签；--res 默认 1080x1920
+#   --start/--end 帧范围；--res 默认 1080x1920；--label-fade 换段交叉淡化时长（默认 0.3 秒）
+#   --cards 另外打开大标题卡（可选，默认关）；--no-corner 关掉角标（只配合 --cards 用）
 
-# 看一帧效果：把第 1925 帧（长笛段开头）的字幕叠在一张渲染图上
+# 看一帧效果：把第 1925 帧（长笛段开头）的角标叠在一张渲染图上
 python3 tools/video/marble_music/titles.py work/plan_zz_v2.json --still 1925 \
-  --bg work/stills_v5/02089.png --png work/title_card_still.png
+  --bg work/stills_v5/02089.png --png work/label_still.png
 
 # 合成：渲染帧（任意分辨率，会用 lanczos 放大到字幕层尺寸）+ 字幕层 + 对应时段音频
 #   composite.sh FRAMES_DIR OVERLAY_DIR AUDIO.wav FPS START_FRAME OUT.mp4
@@ -195,8 +196,8 @@ tools/video/marble_music/composite.sh \
   projects/jingle-bells-marble-music/om_zigzag_full/audio.wav 30 0 work/marble_v5_titled.mp4
 ```
 
-- **时间**：每段第一个击打时刻开始，淡入 0.3 秒，停 1.6 秒，淡出 0.4 秒；第一段从 t=0 开始，所以标题卡晚 `--first-delay`（默认 0.4 秒）出现。之后左上角显示小标签（不透明度 0.8）。
-- **位置**：`--place auto`（默认）用和 `scene.py` 一样的相机，把标题卡显示期间每一帧的击打件（按 0.45 m 半径算上轮廓）和弹珠投影到画面上，在安全区里挑全曲统一、被遮挡最少的位置。本曲选中左下 (28, 1342)，比放在顶部少挡 65–75%。`--place section` 每段各选一个位置，`--place top` 固定在左上。标题卡缩到原来的 80%（`--card-scale`），背景不透明度 150/255（`--card-alpha`）。
+- **时间（默认，只有角标）**：每段第一个击打时刻开始显示，0.3 秒淡入（`--label-fade`），换段时旧标签淡出、新标签淡入同时进行（交叉淡化）；第一段从 t=0 开始，所以晚 `--first-delay`（默认 0.2 秒）开始淡入，0.5 秒时完全显示。不透明度 0.8。
+- **大标题卡（可选，`--cards`）**：每段开始淡入 0.3 秒、停 1.6 秒、淡出 0.4 秒，然后才出现角标；第一张晚 0.4 秒。位置 `--place auto`（默认）用和 `scene.py` 一样的相机，把击打件（按 0.45 m 半径算上轮廓）和弹珠投影到画面上，在安全区里挑全曲统一、被遮挡最少的位置（本曲左下 (28, 1342)）；`--place section` 每段各选一个位置，`--place top` 固定在左上。`--card-scale`（默认 0.8）、`--card-alpha`（默认 150/255）。
 - **安全区（9:16 / YouTube Shorts）**：全部内容在 x∈[28, 900]、y∈[214, 1536] 像素（以 1080×1920 计），避开顶部约 10%（192 px）、底部约 20%（384 px）和右侧约 15% 的按钮栏。
 - **字体**：Noto Sans CJK SC 粗体和常规体，SIL Open Font License 1.1。仓库里只放了用到的字形子集 `fonts/NotoSansSC-{Bold,Regular}-subset.otf`（约 64 KB，许可证见 `fonts/OFL.txt`、`fonts/README.txt`）。改了 `titles.py` 里的乐器名后，用 `fonts/make_subset.sh` 重新生成子集（需要 `pip install fonttools` 和完整的 Noto Sans CJK 字体），或用 `--font-bold/--font-regular` 指定其他字体。
 - **图标**：12 个乐器图标全部用 PIL 在 `titles.py` 里程序化绘制，没有第三方图片。

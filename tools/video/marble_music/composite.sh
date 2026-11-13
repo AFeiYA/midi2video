@@ -2,7 +2,8 @@
 # composite.sh FRAMES_DIR OVERLAY_DIR AUDIO.wav FPS START_FRAME OUT.mp4
 # v5 compositing pass: Blender frames (any resolution, upscaled to the overlay size with lanczos) + titles.py RGBA overlays
 # (same %05d numbering; PY = python with Pillow, default python3) + the matching audio segment (audio.wav covers the whole song from t=0, so it is trimmed at START/FPS).
-# Label tweaks only need titles.py + this script - no re-render.
+# Default titles.py overlay = corner label only (e.g. "01 响板 Castanets", cross-fades at section changes); the big
+# section title card is opt-in via `titles.py --cards`. Label tweaks only need titles.py + this script - no re-render.
 set -euo pipefail
 FR="$1"; OV="$2"; AU="$3"; FPS="$4"; S="$5"; OUT="$6"
 read OW OH < <("${PY:-python3}" -c "import glob;from PIL import Image;f=sorted(glob.glob('$OV/*.png'))[0];print(*Image.open(f).size)" 2>/dev/null || echo "1080 1920")

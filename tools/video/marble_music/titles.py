@@ -1,10 +1,14 @@
-"""titles.py - v5 instrument title-card + corner-label overlay (compositing pass, no re-render needed for label tweaks).
-usage: python titles.py PLAN.json OUT_DIR [--start F0 --end F1] [--res 1080x1920] [--no-corner] [--still FRAME --bg render.png --out card.png]
+"""titles.py - v5 instrument corner-label overlay (compositing pass, no re-render needed for label tweaks).
+usage: python titles.py PLAN.json OUT_DIR [--start F0 --end F1] [--res 1080x1920] [--cards] [--no-corner] [--still FRAME --bg render.png --png out.png]
+Default: only the small top-left label ("01 响板 Castanets", opacity 0.8), shown from the first hit of each section; it fades in over
+--label-fade (0.3 s) and cross-fades from the previous section's label at each change. A section starting at t=0 starts at
+--first-delay (0.2 s) so nothing pops in on frame 0 (fully visible by 0.5 s).
+--cards (opt-in) restores the big per-section title card (label then appears as the card leaves; first-delay 0.4 s).
 Writes OUT_DIR/%05d.png RGBA overlays (same numbering as the Blender frames) - identical overlay states are hard-linked, so a full-song
 pass is cheap.  Composite with composite.sh (ffmpeg overlay).
 Layout (9:16, YouTube-Shorts safe): everything sits in x in [28, 900] (keeps clear of the right-side action buttons, ~15 %),
 y in [214, 1536] (below the top ~10 % = 192 px status/search bar, above the bottom ~20 % caption / channel area).
-Title card (80 % size, translucent): --place auto (default) projects every striker and the marble with the scene camera for the
+Title card (--cards only; 80 % size, translucent): --place auto (default) projects every striker and the marble with the scene camera for the
 frames each card is up and picks ONE safe-area spot that they occupy least (for Jingle Bells: lower-left, y=1342 -> 65-75 % less
 overlap than the top); --place section = best spot per section, --place top = fixed top-left.  Fades in 0.3 s at the section's first
 hit (the opening card waits --first-delay 0.4 s so it does not pop in on frame 0), holds 1.6 s, fades out 0.4 s.  Corner label: small
@@ -18,7 +22,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('out', nargs='?', default='overlay')
 ap.add_argument('--start', type=int, default=0); ap.add_argument('--end', type=int, default=-1); ap.add_argument('--res', default='1080x1920')
 ap.add_argument('--no-corner', action='store_true'); ap.add_argument('--place', default='auto', choices=['auto', 'section', 'top'], help='auto: ONE safe-area spot for all sections that strikers/marble occupy least while cards are up; section: best spot per section; top: fixed top-left')
-ap.add_argument('--card-scale', type=float, default=0.8); ap.add_argument('--card-alpha', type=int, default=150); ap.add_argument('--first-delay', type=float, default=0.4, help='a section starting at t<delay shows its card at t=delay (no pop-in on frame 0)')
+ap.add_argument('--cards', action='store_true', help='opt-in: also show the big title card at each section start (default: corner label only)')
+ap.add_argument('--card-scale', type=float, default=0.8); ap.add_argument('--card-alpha', type=int, default=150)
+ap.add_argument('--first-delay', type=float, default=None, help='a section starting at t<delay starts its label/card at t=delay (no pop-in on frame 0); default 0.2 s for labels, 0.4 s with --cards')
+ap.add_argument('--label-fade', type=float, default=0.3, help='corner label fade-in / cross-fade time at section changes (s)')
 ap.add_argument('--still', type=int, default=-1); ap.add_argument('--bg', default='')
 ap.add_argument('--png', default='', help='with --still: output composite png')
 _FD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
@@ -28,6 +35,7 @@ def _dflt(w):   # bundled OFL subset first (portable, e.g. on the Mac), else the
 ap.add_argument('--font-bold', default=_dflt('Bold')); ap.add_argument('--font-regular', default=_dflt('Regular'))
 ap.add_argument('--font-index', type=int, default=2, help='face index inside a .ttc (2 = SC in Noto Sans CJK); ignored for .otf')
 a = ap.parse_args()
+if a.first_delay is None: a.first_delay = 0.4 if a.cards else 0.2
 W, H = map(int, a.res.split('x')); S = W / 1080.0          # all layout numbers below are for 1080x1920
 FIN, HOLD, FOUT = 0.3, 1.6, 0.4
 NAMES = {   # section no -> (zh, en, accent rgb)
@@ -184,33 +192,45 @@ def place_cards():
         tot = {c: sum(out[n][c] for n in order) for c in out[order[0]]}; g = min(tot, key=tot.get)
         return {n: (g, out[n][g], out[n][(xs[0], int(214*S))]) for n in order}
     return {n: (min(out[n], key=out[n].get), min(out[n].values()), out[n][(xs[0], int(214*S))]) for n in order}
-if a.place in ('auto', 'section'):
+if a.cards and a.place in ('auto', 'section'):
     PL = place_cards(); CARDXY = {n: PL[n][0] for n in order}
     for n in order: print(f'  card {n:02d} at {PL[n][0]}  overlap cost {PL[n][1]:.0f} (fixed top would be {PL[n][2]:.0f})')
 else:
     CARDXY = {n: (int(28*S), int(214*S)) for n in order}
 def state(f):
+    """(section, card alpha, label alpha, previous section, previous label alpha) - quantised so identical frames are hard-linked"""
     t = f / fps; cur = None
     for n in order:
         if secs[n][0] <= t + 1e-6: cur = n
-    if cur is None: return (None, 0, 0)
-    dt = t - START[cur]
-    if dt < 0: return (cur, 0, 0)
-    ca = min(1, dt/FIN) if dt < FIN else (1 if dt < FIN+HOLD else max(0, 1-(dt-FIN-HOLD)/FOUT))
-    pa = 0 if a.no_corner else 0.8*min(1, max(0, (dt-FIN-HOLD-FOUT*0.5)/0.4))      # pill fades in as the card leaves
+    if cur is None: return (None, 0, 0, None, 0)
     q = lambda v: round(v*20)/20
-    return (cur, q(ca), q(pa))
+    dt = t - START[cur]; i = order.index(cur); prev = order[i-1] if i > 0 else None
+    if a.cards:                                                      # opt-in: big card first, label fades in as the card leaves
+        if dt < 0: return (cur, 0, 0, None, 0)
+        ca = min(1, dt/FIN) if dt < FIN else (1 if dt < FIN+HOLD else max(0, 1-(dt-FIN-HOLD)/FOUT))
+        pa = 0 if a.no_corner else 0.8*min(1, max(0, (dt-FIN-HOLD-FOUT*0.5)/0.4))
+        return (cur, q(ca), q(pa), None, 0)
+    # default: corner label only, visible from the start of each section; cross-fades from the previous section's label
+    if a.no_corner: return (cur, 0, 0, None, 0)
+    u = 1.0 if a.label_fade <= 0 else min(1, max(0, dt/a.label_fade))
+    pp = (1-u) if prev is not None else 0
+    return (cur, 0, q(0.8*u), prev if pp > 0 else None, q(0.8*pp))
 def overlay(st):
-    n, ca, pa = st; im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    n, ca, pa, pn, ppa = st; im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     if n is None: return im
-    for src, al, xy in ((CARD[n], ca, CARDXY[n]), (PILL[n], pa, PILL_XY)):
+    layers = [(PILL[pn], ppa, PILL_XY, False)] if pn is not None and ppa > 0 else []
+    if a.cards: layers.append((CARD[n], ca, CARDXY[n], True))
+    layers.append((PILL[n], pa, PILL_XY, False))
+    for src, al, xy, is_card in layers:
         if al <= 0: continue
-        s = src.copy(); s.putalpha(s.getchannel('A').point(lambda v: int(v*al))); y = xy[1] + (int((1-al)*-18*S) if src is CARD[n] else 0)
+        s = src.copy(); s.putalpha(s.getchannel('A').point(lambda v: int(v*al))); y = xy[1] + (int((1-al)*-18*S) if is_card else 0)
         im.alpha_composite(s, (xy[0], max(0, y)))
     return im
 
 if a.still >= 0:
-    st = state(a.still); st = (st[0], max(st[1], 1.0 if st[2] == 0 else st[1]), st[2]); ov = overlay(st)
+    st = state(a.still)
+    if a.cards and st[2] == 0: st = (st[0], max(st[1], 1.0), st[2], st[3], st[4])   # preview: show the card at full strength
+    ov = overlay(st)
     bg = Image.open(a.bg).convert('RGBA').resize((W, H)) if a.bg else Image.new('RGBA', (W, H), (90, 90, 90, 255))
     out = Image.alpha_composite(bg, ov); out.convert('RGB').save(a.png or 'title_still.png'); print('wrote', a.png or 'title_still.png', st); sys.exit()
 os.makedirs(a.out, exist_ok=True); end = (a.end if a.end >= 0 else nfr-1); cache = {}
