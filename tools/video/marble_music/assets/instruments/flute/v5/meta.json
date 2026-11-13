@@ -1,0 +1,92 @@
+{
+ "name": "flute",
+ "section": 7,
+ "tracks_regex": "flute",
+ "description": "v5: v4 silver body section with gold keys and dark pads (the striker), backed by one continuous silver tube behind the marble plane (head joint with lip plate and crown -> foot joint with gold keys, joint rings), so the flute reads as one long thin instrument from every tilt.",
+ "slots": [
+  "body",
+  "pad",
+  "rod",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.85,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.02,
+   "y_start": 0.06,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.02,
+   "y_start": 0.06,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04499,
+   "bbox": [
+    [
+     -0.75,
+     -0.07750000059604645,
+     -0.11900000274181366
+    ],
+    [
+     0.550000011920929,
+     0.3100000023841858,
+     0.050999999046325684
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.07500000298023224,
+     -0.09099999815225601
+    ],
+    [
+     0.5299999713897705,
+     0.15479999780654907,
+     0.050999999046325684
+    ]
+   ],
+   "probe_points": 41283,
+   "triangles": 3166
+  }
+ }
+}

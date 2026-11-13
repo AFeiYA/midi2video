@@ -1,0 +1,82 @@
+{
+ "name": "kalimba",
+ "section": 6,
+ "tracks_regex": "kalimba",
+ "description": "v5: polished steel bridge bar (the striker) over a fan of nine steel tines with uneven V-shaped lengths, mounted on a rounded lacquered walnut board with a dark sound hole; tines and board sit behind the marble plane.",
+ "slots": [
+  "body",
+  "steel",
+  "wood",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.75,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.25,
+   "z": -0.3,
+   "y_start": 0.27,
+   "radius": 0.022
+  },
+  {
+   "x": 0.25,
+   "z": -0.3,
+   "y_start": 0.27,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3400000035762787,
+     -0.05999999865889549,
+     -0.47999998927116394
+    ],
+    [
+     0.3400000035762787,
+     0.3100000023841858,
+     0.07999999821186066
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 40389,
+   "triangles": 1351
+  }
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "name": "xylophone",
+ "section": 8,
+ "tracks_regex": "xylo",
+ "description": "Gloss-painted rainbow xylophone bar (colour cycles bar to bar), resting on two red felt strips over a pale birch frame rail behind the marble plane. v5: bar colours follow the pitch class (shared palette with piano).",
+ "slots": [
+  "body",
+  "felt",
+  "frame",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.95,
+  0.85
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.07,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.07,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.33000001311302185,
+     -0.15000000596046448,
+     -0.11999999731779099
+    ],
+    [
+     0.33000001311302185,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32850000262260437,
+     -0.15000000596046448,
+     -0.11860000342130661
+    ],
+    [
+     0.328000009059906,
+     0.1550000011920929,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 27700,
+   "triangles": 428
+  }
+ }
+}

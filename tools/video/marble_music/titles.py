@@ -1,0 +1,176 @@
+"""titles.py - v5 instrument title-card + corner-label overlay (compositing pass, no re-render needed for label tweaks).
+usage: python titles.py PLAN.json OUT_DIR [--start F0 --end F1] [--res 1080x1920] [--no-corner] [--still FRAME --bg render.png --out card.png]
+Writes OUT_DIR/%05d.png RGBA overlays (same numbering as the Blender frames) - identical overlay states are hard-linked, so a full-song
+pass is cheap.  Composite with composite.sh (ffmpeg overlay).
+Layout (9:16, YouTube-Shorts safe): everything sits in x in [48, 900] (keeps clear of the right-side action buttons, ~15 %),
+y in [210, 420] (below the top ~10 % = 192 px status/search bar; far above the bottom ~20 % caption / channel area).
+Title card: fades in 0.3 s at the section's first hit, holds 1.6 s, fades out 0.4 s.  Corner label: small pill "05 马林巴 Marimba"
+at 0.8 opacity whenever no title card is showing (viewers who join mid-section / Shorts loops still know the instrument).
+Font: Noto Sans CJK SC, SIL Open Font License 1.1 - bundled glyph subset fonts/NotoSansSC-{Bold,Regular}-subset.otf (fonts/OFL.txt,
+regenerate with fonts/make_subset.sh after adding names), else /usr/share/fonts/opentype/noto/NotoSansCJK-*.ttc index 2 = SC.
+All icons are drawn procedurally here with PIL primitives - no third-party images."""
+import json, os, re, sys, argparse, math, colorsys
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('out', nargs='?', default='overlay')
+ap.add_argument('--start', type=int, default=0); ap.add_argument('--end', type=int, default=-1); ap.add_argument('--res', default='1080x1920')
+ap.add_argument('--no-corner', action='store_true'); ap.add_argument('--still', type=int, default=-1); ap.add_argument('--bg', default='')
+ap.add_argument('--png', default='', help='with --still: output composite png')
+_FD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
+def _dflt(w):   # bundled OFL subset first (portable, e.g. on the Mac), else the system Noto Sans CJK TTC (index 2 = SC)
+    b = os.path.join(_FD, f'NotoSansSC-{w}-subset.otf')
+    return b if os.path.isfile(b) else f'/usr/share/fonts/opentype/noto/NotoSansCJK-{w}.ttc'
+ap.add_argument('--font-bold', default=_dflt('Bold')); ap.add_argument('--font-regular', default=_dflt('Regular'))
+ap.add_argument('--font-index', type=int, default=2, help='face index inside a .ttc (2 = SC in Noto Sans CJK); ignored for .otf')
+a = ap.parse_args()
+W, H = map(int, a.res.split('x')); S = W / 1080.0          # all layout numbers below are for 1080x1920
+FIN, HOLD, FOUT = 0.3, 1.6, 0.4
+NAMES = {   # section no -> (zh, en, accent rgb)
+ 1: ('响板', 'Castanets', (196, 92, 52)),   2: ('钢琴', 'Piano', (236, 228, 210)),     3: ('颤音琴', 'Vibraphone', (170, 190, 220)),
+ 4: ('管钟', 'Tubular Bells', (232, 176, 80)), 5: ('马林巴', 'Marimba', (200, 120, 60)), 6: ('卡林巴', 'Kalimba', (190, 196, 206)),
+ 7: ('长笛', 'Flute', (214, 220, 230)),      8: ('木琴', 'Xylophone', (240, 120, 90)),  9: ('陶笛', 'Ocarina', (70, 170, 130)),
+ 10: ('钟琴', 'Glockenspiel', (220, 60, 60)), 11: ('钢鼓', 'Steel Drums', (200, 205, 215)), 12: ('吉他', 'Guitar', (226, 150, 60))}
+
+def font(bold, px):
+    fn = a.font_bold if bold else a.font_regular
+    return ImageFont.truetype(fn, int(px*S), index=a.font_index if fn.lower().endswith('.ttc') else 0)
+
+# ------------------------------------------------------------------ procedural icons (drawn at 4x in a unit box, then downsampled)
+def rainbow(i, n): r, g, b = colorsys.hsv_to_rgb(i/n, 0.7, 0.95); return (int(r*255), int(g*255), int(b*255), 255)
+PH = [0.0, 0.08, 0.15, 0.33, 0.5, 0.62, 0.77]   # same pitch-class hues as assets/instruments/_common.PITCH_HUE (C..B)
+def ph(i): r, g, b = colorsys.hsv_to_rgb(PH[i % 7], 0.72, 0.95); return (int(r*255), int(g*255), int(b*255), 255)
+def icon(sec, px):
+    N = px*4; im = Image.new('RGBA', (N, N), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    def P(x, y): return (x*N, y*N)
+    def R(x0, y0, x1, y1, fill, r=0.0, outline=None, w=0): d.rounded_rectangle([x0*N, y0*N, x1*N, y1*N], radius=r*N, fill=fill, outline=outline, width=int(w*N))
+    def E(cx, cy, rx, ry, fill, outline=None, w=0): d.ellipse([(cx-rx)*N, (cy-ry)*N, (cx+rx)*N, (cy+ry)*N], fill=fill, outline=outline, width=int(w*N))
+    def L(pts, fill, w): d.line([P(*p) for p in pts], fill=fill, width=int(w*N), joint='curve')
+    WHITE = (245, 240, 228, 255); DARK = (25, 22, 20, 255); GOLD = (232, 176, 80, 255); STEEL = (200, 206, 216, 255); WOOD = (160, 96, 48, 255)
+    if sec == 1:      # castanets: two shells + cord
+        E(0.40, 0.56, 0.25, 0.25, (120, 50, 25, 255), outline=(60, 20, 10, 255), w=0.02); E(0.60, 0.50, 0.25, 0.25, (176, 82, 40, 255), outline=(70, 25, 12, 255), w=0.02)
+        E(0.60, 0.50, 0.10, 0.10, (150, 66, 30, 255)); d.arc([0.30*N, 0.06*N, 0.62*N, 0.40*N], 180, 360, fill=(220, 40, 40, 255), width=int(0.035*N))
+    elif sec == 2:    # piano keyboard
+        R(0.08, 0.25, 0.92, 0.80, DARK, r=0.04)
+        for i in range(7): R(0.11+i*0.115, 0.28, 0.215+i*0.115, 0.77, WHITE, r=0.015)
+        for i in (0, 1, 3, 4, 5): R(0.19+i*0.115, 0.28, 0.25+i*0.115, 0.56, DARK, r=0.01)
+    elif sec in (3, 5, 8):   # mallet bars: vibraphone (metal + tubes), marimba (wood + long resonators), xylophone (rainbow + mallets)
+        n = 6
+        for i in range(n):
+            x = 0.12 + i*0.13; L_ = 0.50 - i*0.05; y0 = 0.18 + i*0.025
+            col = STEEL if sec == 3 else (WOOD if sec == 5 else ph(i))
+            if sec != 8: R(x+0.025, y0+L_*0.55, x+0.075, y0+L_*0.55 + (0.28 if sec == 5 else 0.18) - i*0.02, GOLD if sec == 3 else (90, 90, 96, 255), r=0.02)
+            R(x, y0, x+0.10, y0+L_*0.6, col, r=0.02, outline=(40, 30, 25, 255), w=0.008)
+        if sec == 8:
+            L([(0.22, 0.95), (0.42, 0.62)], WHITE, 0.025); E(0.42, 0.60, 0.05, 0.05, (220, 60, 60, 255))
+            L([(0.82, 0.95), (0.62, 0.62)], WHITE, 0.025); E(0.62, 0.60, 0.05, 0.05, (220, 60, 60, 255))
+    elif sec == 4:    # tubular bells: frame + graded hanging tubes
+        R(0.08, 0.08, 0.92, 0.14, (110, 80, 40, 255), r=0.02)
+        for i in range(6):
+            x = 0.14 + i*0.125; L_ = 0.78 - i*0.08
+            L([(x+0.035, 0.14), (x+0.035, 0.18)], (80, 70, 60, 255), 0.01)
+            R(x, 0.18, x+0.07, 0.18+L_, GOLD, r=0.02, outline=(120, 80, 30, 255), w=0.008); R(x-0.008, 0.18, x+0.078, 0.22, (200, 140, 50, 255), r=0.01)
+    elif sec == 6:    # kalimba: rounded board + fan of tines
+        R(0.12, 0.12, 0.88, 0.90, (130, 76, 36, 255), r=0.16); E(0.50, 0.75, 0.07, 0.07, DARK)
+        R(0.14, 0.30, 0.86, 0.36, STEEL, r=0.02)
+        n = 9
+        for i in range(n):
+            x = 0.20 + i*0.075; L_ = 0.42 - 0.26*abs(i-(n-1)/2)/((n-1)/2)
+            R(x-0.018, 0.14, x+0.018, 0.14+L_, (225, 230, 238, 255), r=0.015)
+    elif sec == 7:    # flute: long diagonal tube with keys
+        L([(0.08, 0.82), (0.92, 0.18)], STEEL, 0.085); L([(0.08, 0.82), (0.92, 0.18)], (230, 234, 240, 255), 0.03)
+        for i in range(6):
+            t = 0.32 + i*0.09; E(0.08+0.84*t, 0.82-0.64*t, 0.035, 0.035, GOLD, outline=(110, 80, 30, 255), w=0.008)
+        E(0.08+0.84*0.12, 0.82-0.64*0.12, 0.045, 0.028, (160, 166, 176, 255)); E(0.08+0.84*0.12, 0.82-0.64*0.12, 0.018, 0.012, DARK)
+    elif sec == 9:    # ocarina: sweet-potato with mouthpiece + holes
+        d.polygon([P(0.66, 0.40), P(0.94, 0.36), P(0.95, 0.50), P(0.68, 0.56)], fill=(50, 140, 105, 255))
+        E(0.46, 0.55, 0.36, 0.26, (60, 160, 120, 255), outline=(30, 90, 65, 255), w=0.015)
+        for x, y in ((0.26, 0.50), (0.38, 0.45), (0.50, 0.45), (0.62, 0.50)): E(x, y, 0.04, 0.04, (12, 24, 18, 255))
+        R(0.70, 0.40, 0.76, 0.46, (12, 24, 18, 255), r=0.01)
+    elif sec == 10:   # glockenspiel: red case + graded steel bars
+        d.polygon([P(0.06, 0.14), P(0.94, 0.14), P(0.80, 0.88), P(0.20, 0.88)], fill=(200, 30, 30, 255))
+        for i in range(6):
+            y = 0.20 + i*0.11; hw = 0.38 - i*0.045
+            R(0.5-hw, y, 0.5+hw, y+0.075, STEEL, r=0.015, outline=(90, 95, 105, 255), w=0.006)
+            E(0.5-hw+0.04, y+0.037, 0.013, 0.013, GOLD); E(0.5+hw-0.04, y+0.037, 0.013, 0.013, GOLD)
+    elif sec == 11:   # steel pan face-on
+        E(0.5, 0.52, 0.42, 0.42, (150, 156, 168, 255)); E(0.5, 0.52, 0.37, 0.37, (205, 210, 220, 255), outline=(90, 95, 105, 255), w=0.012)
+        E(0.5, 0.52, 0.11, 0.09, (230, 234, 240, 255), outline=(70, 75, 85, 255), w=0.01)
+        for k in range(6):
+            t = k*math.pi/3 + 0.3; E(0.5+0.24*math.cos(t), 0.52+0.22*math.sin(t), 0.075, 0.06, (232, 236, 242, 255), outline=(70, 75, 85, 255), w=0.01)
+    elif sec == 12:   # acoustic guitar
+        R(0.42, 0.06, 0.58, 0.18, (70, 40, 20, 255), r=0.03); R(0.46, 0.16, 0.54, 0.50, (60, 34, 18, 255))
+        for i in range(5): L([(0.46, 0.22+i*0.055), (0.54, 0.22+i*0.055)], (220, 220, 210, 255), 0.006)
+        E(0.50, 0.73, 0.25, 0.22, (210, 130, 50, 255)); E(0.50, 0.49, 0.18, 0.16, (210, 130, 50, 255)); R(0.36, 0.54, 0.64, 0.68, (210, 130, 50, 255))
+        E(0.50, 0.73, 0.25, 0.22, None, outline=(80, 36, 12, 255), w=0.02); E(0.50, 0.49, 0.18, 0.16, None, outline=(80, 36, 12, 255), w=0.02)
+        R(0.37, 0.55, 0.63, 0.67, (210, 130, 50, 255)); E(0.50, 0.57, 0.075, 0.075, (30, 16, 8, 255), outline=(240, 220, 180, 255), w=0.012)
+        R(0.40, 0.80, 0.60, 0.84, (50, 26, 12, 255), r=0.01)
+        for x in (0.47, 0.49, 0.51, 0.53): L([(x, 0.16), (x, 0.82)], (235, 235, 225, 220), 0.004)
+    return im.resize((px, px), Image.LANCZOS)
+
+# ------------------------------------------------------------------ sections from the plan (first hit of each "NN. Name" track)
+P = json.load(open(a.plan)); fps = P['fps']; nfr = len(P['marble'])
+secs = {}
+for k in P['keys']:
+    m = re.match(r'\s*(\d+)\.', k['track'])
+    if not m: continue
+    n = int(m.group(1)); sub = re.search(r'\(([^)]*)\)', k['track'])
+    if n not in secs or k['t'] < secs[n][0]: secs[n] = (k['t'], sub.group(1) if sub else '')
+order = sorted(secs, key=lambda n: secs[n][0])
+
+def title_card(n, sub):
+    zh, en, acc = NAMES[n]; cw, ch = int(820*S), int(196*S)
+    im = Image.new('RGBA', (cw + int(40*S), ch + int(40*S)), (0, 0, 0, 0)); ox = oy = int(20*S)
+    sh = Image.new('RGBA', im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle([ox, oy+int(6*S), ox+cw, oy+ch+int(6*S)], radius=int(40*S), fill=(0, 0, 0, 120))
+    im = Image.alpha_composite(im, sh.filter(ImageFilter.GaussianBlur(10*S))); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([ox, oy, ox+cw, oy+ch], radius=int(40*S), fill=(16, 16, 22, 196), outline=acc + (230,), width=max(2, int(3*S)))
+    isz = int(156*S); d.ellipse([ox+int(18*S), oy+int(20*S), ox+int(18*S)+isz, oy+int(20*S)+isz], fill=(255, 255, 255, 34), outline=acc + (160,), width=max(1, int(2*S)))
+    ic = icon(n, int(124*S)); im.alpha_composite(ic, (ox+int(34*S), oy+int(36*S)))
+    tx = ox + int(200*S)
+    d.text((tx, oy+int(18*S)), f'{n:02d}  ·  {sub}', font=font(False, 26), fill=acc + (235,))
+    fz = font(True, 72); d.text((tx, oy+int(46*S)), zh, font=fz, fill=(255, 255, 255, 255))
+    zw = d.textlength(zh, font=fz); d.text((tx + zw + int(22*S), oy+int(78*S)), en, font=font(True, 40), fill=(235, 235, 240, 235))
+    return im
+
+def corner(n):
+    zh, en, acc = NAMES[n]; f1, f2 = font(True, 30), font(False, 24)
+    tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1))); w = int(64*S + tmp.textlength(f'{n:02d}', font=f2) + 14*S + tmp.textlength(zh, font=f1) + 12*S + tmp.textlength(en, font=f2) + 26*S); h = int(56*S)
+    im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, w-1, h-1], radius=h//2, fill=(16, 16, 22, 170), outline=acc + (200,), width=max(1, int(2*S)))
+    im.alpha_composite(icon(n, int(44*S)), (int(10*S), int(6*S))); x = int(62*S)
+    d.text((x, int(12*S)), f'{n:02d}', font=f2, fill=acc + (255,)); x += int(tmp.textlength(f'{n:02d}', font=f2) + 14*S)
+    d.text((x, int(6*S)), zh, font=f1, fill=(255, 255, 255, 255)); x += int(tmp.textlength(zh, font=f1) + 12*S)
+    d.text((x, int(12*S)), en, font=f2, fill=(225, 225, 232, 235))
+    return im
+
+CARD = {n: title_card(n, secs[n][1]) for n in order}; PILL = {n: corner(n) for n in order}
+CARD_XY = (int(28*S), int(214*S)); PILL_XY = (int(48*S), int(222*S))
+def state(f):
+    t = f / fps; cur = None
+    for n in order:
+        if secs[n][0] <= t + 1e-6: cur = n
+    if cur is None: return (None, 0, 0)
+    dt = t - secs[cur][0]
+    ca = min(1, dt/FIN) if dt < FIN else (1 if dt < FIN+HOLD else max(0, 1-(dt-FIN-HOLD)/FOUT))
+    pa = 0 if a.no_corner else 0.8*min(1, max(0, (dt-FIN-HOLD-FOUT*0.5)/0.4))      # pill fades in as the card leaves
+    q = lambda v: round(v*20)/20
+    return (cur, q(ca), q(pa))
+def overlay(st):
+    n, ca, pa = st; im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    if n is None: return im
+    for src, al, xy in ((CARD[n], ca, CARD_XY), (PILL[n], pa, PILL_XY)):
+        if al <= 0: continue
+        s = src.copy(); s.putalpha(s.getchannel('A').point(lambda v: int(v*al))); y = xy[1] + (int((1-al)*-18*S) if src is CARD[n] else 0)
+        im.alpha_composite(s, (xy[0], max(0, y)))
+    return im
+
+if a.still >= 0:
+    st = state(a.still); st = (st[0], max(st[1], 1.0 if st[2] == 0 else st[1]), st[2]); ov = overlay(st)
+    bg = Image.open(a.bg).convert('RGBA').resize((W, H)) if a.bg else Image.new('RGBA', (W, H), (90, 90, 90, 255))
+    out = Image.alpha_composite(bg, ov); out.convert('RGB').save(a.png or 'title_still.png'); print('wrote', a.png or 'title_still.png', st); sys.exit()
+os.makedirs(a.out, exist_ok=True); end = (a.end if a.end >= 0 else nfr-1); cache = {}
+for f in range(a.start, end+1):
+    st = state(f); fn = os.path.join(a.out, f'{f:05d}.png')
+    if os.path.exists(fn): os.remove(fn)
+    if st in cache: os.link(cache[st], fn)
+    else: overlay(st).save(fn, optimize=False, compress_level=3); cache[st] = fn
+print('overlay frames', a.start, '-', end, 'unique', len(cache), '->', a.out)
+for n in order: print(f'  section {n:02d} {NAMES[n][0]} {NAMES[n][1]} at {secs[n][0]:.2f}s (frame {round(secs[n][0]*fps)})')

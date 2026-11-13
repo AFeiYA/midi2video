@@ -3,7 +3,7 @@ Look overrides: an instrument folder may contain a sub-folder named after a look
 build.py / material.py / meta.json / probe_*.npy; it replaces the base asset for that look only (base = v3, untouched)."""
 import os, json, re
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOOK_ORDER = ['v3', 'v4']
+LOOK_ORDER = ['v3', 'v4', 'v5']
 def metas(look='v3'):
     out = {}
     for d in sorted(os.listdir(HERE)):
@@ -37,6 +37,8 @@ def assign(keys, M=None):
         t = k['track'].lower()
         m = next((m for m in order if re.search(m['tracks_regex'], t)), None) or (M['castanets'] if k.get('drum') else M['piano'])
         j = count.get(k['track'], 0); count[k['track']] = j + 1
-        v = m['variants'][j % len(m['variants'])] if m['variant_rule'] == 'alternate' else m['variants'][0]
+        if m['variant_rule'] == 'alternate': v = m['variants'][j % len(m['variants'])]
+        elif m['variant_rule'] == 'pitch': v = 'black' if int(k['note']) % 12 in (1, 3, 6, 8, 10) else 'white'   # v5 piano: shape follows the note
+        else: v = m['variants'][0]
         out.append((m['name'], v, j))
     return out

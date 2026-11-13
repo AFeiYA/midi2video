@@ -9,7 +9,7 @@ argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.add_argument('--out',default='frames/')
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
-ap.add_argument('--look',default='v4',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash)')
+ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays)')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
@@ -72,9 +72,10 @@ FLASH={'rosewood':(1.0,0.55,0.25),'ivory':(1.0,0.85,0.55),'alu':(0.45,0.7,1.0),'
        'kalimba':(0.75,0.9,1.0),'silver':(0.85,0.9,1.0),'rainbow':(1.0,0.95,0.85),'ceramic':(1.0,0.65,0.4),'steel':(0.55,0.8,1.0),
        'chrome':(1.0,0.85,0.4),'spruce':(1.0,0.78,0.45),'metal':(0.45,0.7,1.0),'wood':(1.0,0.6,0.3)}
 import colorsys
-V2=(a.look in ('v2','v3','v4'))
-V3=(a.look in ('v3','v4'))
-V4=(a.look=='v4')
+LOOKN=int(a.look.lstrip('v'))
+V2=(LOOKN>=2)
+V3=(LOOKN>=3)
+V4=(LOOKN>=4)   # v4 behaviour (kept material slots, override assets, hanging parts) also applies to v5+
 PIANO_IDX={}
 for _k in P['keys']:
     if 'piano' in _k['track'].lower(): PIANO_IDX[_k['i']]=len(PIANO_IDX)
@@ -127,15 +128,19 @@ if V3:
     import os as _os
     sys.path.insert(0,_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'assets','instruments'))
     import _common as AC, library as ALIB
-    _AM=ALIB.metas('v4' if V4 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}
+    _AM=ALIB.metas(a.look if V3 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}
     for (an,av,_j) in sorted(set(_ASG)):
         if an not in _MODS:
             _MODS[an]=AC.load_asset(_AM[an]['_dir']); _SH[an]=_MODS[an][2].shared(AC)
             for hi,h in enumerate(_AM[an].get('hanging',[])):   # world-vertical parts (e.g. resonator tubes): top at origin, hanging along -Z
                 tb=AC.prim('cyl',0,loc=(0,0,-h['length']/2),scale=(h['radius'],h['radius'],h['length']),verts=40)
                 AC.cut(tb,AC.prim('cyl',1,loc=(0,0,0),scale=(h['inner'],h['inner'],0.12),verts=40))
-                AC.set_slots(tb.data,[_SH[an][h['role']],_SH[an].get('dark',pinm)])
-                while len(tb.data.materials)>2: tb.data.materials.pop(index=len(tb.data.materials)-1)
+                hm=[_SH[an][h['role']],_SH[an].get('dark',pinm)]
+                if h.get('cap_role'):                              # v5: crown cap at the top of a chime tube
+                    cap=AC.prim('cyl',2,loc=(0,0,-0.018),scale=(h['radius']*1.3,h['radius']*1.3,0.036),verts=40)
+                    tb=AC.join([tb,cap],f'hang_{an}_{hi}'); hm.append(_SH[an][h['cap_role']])
+                AC.set_slots(tb.data,hm)
+                while len(tb.data.materials)>len(hm): tb.data.materials.pop(index=len(tb.data.materials)-1)
                 _HANG[(an,hi)]=tb.data; bpy.data.objects.remove(tb,do_unlink=True)
         meta,bmod,mmod=_MODS[an]; t=AC.make_asset(meta,bmod,av,f'tmpl_{an}_{av}',keep_slots=V4); me=t.data   # v3 kept the join-collapsed slots
         AC.set_slots(me,[pinm if role=='pin' else (mmod.body(AC,f'{an}_{av}_placeholder',0,60,None) if role=='body' else _SH[an][role]) for role in meta['slots']])

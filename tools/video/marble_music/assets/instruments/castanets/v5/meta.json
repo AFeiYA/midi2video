@@ -1,0 +1,92 @@
+{
+ "name": "castanets",
+ "section": 1,
+ "tracks_regex": "castanet",
+ "description": "v5: open clam pair of lacquered rosewood castanets seen face-on (front shell is the striker, its crown flush with the contact face; second shell sits behind the marble plane), dark rims, ears joined by a red cord loop.",
+ "slots": [
+  "body",
+  "dark",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.55,
+  0.25
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.05,
+   "z": -0.15,
+   "y_start": 0.24,
+   "radius": 0.022
+  },
+  {
+   "x": 0.25,
+   "z": -0.15,
+   "y_start": 0.24,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.2289000004529953,
+     -0.07000000029802322,
+     -0.3230000138282776
+    ],
+    [
+     0.30300000309944153,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.17000000178813934,
+     -0.07000000029802322,
+     -0.32019999623298645
+    ],
+    [
+     0.29989999532699585,
+     0.1550000011920929,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 27184,
+   "triangles": 5028
+  }
+ }
+}

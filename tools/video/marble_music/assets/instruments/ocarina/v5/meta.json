@@ -1,0 +1,91 @@
+{
+ "name": "ocarina",
+ "section": 9,
+ "tracks_regex": "ocarina",
+ "description": "v5: larger saturated-celadon sweet-potato ocarina (crown flush with the contact face) with a rounded tail, four big near-black finger holes on the camera-facing face, a dark labium window and a protruding mouthpiece with windway behind the marble plane.",
+ "slots": [
+  "body",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.7,
+  1.0,
+  0.8
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.1,
+   "z": -0.08,
+   "y_start": 0.12,
+   "radius": 0.022
+  },
+  {
+   "x": 0.1,
+   "z": -0.08,
+   "y_start": 0.12,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.14509999752044678,
+     -0.20499999821186066
+    ],
+    [
+     0.4399999976158142,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.14509999752044678,
+     -0.20499999821186066
+    ],
+    [
+     0.4253000020980835,
+     0.1550000011920929,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 25962,
+   "triangles": 3564
+  }
+ }
+}

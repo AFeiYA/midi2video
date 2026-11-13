@@ -1,0 +1,94 @@
+{
+ "name": "glockenspiel",
+ "section": 10,
+ "tracks_regex": "glock",
+ "description": "v5: struck polished-steel bar on top of a red lacquered trapezoid case that holds four more graded steel bars with brass screws (case and lower bars behind the marble plane).",
+ "slots": [
+  "body",
+  "wood",
+  "screw",
+  "felt",
+  "bars",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.55,
+  0.8,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.2,
+   "z": -0.2,
+   "y_start": 0.27,
+   "radius": 0.022
+  },
+  {
+   "x": 0.2,
+   "z": -0.2,
+   "y_start": 0.27,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3361000120639801,
+     -0.15000000596046448,
+     -0.4399999976158142
+    ],
+    [
+     0.3361000120639801,
+     0.3100000023841858,
+     0.05999999865889549
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.2240000069141388,
+     -0.024000000208616257,
+     -0.375900000333786
+    ],
+    [
+     0.2240000069141388,
+     0.1550000011920929,
+     0.052000001072883606
+    ]
+   ],
+   "probe_points": 50068,
+   "triangles": 2100
+  }
+ }
+}

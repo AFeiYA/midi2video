@@ -2,7 +2,15 @@
 
 参考：Virtual 3D《iPhone Ringtone - Marble Music》。弹珠在左右交替的斜挡板之间来回碰撞下落，每次碰撞精确落在一个 MIDI 音符的帧上。
 
-当前默认外观是 **v4**（v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架）。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
+当前默认外观是 **v5**（“一眼认出乐器”版）：
+
+- **乐器轮廓**：在弹珠平面之后（y>0.155，弹珠永远碰不到的区域）加了大块可辨认的轮廓：吉他琴身+音孔+琴颈+琴头、卡林巴长短不一的扇形琴键+木板、钢鼓正面圆盘和音区凹坑、管钟竖直悬挂的 5 根铜管、钟琴红色梯形琴箱+多根钢条、陶笛加大的红薯形+吹口、长笛的笛头和笛尾、响板成对的贝壳。
+- **琴键**：木琴的琴条按音名着色（C 红、D 橙、E 黄、F 绿、G 青、A 蓝、B 紫；升降音用更暗、更灰的中间色）。钢琴保持真实外观，按每个音符的音名决定：自然音（C D E F G A B）是象牙白键，升降音是乌木黑键，保留红色毛毡点缀。Jingle Bells 钢琴段 22 个音全是自然音，所以都是白键。白键后面还有两块乌木黑键短块，让 C 大调旋律看起来仍是键盘。
+- **乐器名字幕**：每个旋律段 01–12 开始时，顶部淡入标题卡（程序化绘制的乐器图标、中文名+英文名、段落号），停留约 1.6 秒后淡出。之后左上角一直显示小标签（如 `05 马林巴 Marimba`），中途进入或 Shorts 循环播放的观众也知道当前是什么乐器。字幕是后期合成层（`titles.py` + `composite.sh`），改文字不用重渲。
+
+弹珠接触面几何不变，禁入检查 0 违规，新增的击打件之间互碰检查 `check_pairs.py` 也没有新的冲突。
+
+`--look v4` 是 v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
 
 > 规划器和场景脚本不再写死机器路径。MIDI、输出目录用参数传入；Blender 用环境变量 `BLENDER`；计算设备用 `--device` 或 `MARBLE_DEVICE`。
 
@@ -10,7 +18,7 @@
 
 在仓库根目录操作（克隆见文末快速开始）。需要：
 
-- **Python 3**：`pip install mido numpy pillow matplotlib`
+- **Python 3**：`pip install mido numpy pillow matplotlib scipy`（`scipy` 只有 `check_pairs.py` 要用）
 - **Blender 4.2+**（ macOS 安装后一般是 `/Applications/Blender.app/Contents/MacOS/Blender`）
   - 本管线在 **Blender 4.2.3 LTS** 上开发并验证。
   - **Blender 5.x**（例如本机的 5.3）可以用来渲染：程序化建场景，不依赖 4.2 的 `.blend` 缓存。注意下面的兼容说明。
@@ -34,7 +42,7 @@ brew install python ffmpeg fluid-synth
 | `MARBLE_DEVICE` | Cycles 设备：`AUTO`/`GPU`/`CPU`/`METAL`/`CUDA`/`OPTIX`/`HIP` | `AUTO`（`GPU` 等同 `AUTO`：先 Metal，再 OptiX/CUDA/HIP，没有则回退 CPU） |
 | `SF2` | Soundfont 路径 | `tools/video/marble_music/GeneralUser.sf2` |
 | `PY` | Python 解释器 | `python3` |
-| `LOOK` | 仅 `run_marble.sh`：外观版本 | `v4` |
+| `LOOK` | 仅 `run_marble.sh`：外观版本 | `v5` |
 
 ### Blender 5.x 兼容说明
 
@@ -52,12 +60,13 @@ brew install python ffmpeg fluid-synth
 
 1. **提取击打点** `extract_hits.py`：读 MIDI，建立 tempo map，只取 `01.`–`12.` 主旋律轨（13–16 伴奏只出声不出画），60ms 内叠音合并为一次击打（取最高音）。
 2. **逆向规划轨迹** `plan_zigzag.py`：先定时间再反推几何；左右交替挡板；段间是抛物线；挡板法线为入射反向与出射方向的角平分线。全曲规划约 0 次穿模。
-3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3/v4 必做，按 `--look` 读取对应外观的资产，`--strict` 有违规会退出；v4 的竖直共鸣管也会一起检查）。
+3. **禁入检查** `check_keepout.py`：用资产库表面采样点检查装饰几何、销钉是否侵入弹道（v3 及以后必做，按 `--look` 读取对应外观的资产，`--strict` 有违规会退出；竖直悬挂件也会一起检查）。v5 再跑 `check_pairs.py`，检查击打件之间（含悬挂铜管）是否小于 1 cm（目前只报出一对 v4 起就有的马林巴共鸣管，间距 9 mm，没有碰到）。
 4. **渲 12 张乐器静帧**（材质/外形确认）：帧号为各段落中段的击打帧。
 5. **渲 15 秒小样**，再合成音频、出接触点拼图。
 6. **全曲渲染**（可断点续渲，已有帧会跳过），然后 `mux.sh` 合成。
+7. **v5 字幕合成**：`titles.py` 生成每帧 RGBA 字幕层，`composite.sh` 把渲染帧、字幕层和对应时段的音频合成为成片。`run_zigzag.sh` 在 v5 下会自动做，输出 `*_titled.mp4`。
 
-规划器可调参数：`--g` 重力，`--half-gap` 左右间距，`--drop-rate` 最大下落速度，`--frac` 弹跳高度系数（越小越平），`--frame-margin` 镜头跟随裕度（v2/v3/v4 用 0.8）。
+规划器可调参数：`--g` 重力，`--half-gap` 左右间距，`--drop-rate` 最大下落速度，`--frac` 弹跳高度系数（越小越平），`--frame-margin` 镜头跟随裕度（v2 及以后用 0.8）。
 
 ## 3. 具体命令
 
@@ -81,7 +90,9 @@ python3 tools/video/marble_music/plan_zigzag.py \
   work/hits.json --fps 30 --frame-margin 0.8 -o work/plan_zz_v2.json
 
 python3 tools/video/marble_music/check_keepout.py \
-  work/plan_zz_v2.json --look v4 --out work/keepout_report_v4.json --strict
+  work/plan_zz_v2.json --look v5 --out work/keepout_report_v5.json --strict
+python3 tools/video/marble_music/check_pairs.py \
+  work/plan_zz_v2.json --look v5 --out work/pairs_report_v5.json
 
 # 自动挑 12 张静帧的帧号（打印每段的画面内击打件数和最后一行逗号分隔的帧列表）
 python3 tools/video/marble_music/select_stills.py work/plan_zz_v2.json
@@ -94,16 +105,21 @@ python3 tools/video/marble_music/select_stills.py work/plan_zz_v2.json
 帧号由 `select_stills.py work/plan_zz_v2.json` 自动挑选：每个乐器段落里画面内同乐器击打件最多、弹珠在画面中上部的击打帧（避开长距离下落）：响板 92、钢琴 230、电颤琴 597、管钟 928、马林巴 1341、卡林巴 1772、长笛 2089、木琴 2677、陶笛 3233、钟琴 3572、钢鼓 4427、吉他 4734。（v3 用的是旧的中段帧 73,257,597,1010,1460,1763,2186,2654,3086,3655,4280,4895。）
 
 ```bash
-mkdir -p work/stills_v4
+mkdir -p work/stills_v5
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v4 \
+  --look v5 \
   --plan work/plan_zz_v2.json \
-  --out work/stills_v4 \
+  --out work/stills_v5 \
   --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
   --samples 12 --res 1080x1920 --device "${MARBLE_DEVICE:-GPU}"
 
 python3 tools/video/marble_music/instrument_sheet.py \
-  work/plan_zz_v2.json work/stills_v4 work/instrument_stills_v4.png \
+  work/plan_zz_v2.json work/stills_v5 work/instrument_stills_v5.png \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
+
+# v4 / v5 对比（先按同样参数把 v4 渲到 work/stills_v4）
+python3 tools/video/marble_music/compare_sheet.py \
+  work/plan_zz_v2.json work/stills_v4 work/stills_v5 work/instrument_stills_v4_vs_v5.png v4 v5 \
   --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734
 ```
 
@@ -111,7 +127,7 @@ python3 tools/video/marble_music/instrument_sheet.py \
 
 ```bash
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v4 --plan work/plan_zz_v2.json --out work/stills_v4 \
+  --look v5 --plan work/plan_zz_v2.json --out work/stills_v5 \
   --frames 230 --samples 4 --res 540x960 --device "${MARBLE_DEVICE:-GPU}"
 ```
 
@@ -121,14 +137,14 @@ python3 tools/video/marble_music/instrument_sheet.py \
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
-  0 15 30 12 1080x1920 v4 "${MARBLE_DEVICE:-GPU}"
-# 输出：.../om_zigzag_0_15/marble_zigzag_v4_0_15.mp4
+  0 15 30 12 1080x1920 v5 "${MARBLE_DEVICE:-GPU}"
+# 输出：.../om_zigzag_0_15/marble_zigzag_v5_0_15.mp4（无字幕）和 marble_zigzag_v5_0_15_titled.mp4（带字幕）
 ```
 
-或用旧入口（第 8 个参数仍是设备；外观用 `LOOK=v4`，默认就是 v4）：
+或用旧入口（第 8 个参数仍是设备；外观用 `LOOK=v5`，默认就是 v5）：
 
 ```bash
-LOOK=v4 tools/video/marble_music/run_marble.sh \
+LOOK=v5 tools/video/marble_music/run_marble.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
   0 15 30 12 1080x1920 "${MARBLE_DEVICE:-GPU}"
@@ -141,29 +157,55 @@ LOOK=v4 tools/video/marble_music/run_marble.sh \
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_full \
-  0 176.3 30 12 1080x1920 v4 "${MARBLE_DEVICE:-GPU}"
+  0 176.3 30 12 1080x1920 v5 "${MARBLE_DEVICE:-GPU}"
 
 # 或后台启动 / 续渲
-tools/video/marble_music/resume_full.sh v4
-# 日志：projects/jingle-bells-marble-music/om_zigzag_full/render_v4.log
+tools/video/marble_music/resume_full.sh v5
+# 日志：projects/jingle-bells-marble-music/om_zigzag_full/render_v5.log
 ```
 
 若只想把已渲好的帧和音频合成（默认 `render_audio.sh` 会在流水线里自动做）：
 
 ```bash
 tools/video/marble_music/mux.sh \
-  projects/jingle-bells-marble-music/om_zigzag_full/frames_zz_v4 \
+  projects/jingle-bells-marble-music/om_zigzag_full/frames_zz_v5 \
   projects/jingle-bells-marble-music/om_zigzag_full/audio.wav \
   30 \
-  projects/jingle-bells-marble-music/om_zigzag_full/marble_zigzag_v4_0_176.3.mp4
+  projects/jingle-bells-marble-music/om_zigzag_full/marble_zigzag_v5_0_176.3.mp4
 ```
+
+### 3.5 v5 字幕层（标题卡 + 角标），后期合成
+
+字幕不进 Blender，单独生成一层 RGBA PNG（编号和渲染帧一致，`%05d.png`），再用 ffmpeg `overlay` 叠上去。改文字、时长、位置只需重跑下面两步，不用重渲。
+
+```bash
+# 全曲字幕层：约 7 秒，5290 帧里只有约 300 张不同的图，其余用硬链接，约 19 MB
+python3 tools/video/marble_music/titles.py work/plan_zz_v2.json work/overlay_v5
+#   --start/--end 帧范围；--no-corner 关掉左上角常驻小标签；--res 默认 1080x1920
+
+# 看一帧效果：把第 1925 帧（长笛段开头）的字幕叠在一张渲染图上
+python3 tools/video/marble_music/titles.py work/plan_zz_v2.json --still 1925 \
+  --bg work/stills_v5/02089.png --png work/title_card_still.png
+
+# 合成：渲染帧（任意分辨率，会用 lanczos 放大到字幕层尺寸）+ 字幕层 + 对应时段音频
+#   composite.sh FRAMES_DIR OVERLAY_DIR AUDIO.wav FPS START_FRAME OUT.mp4
+#   audio.wav 要从 t=0 开始的整曲音频，脚本会按 START_FRAME/FPS 裁剪
+tools/video/marble_music/composite.sh \
+  projects/jingle-bells-marble-music/om_zigzag_full/frames_zz_v5 work/overlay_v5 \
+  projects/jingle-bells-marble-music/om_zigzag_full/audio.wav 30 0 work/marble_v5_titled.mp4
+```
+
+- **时间**：每段第一个击打时刻开始，淡入 0.3 秒，停 1.6 秒，淡出 0.4 秒。之后左上角显示小标签（不透明度 0.8）。
+- **安全区（9:16 / YouTube Shorts）**：全部内容在 x∈[48, 900]、y∈[210, 430] 像素（以 1080×1920 计），避开顶部约 10%（192 px）、底部约 20%（384 px）和右侧约 15% 的按钮栏。
+- **字体**：Noto Sans CJK SC 粗体和常规体，SIL Open Font License 1.1。仓库里只放了用到的字形子集 `fonts/NotoSansSC-{Bold,Regular}-subset.otf`（约 64 KB，许可证见 `fonts/OFL.txt`、`fonts/README.txt`）。改了 `titles.py` 里的乐器名后，用 `fonts/make_subset.sh` 重新生成子集（需要 `pip install fonttools` 和完整的 Noto Sans CJK 字体），或用 `--font-bold/--font-regular` 指定其他字体。
+- **图标**：12 个乐器图标全部用 PIL 在 `titles.py` 里程序化绘制，没有第三方图片。
 
 ## 4. 做法说明（4 步）
 
 1. **提取击打点** `extract_hits.py` — 见上文。
 2. **逆向规划轨迹** `plan_zigzag.py` — 向量化碰撞检测；输出每帧弹珠位置、挡板位姿、相机路径到 `plan_zz_v2.json`。
-3. **Blender 渲染** `scene.py` — 程序化建场景：灰墙、翡翠绿玻璃弹珠、柔光；v3/v4 从 `assets/instruments/` 实例化 12 种击打件（v4 优先用 `<乐器>/v4/` 里的覆盖版本，共鸣管作为世界坐标竖直的悬挂件单独生成）；击打帧挡板下沉 + 边缘闪光；相机平滑下摇。Cycles + OIDN + 运动模糊 + AgX。已存在且大于 1KB 的帧自动跳过。
-4. **音频与合成** `render_audio.sh` + `mux.sh` — FluidSynth + GeneralUser GS 把整份 MIDI（全部 17 轨）合成 48k WAV 并裁到同一时间窗；ffmpeg 合成 H.264 + AAC。
+3. **Blender 渲染** `scene.py` — 程序化建场景：灰墙、翡翠绿玻璃弹珠、柔光；v3 及以后从 `assets/instruments/` 实例化 12 种击打件（`--look vN` 会选不超过 N 的最新覆盖版本 `<乐器>/vN/`；共鸣管和管钟铜管作为世界坐标竖直的悬挂件单独生成）；击打帧挡板下沉 + 边缘闪光；相机平滑下摇。Cycles + OIDN + 运动模糊 + AgX。已存在且大于 1KB 的帧自动跳过。
+4. **音频与合成** `render_audio.sh` + `mux.sh` — FluidSynth + GeneralUser GS 把整份 MIDI（全部 17 轨）合成 48k WAV 并裁到同一时间窗；ffmpeg 合成 H.264 + AAC。v5 再用 `titles.py` + `composite.sh` 叠字幕层。
 
 升级路线和特效规划见同目录 `UPGRADE_PLAN.md`。历史脚本 `scene_zigzag.py` 是最早的 v1 快照，新流程请用 `scene.py`。
 
@@ -172,7 +214,7 @@ tools/video/marble_music/mux.sh \
 ```bash
 git clone https://github.com/AFeiYA/midi2video.git
 cd midi2video
-pip install mido numpy pillow matplotlib
+pip install mido numpy pillow matplotlib scipy
 brew install ffmpeg fluid-synth
 # 下载 GeneralUser GS 为 tools/video/marble_music/GeneralUser.sf2
 # https://schristiancollins.com/generaluser.php
@@ -187,12 +229,14 @@ python3 tools/video/marble_music/extract_hits.py \
 python3 tools/video/marble_music/plan_zigzag.py \
   work/hits.json --fps 30 --frame-margin 0.8 -o work/plan_zz_v2.json
 python3 tools/video/marble_music/check_keepout.py \
-  work/plan_zz_v2.json --look v4 --out work/keepout_report_v4.json --strict
+  work/plan_zz_v2.json --look v5 --out work/keepout_report_v5.json --strict
+python3 tools/video/marble_music/check_pairs.py \
+  work/plan_zz_v2.json --look v5 --out work/pairs_report_v5.json
 
 # 12 张乐器静帧
-mkdir -p work/stills_v4
+mkdir -p work/stills_v5
 "$BLENDER" -b -P tools/video/marble_music/scene.py -- \
-  --look v4 --plan work/plan_zz_v2.json --out work/stills_v4 \
+  --look v5 --plan work/plan_zz_v2.json --out work/stills_v5 \
   --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
   --samples 12 --res 1080x1920 --device GPU
 
@@ -200,5 +244,6 @@ mkdir -p work/stills_v4
 tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle.mid \
   projects/jingle-bells-marble-music/om_zigzag_0_15 \
-  0 15 30 12 1080x1920 v4 GPU
+  0 15 30 12 1080x1920 v5 GPU
+# 带字幕的成片：.../om_zigzag_0_15/marble_zigzag_v5_0_15_titled.mp4
 ```

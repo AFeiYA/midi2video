@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Start/resume a long render in the background. Already-rendered frames are skipped by scene.py.
-# usage: resume_full.sh [LOOK=v4] [MIDI] [OUT_DIR] [START] [END] [FPS] [SAMPLES] [RES] [DEVICE]
+# usage: resume_full.sh [LOOK=v5] [MIDI] [OUT_DIR] [START] [END] [FPS] [SAMPLES] [RES] [DEVICE]
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../../.." && pwd)"
-LOOK=${1:-v4}
+LOOK=${1:-v5}
 MIDI=${2:-$ROOT/projects/jingle-bells-marble-music/source/jingle.mid}
 OUT=${3:-$ROOT/projects/jingle-bells-marble-music/om_zigzag_full}
 S=${4:-0}; E=${5:-176.3}; FPS=${6:-30}; SPP=${7:-12}; RES=${8:-1080x1920}

@@ -1,0 +1,155 @@
+{
+ "name": "tubular_bells",
+ "section": 4,
+ "tracks_regex": "tubular",
+ "description": "v5: polished brass hanging rail (the striker) with five graded brass chime tubes with crown caps hanging straight down in world space behind the marble plane, like a real tubular-bell frame.",
+ "slots": [
+  "body",
+  "tube",
+  "dark",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.75,
+  0.35
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "hanging": [
+  {
+   "attach": [
+    -0.24,
+    0.215,
+    0.0
+   ],
+   "radius": 0.032,
+   "inner": 0.024,
+   "length": 0.52,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    -0.12,
+    0.215,
+    0.0
+   ],
+   "radius": 0.032,
+   "inner": 0.024,
+   "length": 0.47,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.0,
+    0.215,
+    0.0
+   ],
+   "radius": 0.032,
+   "inner": 0.024,
+   "length": 0.42,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.12,
+    0.215,
+    0.0
+   ],
+   "radius": 0.032,
+   "inner": 0.024,
+   "length": 0.37,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.24,
+    0.215,
+    0.0
+   ],
+   "radius": 0.032,
+   "inner": 0.024,
+   "length": 0.32,
+   "role": "tube",
+   "cap_role": "cap"
+  }
+ ],
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.32199999690055847,
+     -0.06499999761581421,
+     -0.0020000000949949026
+    ],
+    [
+     0.32199999690055847,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     0.05000000074505806,
+     0.0007999999797903001
+    ],
+    [
+     0.32199999690055847,
+     0.1542000025510788,
+     0.03909999877214432
+    ]
+   ],
+   "probe_points": 11592,
+   "triangles": 740
+  }
+ }
+}

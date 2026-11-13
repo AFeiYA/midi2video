@@ -1,0 +1,111 @@
+{
+ "name": "piano",
+ "section": 2,
+ "tracks_regex": "piano",
+ "description": "v5: realistic piano keys chosen per note from its pitch class - naturals (C D E F G A B) are bevelled ivory white keys, sharps/flats the taller tapered glossy ebony black-key shape; glossy ebony key-bed rail with red felt, and two ebony black-key stubs behind the marble plane on each white key so a C-major melody still reads as a keyboard.",
+ "slots": [
+  "body",
+  "rail",
+  "felt",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.55
+ ],
+ "variants": [
+  "white",
+  "black"
+ ],
+ "variant_rule": "pitch",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "white": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.33000001311302185,
+     -0.1599999964237213,
+     -0.06499999761581421
+    ],
+    [
+     0.33000001311302185,
+     0.3100000023841858,
+     0.06499999761581421
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 30960,
+   "triangles": 526
+  },
+  "black": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.33000001311302185,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.33000001311302185,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.3100000023841858,
+     0.10999999940395355,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 24602,
+   "triangles": 378
+  }
+ }
+}

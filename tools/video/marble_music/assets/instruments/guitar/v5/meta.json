@@ -1,0 +1,99 @@
+{
+ "name": "guitar",
+ "section": 12,
+ "tracks_regex": "guitar",
+ "description": "v5: six black-coated strings (the striker, flush with the contact face, flash on hit) over a sunburst guitar body seen face-on behind the marble plane - lower and upper bouts with cream binding, waist, dark sound hole with rosette, rosewood bridge with bone saddle and nut - plus a rosewood fingerboard neck with frets and a headstock with six tuning pegs.",
+ "slots": [
+  "body",
+  "strings",
+  "bridge",
+  "dark",
+  "bone",
+  "fret",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.45
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": 0.12,
+   "z": -0.12,
+   "y_start": 0.25,
+   "radius": 0.022
+  },
+  {
+   "x": -0.2,
+   "z": -0.12,
+   "y_start": 0.25,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "flash_slots": [
+  "body",
+  "strings"
+ ],
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04219,
+   "bbox": [
+    [
+     -0.7749999761581421,
+     -0.11999999731779099,
+     -0.22599999606609344
+    ],
+    [
+     0.34599998593330383,
+     0.3100000023841858,
+     0.22599999606609344
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3109999895095825,
+     -0.10999999940395355,
+     0.004999999888241291
+    ],
+    [
+     -0.3102000057697296,
+     0.15479999780654907,
+     0.03500000014901161
+    ]
+   ],
+   "probe_points": 48650,
+   "triangles": 4202
+  }
+ }
+}

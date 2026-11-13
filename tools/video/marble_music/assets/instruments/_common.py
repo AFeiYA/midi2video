@@ -164,3 +164,18 @@ def surface_points(o, spacing=0.006):
     idx = np.repeat(np.arange(len(T)), n); u = rng.random(len(idx)); v = rng.random(len(idx)); s = u+v > 1; u[s] = 1-u[s]; v[s] = 1-v[s]
     P = a[idx] + u[:,None]*(b[idx]-a[idx]) + v[:,None]*(c[idx]-a[idx])
     ev.to_mesh_clear(); return np.vstack([P, V]).astype(np.float32)
+
+
+# ---------- v5: one pitch-class colour scheme shared by every pitched rainbow instrument (piano, xylophone)
+import colorsys as _cs
+PITCH_HUE = {0:0.0, 2:0.08, 4:0.15, 5:0.33, 7:0.5, 9:0.62, 11:0.77}   # C red, D orange, E yellow, F green, G cyan, A blue, B violet
+SHARPS = (1, 3, 6, 8, 10)
+def pitch_hue(note):
+    pc = int(note) % 12
+    if pc in PITCH_HUE: return PITCH_HUE[pc]
+    a, b = PITCH_HUE[pc-1], PITCH_HUE.get(pc+1, 1.0)
+    return (a + b) / 2                                                      # sharp: halfway between its neighbours
+def pitch_rgb(note, s=0.95, v=0.6):
+    """naturals: saturated rainbow; sharps: darker, desaturated variant of the in-between hue."""
+    if int(note) % 12 in SHARPS: s, v = s*0.65, v*0.45
+    return _cs.hsv_to_rgb(pitch_hue(note), s, v)
