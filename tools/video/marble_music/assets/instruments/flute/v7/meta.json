@@ -2,18 +2,19 @@
  "name": "flute",
  "section": 7,
  "tracks_regex": "flute",
- "description": "v7: one continuous sterling-silver flute at the striker angle (head + body + foot in the same plane). The tube itself is the hit surface; top flush with the contact face. No behind-plane aligned head, no board.",
+ "description": "v7: a thin silver flute stands perpendicular to the wall (axis along local +Y) as the only mount (no side pins). A small maple striker board (planner 0.62 x 0.09 face, top at z=+0.045) is mounted on the flute's front end so the contact point and normal match the planner. Gold keys, a lip plate and tone holes sit on the tube in the backplate zone; a wall flange marks the far end.",
  "slots": [
   "body",
+  "tube",
   "pad",
   "rod",
   "pin"
  ],
  "flash_slot": "body",
  "flash_color": [
-  0.85,
-  0.9,
-  1.0
+  1.0,
+  0.72,
+  0.4
  ],
  "variants": [
   "default"
@@ -39,20 +40,7 @@
   ],
   "note": "marble centre at hit = point + normal*R"
  },
- "pins": [
-  {
-   "x": -0.18,
-   "z": -0.02,
-   "y_start": 0.07,
-   "radius": 0.022
-  },
-  {
-   "x": 0.18,
-   "z": -0.02,
-   "y_start": 0.07,
-   "radius": 0.022
-  }
- ],
+ "pins": [],
  "scale": 1.0,
  "license": "CC0-1.0 (original procedural geometry, written for this project)",
  "author": "procedural (marble pipeline)",
@@ -60,33 +48,33 @@
  "look": "v7",
  "measured": {
   "default": {
-   "contact_top_z_at_origin": 0.04491,
+   "contact_top_z_at_origin": 0.045,
    "bbox": [
     [
-     -0.33799999952316284,
-     -0.07750000059604645,
-     -0.09099999815225601
+     -0.3100000023841858,
+     -0.054999999701976776,
+     -0.061400000005960464
     ],
     [
-     0.39100000262260437,
      0.3100000023841858,
-     0.050999999046325684
+     0.3019999861717224,
+     0.054999999701976776
     ]
    ],
    "keepout_aabb_in_marble_slab": [
     [
-     -0.33799999952316284,
-     -0.07670000195503235,
-     -0.09099999815225601
+     -0.02459999918937683,
+     0.050999999046325684,
+     -0.060600001364946365
     ],
     [
-     0.39100000262260437,
-     0.07100000232458115,
-     0.050999999046325684
+     0.015799999237060547,
+     0.15489999949932098,
+     0.04800000041723251
     ]
    ],
-   "probe_points": 32209,
-   "triangles": 3954
+   "probe_points": 22639,
+   "triangles": 3518
   }
  }
 }

@@ -1,6 +1,6 @@
 """Blender scene builder/renderer for marble music.
 blender -b -P scene.py -- --plan plan.json --out frames/ [--start 0 --end 450 --samples 24 --res 1080x1920 --look v3 --device AUTO]
-Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks, v7 = v6 colour+bloom without particles; flute/xylophone/steel drums/guitar are the hit surface.
+Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks, v7 = v6 colour+bloom without particles; flute is a thin post perpendicular to the wall with a small striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look.
 Device: --device AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP, or env MARBLE_DEVICE (GPU/AUTO tries Metal, then OptiX/CUDA/HIP, then CPU).
 """
 import bpy, json, sys, math, argparse, os
@@ -9,8 +9,9 @@ argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.add_argument('--out',default='frames/')
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
-ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks, v7 = v6 colour + bloom (no snow/sparks; tamer chrome bloom); flute/xylophone/steel drums/guitar are themselves the hit surface')
+ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks, v7 = v6 colour + bloom (no snow/sparks; tamer chrome bloom); flute is a thin post perpendicular to the wall with a small aligned striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
+ap.add_argument('--cam-off',default='',help='optional camera offset x,y,z in the rig frame (e.g. 2.4,-5.0,1.2 for an oblique test still); default is the look-dependent offset')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -77,7 +78,7 @@ V2=(LOOKN>=2)
 V3=(LOOKN>=3)
 V4=(LOOKN>=4)   # v4 behaviour (kept material slots, override assets, hanging parts) also applies to v5+
 V6=(LOOKN==6)   # Phase 3 batch 1: backdrop + bloom + snow + sparks (v7 must not inherit particles)
-V7=(LOOKN>=7)   # backdrop + tamer bloom; instrument-as-striker overrides for a test subset
+V7=(LOOKN>=7)   # backdrop + tamer bloom; flute post+board, slim xylophone bar; steel/guitar stay v5
 PIANO_IDX={}
 for _k in P['keys']:
     if 'piano' in _k['track'].lower(): PIANO_IDX[_k['i']]=len(PIANO_IDX)
@@ -250,6 +251,8 @@ cam=bpy.data.objects.new('cam',cd); sc.collection.objects.link(cam); sc.camera=c
 off=Vector((0.7,-7.2,1.4)) if P.get('layout')=='zigzag' else Vector((1.3,-6.6,1.9))
 aim=Vector((0,0,0))
 if V2: off=Vector((0.5,-5.3,1.0)); aim=Vector((0,0,-0.9))
+if a.cam_off:
+    off=Vector(tuple(float(x) for x in a.cam_off.split(',')))
 cam.location=off
 cam.rotation_euler=(aim-off).to_track_quat('-Z','Y').to_euler()
 cd.dof.focus_distance=(aim-off).length
