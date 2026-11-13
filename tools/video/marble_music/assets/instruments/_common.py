@@ -175,7 +175,9 @@ def pitch_hue(note):
     if pc in PITCH_HUE: return PITCH_HUE[pc]
     a, b = PITCH_HUE[pc-1], PITCH_HUE.get(pc+1, 1.0)
     return (a + b) / 2                                                      # sharp: halfway between its neighbours
-def pitch_rgb(note, s=0.95, v=0.6):
+PITCH_VAL = {0: 0.55, 2: 0.5, 4: 0.42, 5: 0.5}   # v5b: warm hues (C red, D orange, E yellow, F green) darker in linear so AgX keeps them saturated
+def pitch_rgb(note, s=1.0, v=0.6):
     """naturals: saturated rainbow; sharps: darker, desaturated variant of the in-between hue."""
+    v = PITCH_VAL.get(int(note) % 12, v)
     if int(note) % 12 in SHARPS: s, v = s*0.65, v*0.45
     return _cs.hsv_to_rgb(pitch_hue(note), s, v)

@@ -42,3 +42,20 @@ def assign(keys, M=None):
         else: v = m['variants'][0]
         out.append((m['name'], v, j))
     return out
+
+CAM_OFF = (0.5, -5.3, 1.0)   # v2+ camera offset from the rig (scene.py); rig = (camera_x, 0, camera_z) of the plan at that frame
+def aligned_local(k, cam_xz, part, cam_off=CAM_OFF):
+    """v5 'aligned' part (meta.aligned): a piece placed BEHIND the marble plane (local y = part['y']) on the camera ray through the
+    striker's local axis segment a->b, so in the image it continues that axis exactly (no tilt-dependent parallax step) and keeps
+    the same apparent thickness. Returns (loc, rot_y, scale) in the key's LOCAL frame (the part is parented to the key).
+    The part mesh is modelled along -X from the origin, length |b-a|, at local y=0."""
+    import math
+    cx, cz = cam_xz; Cx, Cy, Cz = cx + cam_off[0], cam_off[1], cz + cam_off[2]
+    nx, nz = k['nx'], k['nz']; dx, dz = Cx - k['x'], Cz - k['z']
+    cl = (dx*nz - dz*nx, Cy, dx*nx + dz*nz)                     # camera in key-local coords (x = tangent, z = normal)
+    y = part['y']; s = (y - cl[1]) / (0.0 - cl[1])             # depth ratio of the plane y vs the axis plane y=0
+    def proj(p): return tuple(cl[i] + (p[i] - cl[i]) * s for i in range(3))
+    A = proj(part['a']); B = proj(part['b'])
+    ddx, ddz = B[0] - A[0], B[2] - A[2]; L = math.hypot(ddx, ddz); L0 = math.hypot(part['b'][0] - part['a'][0], part['b'][2] - part['a'][2])
+    phi = math.atan2(ddz / L, -ddx / L)                         # rotation about local Y that maps mesh -X onto A->B
+    return (A[0], y, A[2]), phi, (L / L0, s, s)

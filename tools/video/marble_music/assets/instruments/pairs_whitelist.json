@@ -1,0 +1,6 @@
+{
+ "_doc": "Known, accepted striker-pair clearances for check_pairs.py --strict. An entry only tolerates that exact key pair with that asset if its gap stays >= min_gap_m (so it cannot silently get worse); anything else under --min fails.",
+ "pairs": [
+  {"keys": [109, 111], "asset": "marimba", "min_gap_m": 0.0085, "since": "v4", "reason": "neighbouring marimba resonator tubes at a steep tilt; 9.2 mm gap, not touching (pre-existing since v4)"}
+ ]
+}

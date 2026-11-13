@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Zig-zag marble-music pipeline (macOS / Linux). Resumable: already-rendered frames are skipped.
 # usage: run_zigzag.sh song.mid OUT_DIR START END [FPS] [SAMPLES] [RES] [LOOK=v5] [DEVICE]
-# v3+: instrument keep-out check (--strict); v5+: striker clearance check, then titles.py overlay + composite.sh -> *_titled.mp4
+# v3+: instrument keep-out check (--strict); v5+: striker clearance check (--strict, whitelist assets/instruments/pairs_whitelist.json), then titles.py overlay + composite.sh -> *_titled.mp4
 # DEVICE also via MARBLE_DEVICE (AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP). GPU/AUTO: Metal, then OptiX/CUDA/HIP, else CPU.
 # BLENDER: default /Applications/Blender.app/Contents/MacOS/Blender if present, otherwise `blender` on PATH.
 # SF2: path to GeneralUser GS soundfont (default: alongside this script). PY: python interpreter (default python3).
@@ -27,7 +27,7 @@ if [ "$LN" -ge 3 ]; then
   "$PY" "$HERE/check_keepout.py" "$PLAN" --look "$LOOK" --out "$W/keepout_report_$LOOK.json" --strict
 fi
 if [ "$LN" -ge 5 ]; then
-  "$PY" "$HERE/check_pairs.py" "$PLAN" --look "$LOOK" --out "$W/pairs_report_$LOOK.json"
+  "$PY" "$HERE/check_pairs.py" "$PLAN" --look "$LOOK" --out "$W/pairs_report_$LOOK.json" --strict
 fi
 [ -f "$W/audio.wav" ] || "$HERE/render_audio.sh" "$MID" "$SF2" "$W/audio.wav" "$S" "$E"
 NF=$("$PY" -c "print(int(round(($E-$S)*$FPS))-1)")

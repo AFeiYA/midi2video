@@ -128,7 +128,7 @@ if V3:
     import os as _os
     sys.path.insert(0,_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'assets','instruments'))
     import _common as AC, library as ALIB
-    _AM=ALIB.metas(a.look if V3 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}
+    _AM=ALIB.metas(a.look if V3 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}; _ALN={}
     for (an,av,_j) in sorted(set(_ASG)):
         if an not in _MODS:
             _MODS[an]=AC.load_asset(_AM[an]['_dir']); _SH[an]=_MODS[an][2].shared(AC)
@@ -145,6 +145,13 @@ if V3:
         meta,bmod,mmod=_MODS[an]; t=AC.make_asset(meta,bmod,av,f'tmpl_{an}_{av}',keep_slots=V4); me=t.data   # v3 kept the join-collapsed slots
         AC.set_slots(me,[pinm if role=='pin' else (mmod.body(AC,f'{an}_{av}_placeholder',0,60,None) if role=='body' else _SH[an][role]) for role in meta['slots']])
         bpy.data.objects.remove(t,do_unlink=True); _MESH[(an,av)]=me
+        for ap_ in meta.get('aligned',[]):                    # v5: camera-aligned behind-plane parts (e.g. flute head joint), one mesh per asset
+            if (an,ap_['name']) in _ALN: continue
+            ta=AC.join(bmod.build_aligned(AC,ap_['name']),f"aln_{an}_{ap_['name']}"); n_=len(meta['slots'])
+            for p_ in ta.data.polygons: p_.material_index=min(p_.material_index,n_-1)
+            while len(ta.data.materials)>n_: ta.data.materials.pop(index=len(ta.data.materials)-1)
+            AC.set_slots(ta.data,[pinm if role=='pin' else (mmod.body(AC,f'{an}_aln_placeholder',0,60,None) if role=='body' else _SH[an][role]) for role in meta['slots']])
+            _ALN[(an,ap_['name'])]=ta.data; bpy.data.objects.remove(ta,do_unlink=True)
 for _ki,k in enumerate(P['keys']):
     if V3:
         an,av,j=_ASG[_ki]; meta,bmod,mmod=_MODS[an]
@@ -169,6 +176,17 @@ for _ki,k in enumerate(P['keys']):
         for hi,h in enumerate(meta.get('hanging',[])):
             ho=bpy.data.objects.new(f"key{k['i']}_hang{hi}",_HANG[(an,hi)]); sc.collection.objects.link(ho)
             ho.location=ALIB.hanging_world(k,h)                 # stays world-vertical regardless of the bar tilt
+        for ap_ in meta.get('aligned',[]):                    # v5: re-aim the part along the camera ray every 2 frames while the key can be on screen
+            ao=bpy.data.objects.new(f"key{k['i']}_{ap_['name']}",_ALN[(an,ap_['name'])]); sc.collection.objects.link(ao); ao.parent=o
+            ao.material_slots[bi].link='OBJECT'; ao.material_slots[bi].material=m
+            fh_=int(round(fh)); fr_=[f for f in range(max(0,fh_-150),min(len(P['camera'])-1,fh_+150)+1,2) if abs(P['camera'][f][1]-k['z'])<4.0] or [fh_]
+            prev=None
+            for f in fr_:
+                lc,ph,scl=ALIB.aligned_local(k,P['camera'][f],ap_)
+                if prev is not None: ph=prev+((ph-prev+math.pi)%(2*math.pi)-math.pi)   # unwrap: atan2 jumps +-pi -> a full spin + huge motion blur
+                prev=ph
+                ao.location=lc; ao.rotation_euler=(0,ph,0); ao.scale=scl
+                ao.keyframe_insert('location',frame=f); ao.keyframe_insert('rotation_euler',index=1,frame=f); ao.keyframe_insert('scale',frame=f)
         continue
     kind=look_for(k['track'],k['drum'])
     ZZ=('ang' in k)

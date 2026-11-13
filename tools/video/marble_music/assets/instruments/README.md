@@ -31,13 +31,14 @@ v5 的 `<乐器>/v5/` 覆盖版本。`library.metas(look)` 按 `LOOK_ORDER = ['v
 - **ocarina**：加大的红薯形（有圆尾巴），面向相机的一面有 4 个大指孔和深色出音窗，吹口在弹珠平面之后、伸出轮廓外。
 - **tubular_bells**：黄铜横梁是击打件，5 根逐级变短、带顶帽的铜管在世界坐标里竖直悬挂（`meta.hanging` 新增 `cap_role`）。
 - **steel_drums**：镀铬边条是击打件，后面是正对相机的圆形钢鼓面：碗形鼓面、中心音区，加 6 个有深色沟槽轮廓的凹坑音区。
-- **flute**：沿用 v4 管身，在弹珠平面之后加一根连续的长管（笛头 → 笛尾），带唇板、笛头塞、接口环和笛尾按键，整体读成一根细长的长笛。用连续长管而不是分开的两段，是因为相机向下看、又偏在一侧，弹珠平面之后的部件会随每个键的倾角错位，分开的两段看起来会断开。
+- **flute**：一根连续的长笛。沿用 v4 管身（击打件），笛尾在弹珠平面内和管身对齐（禁入检查允许到 x=0.44）。笛头没法放在弹珠平面内（弹珠从这一侧过来），所以它是 `meta.aligned` 描述的对齐部件：放在弹珠平面之后（y=0.22），沿相机穿过管身轴线的视线摆放，按深度缩放粗细。`scene.py` 每 2 帧按相机位置重新对齐一次，并挂在击打件上跟着下沉，所以从任何倾角看都和管身连成一根，不会再像两根错开的管子。
 - **guitar**：6 根黑色琴弦是击打件，后面是正对相机的日落色琴身（上下两个圆弧和腰身、奶油色包边、深色音孔和音孔花环），加乌木琴桥和骨质琴枕，以及带品丝的指板和有 6 个弦钮的琴头。
 - **piano**：真实的象牙白键和乌木黑键，按每个音符的音名选择（`meta.variant_rule = "pitch"`：自然音 C D E F G A B 用白键形和象牙色，升降音用更高、两端收窄的黑键形和乌木色），红色毛毡点缀保留。自然音键后面还有两块乌木黑键短块。Jingle Bells 钢琴段 22 个音全是自然音，所以 22 个都是白键。
-- **xylophone**：琴条按音名着色（色表见下）。
+- **xylophone**：琴条按音名着色（色表见下），涂层很薄（0.2），因为厚涂层会反射柔光箱、把颜色冲淡。
 
-音名色表在 `_common.py`：`PITCH_HUE` 和 `pitch_rgb(note)`，现在只有木琴用。C 红、D 橙、E 黄、F 绿、G 青、A 蓝、B 紫；升降音取两侧自然音中间的色相，饱和度和亮度都更低。
+音名色表在 `_common.py`：`PITCH_HUE`、`PITCH_VAL` 和 `pitch_rgb(note)`，现在只有木琴用。暖色的线性亮度调低（C 0.55、D 0.5、E 0.42、F 0.5，其余 0.6），饱和度 1.0，这样 AgX 也不会把它们冲淡。C 红、D 橙、E 黄、F 绿、G 青、A 蓝、B 紫；升降音取两侧自然音中间的色相，饱和度和亮度都更低。
 
 - 只重建 v5：`blender -b -P assets/instruments/build_library.py -- --only /v5`（也可以用 `--only piano/v5,guitar/v5` 只重建指定乐器）
-- 新增 `check_pairs.py`（需要 scipy）：检查击打件之间（含悬挂件）在世界坐标里是否小于 `--min`（默认 1 cm）。陡角度时同侧相邻击打件只隔约 0.7 m，所以吉他琴颈、钟琴琴箱、管钟铜管的长度都按这个检查结果截短过。
-  `python3 tools/video/marble_music/check_pairs.py work/plan_zz_v2.json --look v5`
+- 新增 `check_pairs.py`（需要 scipy）：检查击打件之间（含悬挂件、对齐部件）在世界坐标里是否小于 `--min`（默认 1 cm）。`--strict` 下，只要有不在 `pairs_whitelist.json` 里的冲突就退出 1。白名单每条只放行指定的那一对键，而且间距不能小于 `min_gap_m`。陡角度时同侧相邻击打件只隔约 0.7 m，所以吉他琴颈、钟琴琴箱、管钟铜管的长度都按这个检查结果截短过。
+  `python3 tools/video/marble_music/check_pairs.py work/plan_zz_v2.json --look v5 --strict`
+- 对齐部件：`meta.aligned = [{name, a, b, y, radius}]`，`build.py` 里的 `build_aligned(C, name)` 沿 -X 建模（从原点开始，长度 |b-a|）。位姿由 `library.aligned_local()` 计算，`scene.py` 和 `check_pairs.py` 共用。

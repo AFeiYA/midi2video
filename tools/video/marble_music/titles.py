@@ -2,10 +2,14 @@
 usage: python titles.py PLAN.json OUT_DIR [--start F0 --end F1] [--res 1080x1920] [--no-corner] [--still FRAME --bg render.png --out card.png]
 Writes OUT_DIR/%05d.png RGBA overlays (same numbering as the Blender frames) - identical overlay states are hard-linked, so a full-song
 pass is cheap.  Composite with composite.sh (ffmpeg overlay).
-Layout (9:16, YouTube-Shorts safe): everything sits in x in [48, 900] (keeps clear of the right-side action buttons, ~15 %),
-y in [210, 420] (below the top ~10 % = 192 px status/search bar; far above the bottom ~20 % caption / channel area).
-Title card: fades in 0.3 s at the section's first hit, holds 1.6 s, fades out 0.4 s.  Corner label: small pill "05 马林巴 Marimba"
-at 0.8 opacity whenever no title card is showing (viewers who join mid-section / Shorts loops still know the instrument).
+Layout (9:16, YouTube-Shorts safe): everything sits in x in [28, 900] (keeps clear of the right-side action buttons, ~15 %),
+y in [214, 1536] (below the top ~10 % = 192 px status/search bar, above the bottom ~20 % caption / channel area).
+Title card (80 % size, translucent): --place auto (default) projects every striker and the marble with the scene camera for the
+frames each card is up and picks ONE safe-area spot that they occupy least (for Jingle Bells: lower-left, y=1342 -> 65-75 % less
+overlap than the top); --place section = best spot per section, --place top = fixed top-left.  Fades in 0.3 s at the section's first
+hit (the opening card waits --first-delay 0.4 s so it does not pop in on frame 0), holds 1.6 s, fades out 0.4 s.  Corner label: small
+pill "05 马林巴 Marimba" top-left at 0.8 opacity whenever no title card is showing (viewers who join mid-section / Shorts loops still
+know the instrument).
 Font: Noto Sans CJK SC, SIL Open Font License 1.1 - bundled glyph subset fonts/NotoSansSC-{Bold,Regular}-subset.otf (fonts/OFL.txt,
 regenerate with fonts/make_subset.sh after adding names), else /usr/share/fonts/opentype/noto/NotoSansCJK-*.ttc index 2 = SC.
 All icons are drawn procedurally here with PIL primitives - no third-party images."""
@@ -13,7 +17,9 @@ import json, os, re, sys, argparse, math, colorsys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('out', nargs='?', default='overlay')
 ap.add_argument('--start', type=int, default=0); ap.add_argument('--end', type=int, default=-1); ap.add_argument('--res', default='1080x1920')
-ap.add_argument('--no-corner', action='store_true'); ap.add_argument('--still', type=int, default=-1); ap.add_argument('--bg', default='')
+ap.add_argument('--no-corner', action='store_true'); ap.add_argument('--place', default='auto', choices=['auto', 'section', 'top'], help='auto: ONE safe-area spot for all sections that strikers/marble occupy least while cards are up; section: best spot per section; top: fixed top-left')
+ap.add_argument('--card-scale', type=float, default=0.8); ap.add_argument('--card-alpha', type=int, default=150); ap.add_argument('--first-delay', type=float, default=0.4, help='a section starting at t<delay shows its card at t=delay (no pop-in on frame 0)')
+ap.add_argument('--still', type=int, default=-1); ap.add_argument('--bg', default='')
 ap.add_argument('--png', default='', help='with --still: output composite png')
 _FD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
 def _dflt(w):   # bundled OFL subset first (portable, e.g. on the Mac), else the system Noto Sans CJK TTC (index 2 = SC)
@@ -121,13 +127,14 @@ def title_card(n, sub):
     im = Image.new('RGBA', (cw + int(40*S), ch + int(40*S)), (0, 0, 0, 0)); ox = oy = int(20*S)
     sh = Image.new('RGBA', im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle([ox, oy+int(6*S), ox+cw, oy+ch+int(6*S)], radius=int(40*S), fill=(0, 0, 0, 120))
     im = Image.alpha_composite(im, sh.filter(ImageFilter.GaussianBlur(10*S))); d = ImageDraw.Draw(im)
-    d.rounded_rectangle([ox, oy, ox+cw, oy+ch], radius=int(40*S), fill=(16, 16, 22, 196), outline=acc + (230,), width=max(2, int(3*S)))
+    d.rounded_rectangle([ox, oy, ox+cw, oy+ch], radius=int(40*S), fill=(16, 16, 22, a.card_alpha), outline=acc + (220,), width=max(2, int(3*S)))
     isz = int(156*S); d.ellipse([ox+int(18*S), oy+int(20*S), ox+int(18*S)+isz, oy+int(20*S)+isz], fill=(255, 255, 255, 34), outline=acc + (160,), width=max(1, int(2*S)))
     ic = icon(n, int(124*S)); im.alpha_composite(ic, (ox+int(34*S), oy+int(36*S)))
     tx = ox + int(200*S)
     d.text((tx, oy+int(18*S)), f'{n:02d}  ·  {sub}', font=font(False, 26), fill=acc + (235,))
     fz = font(True, 72); d.text((tx, oy+int(46*S)), zh, font=fz, fill=(255, 255, 255, 255))
     zw = d.textlength(zh, font=fz); d.text((tx + zw + int(22*S), oy+int(78*S)), en, font=font(True, 40), fill=(235, 235, 240, 235))
+    if a.card_scale != 1: im = im.resize((int(im.width*a.card_scale), int(im.height*a.card_scale)), Image.LANCZOS)
     return im
 
 def corner(n):
@@ -142,13 +149,53 @@ def corner(n):
     return im
 
 CARD = {n: title_card(n, secs[n][1]) for n in order}; PILL = {n: corner(n) for n in order}
-CARD_XY = (int(28*S), int(214*S)); PILL_XY = (int(48*S), int(222*S))
+PILL_XY = (int(48*S), int(222*S))
+START = {n: max(secs[n][0], a.first_delay) for n in order}          # card start time per section (first section delayed)
+
+# ------------------------------------------------------------------ v5b: per-section card placement from projected striker / marble positions
+def place_cards():
+    import numpy as np
+    off = np.array([0.5, -5.3, 1.0]); aim = np.array([0, 0, -0.9])   # scene.py v2+ camera rig (lens 40, sensor 36 vertical fit)
+    fw = (aim-off)/np.linalg.norm(aim-off); rt = np.cross(fw, [0, 0, 1]); rt /= np.linalg.norm(rt); up = np.cross(rt, fw); FPX = 40/36*H
+    cam = np.array(P['camera']); mar = np.array(P['marble']); K = P['keys']; KX = np.array([[k['x'], 0, k['z']] for k in K])
+    def proj(fr, pts):
+        C = np.array([cam[fr][0], 0, cam[fr][1]]) + off; d = pts - C; z = d @ fw
+        return np.c_[W/2 + (d @ rt)/z*FPX, H/2 - (d @ up)/z*FPX], z
+    cw, ch = CARD[order[0]].size; pad = int(20*S*a.card_scale)       # card image includes a shadow margin
+    xs = [x for x in (int(28*S), int(120*S), int(220*S)) if x + cw - pad <= int(900*S)]
+    ys = list(range(int(214*S), int(1536*S) - ch + pad, int(24*S)))
+    out = {}
+    for n in order:
+        f0 = int(round(START[n]*fps)); f1 = min(len(cam)-1, int(round((START[n]+FIN+HOLD+FOUT)*fps)))
+        cost = {}
+        for fr in range(f0, f1+1, 2):
+            kp, kz = proj(fr, KX); vis = (kz > 0) & (kp[:,1] > -300) & (kp[:,1] < H+300); kp = kp[vis]; kr = 0.45*FPX/kz[vis]   # striker incl. silhouette ~0.45 m
+            mp, mz = proj(fr, np.array([[mar[fr][0], 0, mar[fr][1]]])); mr = (0.15*FPX/mz[0]) + 40*S
+            for x in xs:
+                for y in ys:
+                    x0, y0, x1, y1 = x+pad, y+pad, x+cw-pad, y+ch-pad
+                    def pen(c, r):
+                        dx = np.maximum(np.maximum(x0-c[:,0], 0), c[:,0]-x1); dy = np.maximum(np.maximum(y0-c[:,1], 0), c[:,1]-y1)
+                        return np.maximum(0, r - np.hypot(dx, dy))
+                    cst = pen(kp, kr).sum() + 6*pen(mp, mr).sum() + 0.05*(y - ys[0])   # small preference for the top
+                    cost[(x, y)] = cost.get((x, y), 0) + cst
+        out[n] = cost
+    if a.place == 'auto':                                            # one consistent spot: minimum of the summed cost
+        tot = {c: sum(out[n][c] for n in order) for c in out[order[0]]}; g = min(tot, key=tot.get)
+        return {n: (g, out[n][g], out[n][(xs[0], int(214*S))]) for n in order}
+    return {n: (min(out[n], key=out[n].get), min(out[n].values()), out[n][(xs[0], int(214*S))]) for n in order}
+if a.place in ('auto', 'section'):
+    PL = place_cards(); CARDXY = {n: PL[n][0] for n in order}
+    for n in order: print(f'  card {n:02d} at {PL[n][0]}  overlap cost {PL[n][1]:.0f} (fixed top would be {PL[n][2]:.0f})')
+else:
+    CARDXY = {n: (int(28*S), int(214*S)) for n in order}
 def state(f):
     t = f / fps; cur = None
     for n in order:
         if secs[n][0] <= t + 1e-6: cur = n
     if cur is None: return (None, 0, 0)
-    dt = t - secs[cur][0]
+    dt = t - START[cur]
+    if dt < 0: return (cur, 0, 0)
     ca = min(1, dt/FIN) if dt < FIN else (1 if dt < FIN+HOLD else max(0, 1-(dt-FIN-HOLD)/FOUT))
     pa = 0 if a.no_corner else 0.8*min(1, max(0, (dt-FIN-HOLD-FOUT*0.5)/0.4))      # pill fades in as the card leaves
     q = lambda v: round(v*20)/20
@@ -156,7 +203,7 @@ def state(f):
 def overlay(st):
     n, ca, pa = st; im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     if n is None: return im
-    for src, al, xy in ((CARD[n], ca, CARD_XY), (PILL[n], pa, PILL_XY)):
+    for src, al, xy in ((CARD[n], ca, CARDXY[n]), (PILL[n], pa, PILL_XY)):
         if al <= 0: continue
         s = src.copy(); s.putalpha(s.getchannel('A').point(lambda v: int(v*al))); y = xy[1] + (int((1-al)*-18*S) if src is CARD[n] else 0)
         im.alpha_composite(s, (xy[0], max(0, y)))

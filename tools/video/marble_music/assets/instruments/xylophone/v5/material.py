@@ -4,4 +4,4 @@ def shared(C):
     m = C.mat('xy_frame',(0.8,0.68,0.5),rough=0.45,coat=0.3)
     return {'felt': C.mat('xy_felt',(0.6,0.05,0.06),rough=0.95), 'frame': C.add_wood(m,(0.70,0.58,0.40),(0.88,0.78,0.60))}
 def body(C, name, j, note, variant):
-    return C.mat(name, C.pitch_rgb(note), rough=0.3, coat=0.7)
+    return C.mat(name, C.pitch_rgb(note), rough=0.38, coat=0.2, coat_rough=0.15)   # v5b: thin coat - a strong clearcoat mirrored the softbox and washed the colours out
