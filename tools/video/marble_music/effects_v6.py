@@ -448,3 +448,10 @@ def apply_v7(sc, P, fps, R, wd, bg, wall, wall_bsdf, mb, mm, mbsdf, rig, cam, lo
     apply_marble_glow(mm, mbsdf)
     apply_bloom(sc, threshold=1.30, size=6, mix=0.0, strength=0.50)
     print('v7 effects applied (backdrop + tamer bloom; no snow/sparks)', flush=True)
+
+def apply_v8(sc, P, fps, R, wd, bg, wall, wall_bsdf, mb, mm, mbsdf, rig, cam, look_for, FLASH):
+    """v8: same backdrop and marble glow as v7, bloom a touch tamer so cream flute bells do not blow out."""
+    apply_backdrop(wall_bsdf, bg, P, fps, look_for)
+    apply_marble_glow(mm, mbsdf)
+    apply_bloom(sc, threshold=1.45, size=6, mix=0.0, strength=0.40)
+    print('v8 effects applied (backdrop + tamer bloom; no snow/sparks)', flush=True)

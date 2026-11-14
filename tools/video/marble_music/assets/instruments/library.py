@@ -3,7 +3,7 @@ Look overrides: an instrument folder may contain a sub-folder named after a look
 build.py / material.py / meta.json / probe_*.npy; it replaces the base asset for that look only (base = v3, untouched)."""
 import os, json, re
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOOK_ORDER = ['v3', 'v4', 'v5', 'v6', 'v7']
+LOOK_ORDER = ['v3', 'v4', 'v5', 'v6', 'v7', 'v8']
 def look_num(look):
     '''Numeric look index so v6 (and later) inherit the newest override <= the requested look.'''
     try:

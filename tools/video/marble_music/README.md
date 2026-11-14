@@ -14,6 +14,8 @@
 
 `--look v7` 在 v6 的段落主题色和 Bloom 上继续（默认仍是 v5，v6 可原样复现，不含雪花和火花；银/铬的 Bloom 更克制）。笛子改成一根细管，垂直于墙面、沿墙法向伸出，作为支撑；原来的小木板仍是击打面，装在笛子前端并对齐规划器接触点。木琴保留 v7 的细彩色琴条。钢鼓和吉他沿用 v5 造型（乐器在板后作为支撑，小挡板/琴弦是击打面）。
 
+`--look v8` 在 v7 的特效（段落主题色、更克制的 Bloom，无雪花和火花）上继续，但把主镜头改成约 35° 斜视墙面（从上左往下看，参考 Short yhQNo8RWmVQ），并重做笛子：木制竖笛沿墙法向伸出，米色喇叭口朝镜头、管脚顶墙，弹珠直接打在管身上（管顶有一小块平坦接触面，对齐规划器的 z=+0.045 和 +Z 法线）。木琴、钢鼓、吉他与 v7 相同。默认仍是 v5，v7 可原样复现。
+
 `--look v4` 是 v3 的可读性优化版：吉他日落色面板和深色琴弦、更饱和的青瓷陶笛、竖直悬挂的电颤琴和马林巴共鸣管、更大的长笛和镀金按键、红色钟琴支架。`--look v3` 是 12 种程序化乐器击打件的第一版，`--look v2` 只用材质挡板，`--look v1` 还原已认可的 15 秒小样。所有乐器模型都是本仓库自己的程序化几何，没有第三方模型版权问题。
 
 > 规划器和场景脚本不再写死机器路径。MIDI、输出目录用参数传入；Blender 用环境变量 `BLENDER`；计算设备用 `--device` 或 `MARBLE_DEVICE`。
@@ -157,6 +159,20 @@ mkdir -p work/stills_v7
 ```
 
 对比图见 `work/instrument_stills_v6_vs_v7.png` 和撞击点特写 `work/instrument_stills_v6_vs_v7_contact.png`。
+
+`--look v8` 几何与镜头试验（默认仍是 v5；v7 可原样复现）。渲全部 12 张标准静帧并拼 v7 vs v8 对比图：
+
+```bash
+mkdir -p work/stills_v8
+"$BLENDER" -b -P tools/video/marble_music/scene.py -- \
+  --look v8 \
+  --plan work/plan_zz_v2.json \
+  --out work/stills_v8 \
+  --frames 92,230,597,928,1341,1772,2089,2677,3233,3572,4427,4734 \
+  --samples 12 --res 1080x1920 --device "${MARBLE_DEVICE:-GPU}"
+```
+
+对比图见 `work/instrument_stills_v7_vs_v8.png`。
 
 只渲其中一张（例如钢琴，低采样试跑）：
 

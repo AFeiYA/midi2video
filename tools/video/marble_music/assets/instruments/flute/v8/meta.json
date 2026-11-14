@@ -1,0 +1,79 @@
+{
+ "name": "flute",
+ "section": 7,
+ "tracks_regex": "flute",
+ "description": "v8: wooden recorder-style flute standing perpendicular to the wall (axis along local +Y). Cream bell toward the camera, cream foot at the wall, ivory rings and finger holes. The marble hits the tube body; a shallow flattened facet keeps the contact plane at z=+0.045 with +Z normal. No separate board, no side pins.",
+ "slots": [
+  "body",
+  "ivory",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.72,
+  0.4
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v8",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.09099999815225601,
+     -0.8100000023841858,
+     -0.0989999994635582
+    ],
+    [
+     0.09099999815225601,
+     0.3100000023841858,
+     0.08299999684095383
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.04050000011920929,
+     -0.15489999949932098,
+     -0.06300000101327896
+    ],
+    [
+     0.04039999842643738,
+     0.1543000042438507,
+     0.04699999839067459
+    ]
+   ],
+   "probe_points": 34390,
+   "triangles": 2986
+  }
+ }
+}

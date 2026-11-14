@@ -1,6 +1,6 @@
 """Blender scene builder/renderer for marble music.
 blender -b -P scene.py -- --plan plan.json --out frames/ [--start 0 --end 450 --samples 24 --res 1080x1920 --look v3 --device AUTO]
-Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks, v7 = v6 colour+bloom without particles; flute is a thin post perpendicular to the wall with a small striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look.
+Looks: v1 = approved 15s sample, v2 = studio reflectors + edge flash, v3 = v2 + instrument asset library, v4 = v3 + readability pass, v5 = v4 + recognisable silhouettes (default), v6 = v5 + section backdrop colour, bloom, snow, hit sparks, v7 = v6 colour+bloom without particles; flute is a thin post perpendicular to the wall with a small striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look, v8 = angled main camera (~35° off the wall normal) and a wooden recorder-style flute the marble hits directly.
 Device: --device AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP, or env MARBLE_DEVICE (GPU/AUTO tries Metal, then OptiX/CUDA/HIP, then CPU).
 """
 import bpy, json, sys, math, argparse, os
@@ -9,7 +9,7 @@ argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.add_argument('--out',default='frames/')
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
-ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks, v7 = v6 colour + bloom (no snow/sparks; tamer chrome bloom); flute is a thin post perpendicular to the wall with a small aligned striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look')
+ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays; default), v6 = v5 + per-section backdrop colour, bloom, background snow, hit sparks, v7 = v6 colour + bloom (no snow/sparks; tamer chrome bloom); flute is a thin post perpendicular to the wall with a small aligned striker board; xylophone is a slim coloured bar; steel drums and guitar keep their v5 look, v8 = angled main camera and a wooden recorder-style flute (marble hits the tube; no board)')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
 ap.add_argument('--cam-off',default='',help='optional camera offset x,y,z in the rig frame (e.g. 2.4,-5.0,1.2 for an oblique test still); default is the look-dependent offset')
 a=ap.parse_args(argv)
@@ -77,8 +77,9 @@ LOOKN=int(a.look.lstrip('v'))
 V2=(LOOKN>=2)
 V3=(LOOKN>=3)
 V4=(LOOKN>=4)   # v4 behaviour (kept material slots, override assets, hanging parts) also applies to v5+
-V6=(LOOKN==6)   # Phase 3 batch 1: backdrop + bloom + snow + sparks (v7 must not inherit particles)
-V7=(LOOKN>=7)   # backdrop + tamer bloom; flute post+board, slim xylophone bar; steel/guitar stay v5
+V6=(LOOKN==6)   # Phase 3 batch 1: backdrop + bloom + snow + sparks (v7+ must not inherit particles)
+V7=(LOOKN>=7)   # backdrop + tamer bloom (shared by v7 and v8); v7 flute is post+board
+V8=(LOOKN>=8)   # angled main camera; wooden recorder flute (hit the tube); xylo v7 bar; steel/guitar v5
 PIANO_IDX={}
 for _k in P['keys']:
     if 'piano' in _k['track'].lower(): PIANO_IDX[_k['i']]=len(PIANO_IDX)
@@ -251,6 +252,12 @@ cam=bpy.data.objects.new('cam',cd); sc.collection.objects.link(cam); sc.camera=c
 off=Vector((0.7,-7.2,1.4)) if P.get('layout')=='zigzag' else Vector((1.3,-6.6,1.9))
 aim=Vector((0,0,0))
 if V2: off=Vector((0.5,-5.3,1.0)); aim=Vector((0,0,-0.9))
+if V8:
+    # ~35° off the wall normal, from upper left, looking slightly down (matches the reference Short).
+    # off=(-1.3,-5.5,2.6), aim=(0,0,-1.0): angle atan(sqrt(1.3**2+3.6**2)/5.5) ≈ 34.8°.
+    off=Vector((-1.3,-5.5,2.6)); aim=Vector((0,0,-1.0))
+    cd.lens=36
+    cd.dof.aperture_fstop=8.0
 if a.cam_off:
     off=Vector(tuple(float(x) for x in a.cam_off.split(',')))
 cam.location=off
@@ -263,7 +270,10 @@ def light(name,typ,loc,energy,size,color=(1,1,1)):
     if typ=='AREA': ld.size=size
     o=bpy.data.objects.new(name,ld); sc.collection.objects.link(o); o.parent=rig; o.location=loc
     o.rotation_euler=(Vector((0,0,0))-Vector(loc)).to_track_quat('-Z','Y').to_euler(); return o
-kl=light('key','AREA',(-3.0,-4.0,4.0),380,3.0,(1.0,0.95,0.88)); kl.data.spread=math.radians(70)
+if V8:
+    kl=light('key','AREA',(-4.5,-3.2,6.5),460,2.2,(1.0,0.95,0.88)); kl.data.spread=math.radians(55)
+else:
+    kl=light('key','AREA',(-3.0,-4.0,4.0),380,3.0,(1.0,0.95,0.88)); kl.data.spread=math.radians(70)
 light('fill','AREA',(4.0,-5.0,0.0),70,5.0,(0.85,0.9,1.0))
 light('rim','AREA',(0.5,-0.8,5.0),90,2.0)
 if V2:
@@ -289,7 +299,10 @@ _here=os.path.dirname(os.path.abspath(__file__))
 if _here not in sys.path: sys.path.insert(0,_here)
 from blender_compat import set_path_keyframe_interpolation
 set_path_keyframe_interpolation()
-if V7:
+if V8:
+    from effects_v6 import apply_v8
+    apply_v8(sc, P, fps, R, wd, bg, wall, wb, mb, mm, mbsdf, rig, cam, look_for, FLASH)
+elif V7:
     from effects_v6 import apply_v7
     apply_v7(sc, P, fps, R, wd, bg, wall, wb, mb, mm, mbsdf, rig, cam, look_for, FLASH)
 elif V6:
