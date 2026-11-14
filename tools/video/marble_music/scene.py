@@ -235,11 +235,15 @@ mbsdf.inputs['Subsurface Weight'].default_value=0.0
 nt=mm.node_tree; vol=nt.nodes.new('ShaderNodeVolumeAbsorption'); vol.inputs['Color'].default_value=(0.1,0.8,0.35,1); vol.inputs['Density'].default_value=6.0
 nt.links.new(vol.outputs[0],nt.nodes['Material Output'].inputs['Volume'])
 mb.data.materials.append(mm)
-prev=None; ang=0.0
+prev=None; ang=0.0; angx=0.3; MY=P.get('marble_y') or [0.0]*len(P['marble'])   # ending.py: marble_y = bounce toward the camera
 for f,(x,z) in enumerate(P['marble']):
-    if prev is not None: ang+= -(x-prev)/R
-    mb.location=(x,0,z); mb.rotation_euler=(0.3,ang,0)
+    if prev is not None: ang+= -(x-prev)/R; angx+= -(MY[f]-MY[f-1])/R
+    mb.location=(x,MY[f],z); mb.rotation_euler=(angx,ang,0)
     mb.keyframe_insert('location',frame=f); mb.keyframe_insert('rotation_euler',frame=f); prev=x
+if P.get('ending'):   # ending.py: gold FINISH pad (END marker) the marble lands on
+    _here_=os.path.dirname(os.path.abspath(__file__))
+    if _here_ not in sys.path: sys.path.insert(0,_here_)
+    import ending_pad; ending_pad.build(P,mat,fps)
 # ---------- camera + lights rig
 rig=bpy.data.objects.new('rig',None); sc.collection.objects.link(rig)
 cd=bpy.data.cameras.new('cam'); cd.lens=40; cd.sensor_fit='VERTICAL'; cd.sensor_height=36
