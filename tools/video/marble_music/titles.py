@@ -43,7 +43,10 @@ NAMES = {   # section no -> (zh, en, accent rgb)
  1: ('响板', 'Castanets', (196, 92, 52)),   2: ('钢琴', 'Piano', (236, 228, 210)),     3: ('颤音琴', 'Vibraphone', (170, 190, 220)),
  4: ('管钟', 'Tubular Bells', (232, 176, 80)), 5: ('马林巴', 'Marimba', (200, 120, 60)), 6: ('卡林巴', 'Kalimba', (190, 196, 206)),
  7: ('长笛', 'Flute', (214, 220, 230)),      8: ('木琴', 'Xylophone', (240, 120, 90)),  9: ('陶笛', 'Ocarina', (70, 170, 130)),
- 10: ('钟琴', 'Glockenspiel', (220, 60, 60)), 11: ('钢鼓', 'Steel Drums', (200, 205, 215)), 12: ('吉他', 'Guitar', (226, 150, 60))}
+ 10: ('钟琴', 'Glockenspiel', (220, 60, 60)), 11: ('钢鼓', 'Steel Drums', (200, 205, 215)), 12: ('吉他', 'Guitar', (226, 150, 60)),
+ # hook50 (50 s Shorts hook cut) instruments
+ 13: ('管钟+响板', 'Tubular Bells & Castanets', (232, 176, 80)), 14: ('八音盒', 'Music Box', (220, 70, 80)), 15: ('古筝', 'Koto', (200, 110, 60)),
+ 16: ('8-bit 方波', '8-Bit Square Lead', (70, 225, 240)), 17: ('风笛', 'Bagpipe', (210, 50, 55)), 18: ('齐奏终章', 'Grand Tutti Finale', (255, 205, 90))}
 
 def font(bold, px):
     fn = a.font_bold if bold else a.font_regular
@@ -119,6 +122,43 @@ def icon(sec, px):
         R(0.37, 0.55, 0.63, 0.67, (210, 130, 50, 255)); E(0.50, 0.57, 0.075, 0.075, (30, 16, 8, 255), outline=(240, 220, 180, 255), w=0.012)
         R(0.40, 0.80, 0.60, 0.84, (50, 26, 12, 255), r=0.01)
         for x in (0.47, 0.49, 0.51, 0.53): L([(x, 0.16), (x, 0.82)], (235, 235, 225, 220), 0.004)
+    elif sec == 13:   # tubular bells + castanets: brass rail, graded tubes, castanet pair
+        R(0.06, 0.08, 0.70, 0.14, (110, 80, 40, 255), r=0.02)
+        for i in range(5):
+            x = 0.10 + i*0.12; L_ = 0.72 - i*0.09
+            R(x, 0.16, x+0.07, 0.16+L_, GOLD, r=0.02, outline=(120, 80, 30, 255), w=0.008); R(x-0.008, 0.16, x+0.078, 0.20, (200, 140, 50, 255), r=0.01)
+        E(0.78, 0.66, 0.15, 0.15, (120, 50, 25, 255), outline=(60, 20, 10, 255), w=0.02); E(0.84, 0.60, 0.15, 0.15, (176, 82, 40, 255), outline=(70, 25, 12, 255), w=0.02)
+        L([(0.70, 0.12), (0.80, 0.45)], (220, 40, 40, 255), 0.025)
+    elif sec == 14:   # music box: open red-velvet lid, walnut box, brass comb, winding key
+        R(0.10, 0.10, 0.86, 0.46, (110, 55, 28, 255), r=0.03); R(0.15, 0.14, 0.81, 0.42, (190, 25, 40, 255), r=0.02)
+        R(0.10, 0.52, 0.86, 0.90, (120, 62, 30, 255), r=0.04, outline=(70, 35, 15, 255), w=0.012)
+        R(0.16, 0.46, 0.80, 0.53, GOLD, r=0.01)
+        for i in range(10): R(0.18+i*0.062, 0.53, 0.205+i*0.062, 0.60-i*0.004, GOLD)
+        E(0.48, 0.74, 0.03, 0.03, (40, 25, 10, 255)); E(0.93, 0.62, 0.05, 0.05, None, outline=GOLD, w=0.02)
+    elif sec == 15:   # koto: long dark board, strings, diagonal ivory bridges
+        d.polygon([P(0.06, 0.78), P(0.80, 0.08), P(0.94, 0.22), P(0.20, 0.92)], fill=(95, 50, 22, 255))
+        for i in range(6):
+            o = -0.05 + i*0.025; L([(0.13+o, 0.85-o), (0.87+o, 0.15-o)], (235, 220, 180, 255), 0.006)
+        for i in range(6):
+            t = 0.30 + i*0.08; o = -0.05 + i*0.025; cx = 0.13+o + 0.74*t; cy = 0.85-o - 0.70*t
+            d.polygon([P(cx-0.03, cy+0.02), P(cx+0.03, cy+0.02), P(cx, cy-0.03)], fill=(250, 245, 230, 255))
+    elif sec == 16:   # 8-bit: pixel eighth note in cyan + pixel blocks
+        bm = ["....XXXX", "....X..X", "....X...", "..XXX...", ".XXXX...", ".XXXX...", "..XX...."]
+        for r_, row in enumerate(bm):
+            for c_, ch in enumerate(row):
+                if ch == 'X': R(0.14+c_*0.09, 0.06+r_*0.09, 0.225+c_*0.09, 0.145+r_*0.09, (70, 235, 245, 255))
+        for i, col in enumerate(((230, 40, 60, 255), (245, 160, 30, 255), (250, 220, 40, 255), (60, 200, 90, 255), (60, 120, 240, 255))):
+            R(0.06+i*0.18, 0.76, 0.22+i*0.18, 0.92, col, r=0.01)
+    elif sec == 17:   # bagpipe: tartan bag, drones, chanter
+        for (a_, b_) in (((0.40, 0.42), (0.18, 0.04)), ((0.48, 0.40), (0.34, 0.02)), ((0.56, 0.40), (0.52, 0.04))): L([a_, b_], DARK, 0.04); E(b_[0], b_[1]+0.02, 0.035, 0.03, WHITE)
+        E(0.52, 0.58, 0.32, 0.24, (190, 25, 30, 255), outline=(90, 10, 12, 255), w=0.015)
+        for k in range(3): L([(0.28+k*0.16, 0.38), (0.28+k*0.16, 0.80)], (20, 80, 40, 230), 0.035); L([(0.22, 0.48+k*0.1), (0.82, 0.48+k*0.1)], (20, 80, 40, 230), 0.03)
+        L([(0.70, 0.76), (0.82, 0.98)], DARK, 0.04)
+    elif sec == 18:   # finale: gold star + jingle bells
+        pts = [P(0.5 + (0.40 if i % 2 == 0 else 0.17)*math.cos(-math.pi/2 + i*math.pi/5), 0.45 + (0.40 if i % 2 == 0 else 0.17)*math.sin(-math.pi/2 + i*math.pi/5)) for i in range(10)]
+        d.polygon(pts, fill=(250, 195, 60, 255), outline=(170, 110, 20, 255))
+        for x in (0.18, 0.82): E(x, 0.84, 0.11, 0.11, GOLD, outline=(140, 90, 20, 255), w=0.012); L([(x-0.08, 0.86), (x+0.08, 0.86)], DARK, 0.015)
+        E(0.5, 0.86, 0.06, 0.045, (200, 20, 40, 255))
     return im.resize((px, px), Image.LANCZOS)
 
 # ------------------------------------------------------------------ sections from the plan
@@ -128,15 +168,19 @@ def icon(sec, px):
 # (one contiguous section per track, numbered like NAMES) gives exactly the same sections as before.
 INST_KEYS = [('castanet', 1), ('piano', 2), ('vibra', 3), ('tubular', 4), ('marimba', 5), ('kalimba', 6), ('flute', 7),
              ('xylo', 8), ('ocarina', 9), ('glock', 10), ('steel drum', 11), ('guitar', 12)]
+HOOK_KEYS = [('tutti', 18), ('finale', 18), ('music box', 14), ('koto', 15), ('8-bit', 16), ('square lead', 16), ('bagpipe', 17)]   # hook50 (checked first)
 def inst_of(track):
     t = track.lower()
+    if 'tubular' in t and 'castanet' in t: return 13
+    for kw, i in HOOK_KEYS:
+        if kw in t: return i
     for kw, i in INST_KEYS:
         if kw in t: return i
-    m = re.match(r'\s*(\d+)\.', track); return int(m.group(1)) if m and int(m.group(1)) in NAMES else None
+    m = re.match(r'\s*(\d+)(?:/\d+)?\.', track); return int(m.group(1)) if m and int(m.group(1)) in NAMES else None
 P = json.load(open(a.plan)); fps = P['fps']; nfr = len(P['marble'])
 SEC = []                                       # section index -> (start t, instrument id (NAMES key), label number, subtitle)
 for k in sorted(P['keys'], key=lambda k: k['t']):
-    m = re.match(r'\s*(\d+)\.', k['track']); inst = inst_of(k['track'])
+    m = re.match(r'\s*(\d+)(?:/\d+)?\.', k['track']); inst = inst_of(k['track'])
     if not m or inst is None: continue
     if SEC and SEC[-1][4] == k['track']: continue
     sub = re.search(r'\(([^)]*)\)', k['track'])

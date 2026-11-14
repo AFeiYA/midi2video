@@ -264,3 +264,9 @@ tools/video/marble_music/run_zigzag.sh \
   projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid \
   projects/jingle-bells-marble-music/om_remix_0_15 0 15
 ```
+
+## hook50 @ 196 BPM（Shorts 副歌接力版，44 秒）
+
+- MIDI：`projects/jingle-bells-marble-music/source/hook50/02_Jingle_Bells_50s_Shorts_8Marbles_Tutti_Split_196bpm.mid`（只改了速度）
+- 流程：`extract_hits.py --tutti-min 3`（齐奏终章用一颗弹珠，同时起音合并成一次击打）→ `fix_clearance.py` → `hold_camera_end.py`（最后一击后相机缓停，结尾不会跟着弹珠拍空墙）→ `scene.py --look v5` → `titles.py` → `composite.sh`
+- `titles.py` 支持 `01/09.` 编号和 hook50 的乐器（13 管钟+响板、14 八音盒、15 古筝、16 8-bit 方波、17 风笛、18 齐奏终章），字体子集已用 `fonts/make_subset.sh` 重建。
