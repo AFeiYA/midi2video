@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Zig-zag marble-music pipeline (macOS / Linux). Resumable: already-rendered frames are skipped.
 # usage: run_zigzag.sh song.mid OUT_DIR START END [FPS] [SAMPLES] [RES] [LOOK=v5] [DEVICE]
+# v5+: plan via fix_clearance.py (plan_zigzag.py + small extra drops until both 3D checks pass; writes plan_zz_v2.extra_drop.json)
 # v3+: instrument keep-out check (--strict); v5+: striker clearance check (--strict, whitelist assets/instruments/pairs_whitelist.json), then titles.py overlay + composite.sh -> *_titled.mp4
 # DEVICE also via MARBLE_DEVICE (AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP). GPU/AUTO: Metal, then OptiX/CUDA/HIP, else CPU.
 # BLENDER: default /Applications/Blender.app/Contents/MacOS/Blender if present, otherwise `blender` on PATH.
@@ -21,7 +22,12 @@ PY=${PY:-python3}
 F="$W/frames_zz_$LOOK"; PLAN="$W/plan_zz_v2.json"
 mkdir -p "$F"
 "$PY" "$HERE/extract_hits.py" "$MID" --start "$S" --end "$E" -o "$W/hits.json" >/dev/null
-"$PY" "$HERE/plan_zigzag.py" "$W/hits.json" --fps "$FPS" --frame-margin 0.8 -o "$PLAN"
+LN=${LOOK#v}
+if [ "$LN" -ge 5 ]; then   # plan + automatic extra drop where 3D silhouettes would touch (no-op for the original jingle.mid)
+  "$PY" "$HERE/fix_clearance.py" "$W/hits.json" --fps "$FPS" --frame-margin 0.8 --look "$LOOK" -o "$PLAN"
+else
+  "$PY" "$HERE/plan_zigzag.py" "$W/hits.json" --fps "$FPS" --frame-margin 0.8 -o "$PLAN"
+fi
 LN=${LOOK#v}
 if [ "$LN" -ge 3 ]; then
   "$PY" "$HERE/check_keepout.py" "$PLAN" --look "$LOOK" --out "$W/keepout_report_$LOOK.json" --strict

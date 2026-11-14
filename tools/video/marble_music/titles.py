@@ -1,5 +1,6 @@
 """titles.py - v5 instrument corner-label overlay (compositing pass, no re-render needed for label tweaks).
 usage: python titles.py PLAN.json OUT_DIR [--start F0 --end F1] [--res 1080x1920] [--cards] [--no-corner] [--still FRAME --bg render.png --png out.png]
+Sections = contiguous runs of one melody track (instrument resolved by track name), so remixed MIDIs where instruments rotate and repeat (e.g. 6 instruments every 16 beats) get one label per run.
 Default: only the small top-left label ("01 响板 Castanets", opacity 0.8), shown from the first hit of each section; it fades in over
 --label-fade (0.3 s) and cross-fades from the previous section's label at each change. A section starting at t=0 starts at
 --first-delay (0.2 s) so nothing pops in on frame 0 (fully visible by 0.5 s).
@@ -120,43 +121,61 @@ def icon(sec, px):
         for x in (0.47, 0.49, 0.51, 0.53): L([(x, 0.16), (x, 0.82)], (235, 235, 225, 220), 0.004)
     return im.resize((px, px), Image.LANCZOS)
 
-# ------------------------------------------------------------------ sections from the plan (first hit of each "NN. Name" track)
+# ------------------------------------------------------------------ sections from the plan
+# A section = one contiguous run of hits by the same melody track (time order), so an instrument may come back many times
+# (e.g. the remix: 6 instruments rotating every 16 beats -> 36 sections).  The instrument (name / icon / accent colour) is
+# resolved from the track NAME (keywords below), the label number is the track's own "NN." prefix; the old 12-track MIDI
+# (one contiguous section per track, numbered like NAMES) gives exactly the same sections as before.
+INST_KEYS = [('castanet', 1), ('piano', 2), ('vibra', 3), ('tubular', 4), ('marimba', 5), ('kalimba', 6), ('flute', 7),
+             ('xylo', 8), ('ocarina', 9), ('glock', 10), ('steel drum', 11), ('guitar', 12)]
+def inst_of(track):
+    t = track.lower()
+    for kw, i in INST_KEYS:
+        if kw in t: return i
+    m = re.match(r'\s*(\d+)\.', track); return int(m.group(1)) if m and int(m.group(1)) in NAMES else None
 P = json.load(open(a.plan)); fps = P['fps']; nfr = len(P['marble'])
-secs = {}
-for k in P['keys']:
-    m = re.match(r'\s*(\d+)\.', k['track'])
-    if not m: continue
-    n = int(m.group(1)); sub = re.search(r'\(([^)]*)\)', k['track'])
-    if n not in secs or k['t'] < secs[n][0]: secs[n] = (k['t'], sub.group(1) if sub else '')
-order = sorted(secs, key=lambda n: secs[n][0])
+SEC = []                                       # section index -> (start t, instrument id (NAMES key), label number, subtitle)
+for k in sorted(P['keys'], key=lambda k: k['t']):
+    m = re.match(r'\s*(\d+)\.', k['track']); inst = inst_of(k['track'])
+    if not m or inst is None: continue
+    if SEC and SEC[-1][4] == k['track']: continue
+    sub = re.search(r'\(([^)]*)\)', k['track'])
+    SEC.append((k['t'], inst, int(m.group(1)), sub.group(1) if sub else '', k['track']))
+secs = {n: (S_[0], S_[3]) for n, S_ in enumerate(SEC)}
+order = list(range(len(SEC)))
+INST = {n: SEC[n][1] for n in order}; NUM = {n: SEC[n][2] for n in order}
 
 def title_card(n, sub):
-    zh, en, acc = NAMES[n]; cw, ch = int(820*S), int(196*S)
+    zh, en, acc = NAMES[INST[n]]; cw, ch = int(820*S), int(196*S)
     im = Image.new('RGBA', (cw + int(40*S), ch + int(40*S)), (0, 0, 0, 0)); ox = oy = int(20*S)
     sh = Image.new('RGBA', im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle([ox, oy+int(6*S), ox+cw, oy+ch+int(6*S)], radius=int(40*S), fill=(0, 0, 0, 120))
     im = Image.alpha_composite(im, sh.filter(ImageFilter.GaussianBlur(10*S))); d = ImageDraw.Draw(im)
     d.rounded_rectangle([ox, oy, ox+cw, oy+ch], radius=int(40*S), fill=(16, 16, 22, a.card_alpha), outline=acc + (220,), width=max(2, int(3*S)))
     isz = int(156*S); d.ellipse([ox+int(18*S), oy+int(20*S), ox+int(18*S)+isz, oy+int(20*S)+isz], fill=(255, 255, 255, 34), outline=acc + (160,), width=max(1, int(2*S)))
-    ic = icon(n, int(124*S)); im.alpha_composite(ic, (ox+int(34*S), oy+int(36*S)))
+    ic = icon(INST[n], int(124*S)); im.alpha_composite(ic, (ox+int(34*S), oy+int(36*S)))
     tx = ox + int(200*S)
-    d.text((tx, oy+int(18*S)), f'{n:02d}  ·  {sub}', font=font(False, 26), fill=acc + (235,))
+    d.text((tx, oy+int(18*S)), f'{NUM[n]:02d}  ·  {sub}', font=font(False, 26), fill=acc + (235,))
     fz = font(True, 72); d.text((tx, oy+int(46*S)), zh, font=fz, fill=(255, 255, 255, 255))
     zw = d.textlength(zh, font=fz); d.text((tx + zw + int(22*S), oy+int(78*S)), en, font=font(True, 40), fill=(235, 235, 240, 235))
     if a.card_scale != 1: im = im.resize((int(im.width*a.card_scale), int(im.height*a.card_scale)), Image.LANCZOS)
     return im
 
 def corner(n):
-    zh, en, acc = NAMES[n]; f1, f2 = font(True, 30), font(False, 24)
-    tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1))); w = int(64*S + tmp.textlength(f'{n:02d}', font=f2) + 14*S + tmp.textlength(zh, font=f1) + 12*S + tmp.textlength(en, font=f2) + 26*S); h = int(56*S)
+    zh, en, acc = NAMES[INST[n]]; f1, f2 = font(True, 30), font(False, 24)
+    tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1))); w = int(64*S + tmp.textlength(f'{NUM[n]:02d}', font=f2) + 14*S + tmp.textlength(zh, font=f1) + 12*S + tmp.textlength(en, font=f2) + 26*S); h = int(56*S)
     im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     d.rounded_rectangle([0, 0, w-1, h-1], radius=h//2, fill=(16, 16, 22, 170), outline=acc + (200,), width=max(1, int(2*S)))
-    im.alpha_composite(icon(n, int(44*S)), (int(10*S), int(6*S))); x = int(62*S)
-    d.text((x, int(12*S)), f'{n:02d}', font=f2, fill=acc + (255,)); x += int(tmp.textlength(f'{n:02d}', font=f2) + 14*S)
+    im.alpha_composite(icon(INST[n], int(44*S)), (int(10*S), int(6*S))); x = int(62*S)
+    d.text((x, int(12*S)), f'{NUM[n]:02d}', font=f2, fill=acc + (255,)); x += int(tmp.textlength(f'{NUM[n]:02d}', font=f2) + 14*S)
     d.text((x, int(6*S)), zh, font=f1, fill=(255, 255, 255, 255)); x += int(tmp.textlength(zh, font=f1) + 12*S)
     d.text((x, int(12*S)), en, font=f2, fill=(225, 225, 232, 235))
     return im
 
-CARD = {n: title_card(n, secs[n][1]) for n in order}; PILL = {n: corner(n) for n in order}
+_LK = {}
+for n in order: _LK.setdefault((INST[n], NUM[n], secs[n][1]), n)
+LBL = {n: _LK[(INST[n], NUM[n], secs[n][1])] for n in order}   # canonical section per distinct label
+CARD = {n: title_card(n, secs[n][1]) for n in set(LBL.values())}; CARD = {n: CARD[LBL[n]] for n in order}
+PILL = {n: corner(n) for n in set(LBL.values())}; PILL = {n: PILL[LBL[n]] for n in order}
 PILL_XY = (int(48*S), int(222*S))
 START = {n: max(secs[n][0], a.first_delay) for n in order}          # card start time per section (first section delayed)
 
@@ -214,7 +233,7 @@ def state(f):
     if a.no_corner: return (cur, 0, 0, None, 0)
     u = 1.0 if a.label_fade <= 0 else min(1, max(0, dt/a.label_fade))
     pp = (1-u) if prev is not None else 0
-    return (cur, 0, q(0.8*u), prev if pp > 0 else None, q(0.8*pp))
+    return (LBL[cur], 0, q(0.8*u), LBL[prev] if pp > 0 else None, q(0.8*pp))
 def overlay(st):
     n, ca, pa, pn, ppa = st; im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     if n is None: return im
@@ -240,4 +259,4 @@ for f in range(a.start, end+1):
     if st in cache: os.link(cache[st], fn)
     else: overlay(st).save(fn, optimize=False, compress_level=3); cache[st] = fn
 print('overlay frames', a.start, '-', end, 'unique', len(cache), '->', a.out)
-for n in order: print(f'  section {n:02d} {NAMES[n][0]} {NAMES[n][1]} at {secs[n][0]:.2f}s (frame {round(secs[n][0]*fps)})')
+for n in order: print(f'  section {n+1:02d}: {NUM[n]:02d} {NAMES[INST[n]][0]} {NAMES[INST[n]][1]} at {secs[n][0]:.2f}s (frame {round(secs[n][0]*fps)})')

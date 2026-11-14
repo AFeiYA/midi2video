@@ -250,3 +250,17 @@ tools/video/marble_music/run_zigzag.sh \
   0 15 30 12 1080x1920 v5 GPU
 # 带字幕的成片：.../om_zigzag_0_15/marble_zigzag_v5_0_15_titled.mp4
 ```
+
+## 6 乐器轮换版 MIDI（remix）
+
+`projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid`：只保留钟琴、钢鼓、吉他、陶笛、卡林巴、长笛 6 个旋律轨（`01.`–`06.`），每 16 拍（196 BPM，约 4.9 秒）轮换一次，共 36 段，从钟琴开始；伴奏轨不变，总长约 176.3 秒。
+
+- **乐器外观按轨道名匹配**（`assets/instruments/*/meta.json` 的 `tracks_regex`、`scene.py look_for`），与轨道编号无关，所以重新编号的轨道照样使用各自的 v5 外观。
+- **`titles.py`**：一段 = 同一轨道连续的一串击打，因此乐器可以多次重复出现（remix 共 36 段）。标签的乐器名、图标和主题色按轨道名识别，编号显示轨道自己的 `NN.`。每次换段都有 0.3 秒交叉淡入淡出。旧的 12 轨 `jingle.mid` 得到的分段和以前完全一样。
+- **`fix_clearance.py`**：调用 `plan_zigzag.py` 并跑两个 3D 检查。凡是弹珠擦到乐器、或两个击打件相碰的地方，就给相关段加一点下落量（`--extra-drop`，每次 5 cm），直到 `check_keepout.py` 和 `check_pairs.py` 都通过。结果写入 `plan_zz_v2.extra_drop.json`，可以复现。remix 需要在 18 段上加下落量（总计 2.8 m，主要在长笛的快速段）；`jingle.mid` 不需要任何改动。v5 及以上的 `run_zigzag.sh` 会自动调用它。
+
+```bash
+tools/video/marble_music/run_zigzag.sh \
+  projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid \
+  projects/jingle-bells-marble-music/om_remix_0_15 0 15
+```

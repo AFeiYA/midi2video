@@ -7,11 +7,13 @@ ap=argparse.ArgumentParser(); ap.add_argument('hits'); ap.add_argument('--fps',t
 ap.add_argument('--g',type=float,default=30.0); ap.add_argument('--half-gap',type=float,default=0.6,help='marble-centre x at contact = +-this')
 ap.add_argument('--drop-rate',type=float,default=5.0,help='max mean descent per second (long gaps become lobs)')
 ap.add_argument('--min-drop',type=float,default=0.35); ap.add_argument('--frac',type=float,default=0.5,help='drop as fraction of free-fall drop (lower = higher hop, flatter paddles)'); ap.add_argument('--snap',type=int,default=1,help='snap hit times to frame grid')
+ap.add_argument('--extra-drop',default='',help='JSON file {hit index: extra metres} added to the natural drop of the segment after that hit (written by fix_clearance.py to clear 3D instrument silhouettes)')
 ap.add_argument('-o',default='plan.json'); ap.add_argument('--verbose',type=int,default=0); ap.add_argument('--frame-margin',type=float,default=1.4); a=ap.parse_args()
 H=json.load(open(a.hits)); hits=H['hits']; dur=H['end']-H['start']; fps=a.fps; g=a.g; X=a.half_gap
 R=0.15; PL,KD,PT=0.62,0.36,0.09          # paddle length, depth (into wall), thickness
 T=[(round(h['time']*fps)/fps if a.snap else h['time']) for h in hits]
 n=len(T)
+EXTRA={int(k):float(v) for k,v in (json.load(open(a.extra_drop)).items() if a.extra_drop else [])}
 side=[(-1 if i%2==0 else 1) for i in range(n)]           # first paddle on the left
 xs=[side[i]*X for i in range(n)]
 def drop_for(dt): return max(a.min_drop, min(a.frac*0.5*g*dt*dt, a.drop_rate*dt))
@@ -50,7 +52,7 @@ for i in range(n):
     if i==n-1: dt=0.4; xn=-xs[i]
     else: dt=T[i+1]-T[i]; xn=xs[i+1]
     vx=(xn-xs[i])/dt; vin=vel_end(allsegs[-1])
-    nat=max(a.min_drop, min(a.frac*0.5*g*dt*dt, a.drop_rate*dt))
+    nat=max(a.min_drop, min(a.frac*0.5*g*dt*dt, a.drop_rate*dt))+EXTRA.get(i,0.0)
     chosen=None
     for d in list(np.arange(nat, nat+40, 0.1)):
         vz=(-d+0.5*g*dt*dt)/dt; seg=(T[i],xs[i],zs[i],vx,vz,dt)
