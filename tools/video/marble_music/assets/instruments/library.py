@@ -32,7 +32,7 @@ def hanging_world(k, h):
 def assign(keys, M=None):
     """returns list of (asset, variant, j) per key; j = index of the key within its section."""
     M = M or metas(); out = []; count = {}
-    order = sorted(M.values(), key=lambda m: m['section'])
+    order = sorted(M.values(), key=lambda m: (-m.get('priority', 0), m['section']))   # hook50: specific assets (e.g. 'tubular.*castanet') outrank generic ones
     for k in keys:
         t = k['track'].lower()
         m = next((m for m in order if re.search(m['tracks_regex'], t)), None) or (M['castanets'] if k.get('drum') else M['piano'])

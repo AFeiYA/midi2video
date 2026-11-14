@@ -1,0 +1,94 @@
+{
+ "name": "bagpipe",
+ "section": 17,
+ "tracks_regex": "bagpipe",
+ "description": "hook50 section 08: black drone pipe with ivory ferrules (struck) on top of a red tartan bag, with two more drones rising up-left, a chanter hanging down and red tassel cords, behind the marble plane.",
+ "slots": [
+  "body",
+  "tartan",
+  "ivory",
+  "pipe",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.7,
+  0.4
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04498,
+   "bbox": [
+    [
+     -0.47110000252723694,
+     -0.04520000144839287,
+     -0.6499999761581421
+    ],
+    [
+     0.4505999982357025,
+     0.3100000023841858,
+     0.48089998960494995
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     -0.0012000000569969416,
+     -0.20999999344348907
+    ],
+    [
+     0.32199999690055847,
+     0.1550000011920929,
+     0.04520000144839287
+    ]
+   ],
+   "probe_points": 35072,
+   "triangles": 1668
+  }
+ }
+}

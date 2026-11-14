@@ -1,0 +1,93 @@
+{
+ "name": "pixel8bit",
+ "section": 16,
+ "tracks_regex": "8-bit|square lead|chiptune",
+ "description": "hook50 section 07: a row of seven glossy pixel blocks (struck; colour cycles key to key) above a glowing voxel 8-bit eighth-note on a dark console plate with a d-pad and two buttons, behind the marble plane.",
+ "slots": [
+  "body",
+  "plate",
+  "glow",
+  "accent",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.6,
+  1.0,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3499999940395355,
+     -0.10199999809265137,
+     -0.5099999904632568
+    ],
+    [
+     0.3499999940395355,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     0.05000000074505806,
+     0.0008999999845400453
+    ],
+    [
+     0.32199999690055847,
+     0.15489999949932098,
+     0.039000000804662704
+    ]
+   ],
+   "probe_points": 49356,
+   "triangles": 1062
+  }
+ }
+}

@@ -1,0 +1,94 @@
+{
+ "name": "music_box",
+ "section": 14,
+ "tracks_regex": "music box",
+ "description": "hook50 section 02: brass music-box comb (struck: solid top strip + row of graded tines) above a pinned brass cylinder, all on a walnut box with an open red-velvet lid, gold keyhole and a winding key, behind the marble plane.",
+ "slots": [
+  "body",
+  "wood",
+  "velvet",
+  "brass",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.5
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3499999940395355,
+     -0.10000000149011612,
+     -0.4099999964237213
+    ],
+    [
+     0.5,
+     0.3100000023841858,
+     0.20000000298023224
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     -0.07999999821186066,
+     -0.375
+    ],
+    [
+     0.32199999690055847,
+     0.1550000011920929,
+     0.039000000804662704
+    ]
+   ],
+   "probe_points": 92344,
+   "triangles": 4590
+  }
+ }
+}

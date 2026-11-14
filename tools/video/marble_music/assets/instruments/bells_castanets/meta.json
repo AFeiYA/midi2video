@@ -1,0 +1,170 @@
+{
+ "name": "bells_castanets",
+ "section": 13,
+ "priority": 5,
+ "tracks_regex": "tubular.*castanet",
+ "description": "hook50 section 01: polished brass chime rail (struck) with six graded brass tubes (crown caps, world-vertical, meta.hanging) and a red-corded castanet pair hanging off the right end of the rail, behind the marble plane.",
+ "slots": [
+  "body",
+  "tube",
+  "dark",
+  "cap",
+  "shell",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.78,
+  0.38
+ ],
+ "hanging": [
+  {
+   "attach": [
+    -0.25,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.56,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    -0.15,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.51,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    -0.05,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.46,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.05,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.41,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.15,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.36,
+   "role": "tube",
+   "cap_role": "cap"
+  },
+  {
+   "attach": [
+    0.25,
+    0.222,
+    0.0
+   ],
+   "radius": 0.03,
+   "inner": 0.022,
+   "length": 0.31,
+   "role": "tube",
+   "cap_role": "cap"
+  }
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.33000001311302185,
+     -0.05999999865889549,
+     -0.38999998569488525
+    ],
+    [
+     0.6800000071525574,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     -0.042399998754262924,
+     -0.0966000035405159
+    ],
+    [
+     0.44530001282691956,
+     0.15489999949932098,
+     0.03920000046491623
+    ]
+   ],
+   "probe_points": 30738,
+   "triangles": 4008
+  }
+ }
+}

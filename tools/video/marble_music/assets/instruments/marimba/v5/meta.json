@@ -1,0 +1,94 @@
+{
+ "name": "marimba",
+ "section": 5,
+ "tracks_regex": "marimba",
+ "description": "v5 / hook50 03: arched honduras-rosewood bar (struck) above a face-on mini marimba keyboard: seven graded rosewood bars (long bass left, short treble right) on two cords between dark frame rails with brass nodes, behind the marble plane. No hanging tubes (they read as tubular bells).",
+ "slots": [
+  "body",
+  "cord",
+  "dark",
+  "bars",
+  "brass",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.6,
+  0.3
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3499999940395355,
+     -0.15000000596046448,
+     -0.4000000059604645
+    ],
+    [
+     0.35190001130104065,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     0.05000000074505806,
+     0.0010999999940395355
+    ],
+    [
+     0.32199999690055847,
+     0.1543000042438507,
+     0.03920000046491623
+    ]
+   ],
+   "probe_points": 38230,
+   "triangles": 2289
+  }
+ }
+}

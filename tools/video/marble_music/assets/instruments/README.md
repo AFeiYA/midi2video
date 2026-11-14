@@ -42,3 +42,24 @@ v5 的 `<乐器>/v5/` 覆盖版本。`library.metas(look)` 按 `LOOK_ORDER = ['v
 - 新增 `check_pairs.py`（需要 scipy）：检查击打件之间（含悬挂件、对齐部件）在世界坐标里是否小于 `--min`（默认 1 cm）。`--strict` 下，只要有不在 `pairs_whitelist.json` 里的冲突就退出 1。白名单每条只放行指定的那一对键，而且间距不能小于 `min_gap_m`。陡角度时同侧相邻击打件只隔约 0.7 m，所以吉他琴颈、钟琴琴箱、管钟铜管的长度都按这个检查结果截短过。
   `python3 tools/video/marble_music/check_pairs.py work/plan_zz_v2.json --look v5 --strict`
 - 对齐部件：`meta.aligned = [{name, a, b, y, radius}]`，`build.py` 里的 `build_aligned(C, name)` 沿 -X 建模（从原点开始，长度 |b-a|）。位姿由 `library.aligned_local()` 计算，`scene.py` 和 `check_pairs.py` 共用。
+
+## hook50（50 秒 Shorts 副歌接力版）新增击打件（外观 v5 家族）
+
+按音轨名选择（`meta.tracks_regex`；`meta.priority` 越大越优先，用来让 "Tubular Bells & Castanets" 选中组合件而不是单独的响板/管钟）：
+
+- **bells_castanets**（`tubular.*castanet`，priority 5）：黄铜横梁是击打件，6 根逐级变短的铜管世界竖直悬挂（`meta.hanging`），横梁右端用红绳挂一对响板（在弹珠平面之后）。
+- **music_box**（`music box`）：黄铜音梳是击打件（顶条 + 17 根逐级变短的梳齿），后面是带销钉的黄铜滚筒、胡桃木盒（黄铜嵌线、钥匙孔）、打开的红丝绒盒盖和发条钥匙。
+- **marimba/v5**（覆盖 v4）：拱形红木琴条是击打件，后面是正对相机的 7 根逐级变短的红木琴条（红绳穿过节点、深色边框）。不再挂共鸣管，因为金色竖管和管钟太像。
+- **koto**（`koto`）：红木琴边是击打件，后面是深色桐木琴面、琴弦、一排斜向的象牙色琴柱（ji）和带金边的红木端头。
+- **pixel8bit**（`8-bit|square lead|chiptune`）：7 块像素方块是击打件（颜色逐键轮换），后面是黑色游戏机面板上发光的体素八分音符、十字键和两个按钮。
+- **bagpipe**（`bagpipe`）：带象牙箍的黑木低音管是击打件，后面是红色苏格兰格纹气袋、两根向左上伸出的低音管、下垂的旋律管和红色流苏绳。
+- **finale**（`tutti|finale`，priority 5）：单弹珠齐奏终章。抛光金条是击打件，后面是微微发光的金色圣诞星、红色蝴蝶结和两只挂在红绳上的金色铃铛。
+
+齐奏终章只用一颗弹珠：`extract_hits.py --tutti-min 3` 把 3 条及以上乐器轨同时起音的音合并成一次击打，音轨名标为 `09/09. Grand Tutti Finale`，音频仍然是 8 种乐器一起响。
+
+```
+python extract_hits.py hook50/02_..._Split.mid --start 0 --end 50.2 --tutti-min 3 -o work_hook50/hits.json
+python fix_clearance.py work_hook50/hits.json -o work_hook50/plan_zz_v2.json --look v5
+blender -b -P assets/instruments/build_library.py -- --only bells_castanets,music_box,koto,pixel8bit,bagpipe,finale,marimba/v5
+python hook50_sheet.py work_hook50/plan_zz_v2.json stills/ hook50_instrument_sheet.png
+```

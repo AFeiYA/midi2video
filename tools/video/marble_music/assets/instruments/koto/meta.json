@@ -1,0 +1,98 @@
+{
+ "name": "koto",
+ "section": 15,
+ "tracks_regex": "koto",
+ "description": "hook50 section 06: rosewood koto edge (struck) above a face-on paulownia koto board with silk strings (7 drawn so they read at video scale), a diagonal row of ivory bridges (ji) and dark rosewood end caps with gold trim, behind the marble plane.",
+ "slots": [
+  "body",
+  "board",
+  "string",
+  "bridge",
+  "trim",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.5
+ ],
+ "flash_slots": [
+  "body",
+  "string"
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "pins": [
+  {
+   "x": -0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  },
+  {
+   "x": 0.3,
+   "z": 0.02,
+   "y_start": 0.05,
+   "radius": 0.022
+  }
+ ],
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.5049999952316284,
+     -0.08150000125169754,
+     -0.3100000023841858
+    ],
+    [
+     0.5049999952316284,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.32199999690055847,
+     0.05000000074505806,
+     0.0012000000569969416
+    ],
+    [
+     0.32199999690055847,
+     0.15379999577999115,
+     0.03909999877214432
+    ]
+   ],
+   "probe_points": 37256,
+   "triangles": 669
+  }
+ }
+}
