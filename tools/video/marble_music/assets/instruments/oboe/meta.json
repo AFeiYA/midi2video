@@ -1,0 +1,84 @@
+{
+ "name": "oboe",
+ "section": 142,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 42 Oboe: slim warm reddish-brown (violet-wood) oboe on its side - the body is the striker, crowded with silver key cups, rods and ferrules; a small flared bell at the right and the tan cane DOUBLE REED with orange thread wrap and cork at the left.",
+ "slots": [
+  "body",
+  "keys",
+  "dark",
+  "cork",
+  "thread",
+  "cane",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.7
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04499,
+   "bbox": [
+    [
+     -0.46880000829696655,
+     -0.03799999877810478,
+     -0.039000000804662704
+    ],
+    [
+     0.3930000066757202,
+     0.3100000023841858,
+     0.06499999761581421
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 20429,
+   "triangles": 3676
+  }
+ }
+}

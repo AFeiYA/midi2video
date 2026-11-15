@@ -38,3 +38,12 @@ __pycache__/
 /soprano_sax/model*
 /alto_sax/model*
 /tenor_sax/model*
+/oboe/model*
+/english_horn/model*
+/bassoon/model*
+/clarinet/model*
+/piccolo/model*
+/recorder/model*
+/pan_flute/model*
+/shakuhachi/model*
+/tin_whistle/model*

@@ -94,3 +94,31 @@ def front_bell(C, mi, dark, x, z, r, y0=0.165, depth=0.11, r0=0.02, m=14, n=40, 
     o.append(_ring_mesh(C, name+'_m', [[(x + rr*math.cos(a), yy, z + rr*math.sin(a)) for a in [2*math.pi*j/n for j in range(n)]]], dark, cap0=True))
     return o
 '''
+
+# woodwinds: body tube in the marble slab (top flush with the contact face), metal ferrules flush on top, camera-side tone holes / keys.
+# Paste after H + BRASS (uses sweep).
+WOOD = '''
+def tube_x(C, mi, r, x0=-0.31, x1=0.31, zc=None, verts=40):
+    zc = 0.045 - r if zc is None else zc
+    return C.prim('cyl', mi, loc=((x0+x1)/2,0,zc), rot=(0,math.pi/2,0), scale=(r,r,x1-x0), verts=verts)
+def ferrule(C, mi, x, r, zc, w=0.014, extra=0.004):
+    """metal ring around a tube of radius r at axis z=zc; top stays flush with the tube top"""
+    return C.prim('cyl', mi, loc=(x,0,zc-extra), rot=(0,math.pi/2,0), scale=(r+extra,r+extra,w), bevel=0.002, verts=40)
+def hole(C, mi, x, r, zc, rh=0.011):
+    """dark tone hole on the camera side (-Y) of a tube"""
+    return C.prim('cyl', mi, loc=(x,-(r-0.004),zc), rot=(math.pi/2,0,0), scale=(rh,rh,0.012), verts=20)
+def keycup(C, mi, x, r, zc, rc=0.017, pad=None):
+    o = [C.prim('cyl', mi, loc=(x,-(r+0.002),zc), rot=(math.pi/2,0,0), scale=(rc,rc,0.008), bevel=0.002, verts=24)]
+    if pad is not None: o.append(C.prim('cyl', pad, loc=(x,-(r+0.0065),zc), rot=(math.pi/2,0,0), scale=(rc*0.62,rc*0.62,0.003), verts=20))
+    return o
+def keyrod(C, mi, r, zc, x0=-0.28, x1=0.28, dz=-0.6, rr=0.0035):
+    return C.prim('cyl', mi, loc=((x0+x1)/2,-r*0.78,zc+dz*r), rot=(0,math.pi/2,0), scale=(rr,rr,x1-x0), verts=8)
+def double_reed(C, cork, thread, cane, x0, z, y=0.19, dirx=-1.0, scale=1.0, dirz=0.0):
+    """staple + cork + coloured thread wrap + flat cane blades, pointing along (dirx, dirz) from (x0, z)"""
+    s = scale; L = math.hypot(dirx, dirz); dx, dz = dirx/L, dirz/L; o = []
+    p = lambda t: (x0+dx*t*s, z+dz*t*s)
+    o.append(sweep(C, cork, [p(0), p(0.035)], [0.011*s,0.008*s], y=y))
+    o.append(sweep(C, thread, [p(0.035), p(0.06)], [0.0085*s,0.0075*s], y=y))
+    o.append(sweep(C, cane, [p(0.06), p(0.08), p(0.1), p(0.112)], [0.006*s,0.009*s,0.011*s,0.011*s], y=y, ymax=0.003*s))
+    return o
+'''

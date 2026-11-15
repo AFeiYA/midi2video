@@ -98,5 +98,5 @@ def build(C, variant=None):
         P.append(bar(C, (x,-0.24), (x-0.10,-0.16+0.02*i), 0.012, 0.008, 1, 0.168))
         P.append(C.prim('cube', 1, loc=(x-0.10,0.168,-0.16+0.02*i), scale=(0.035,0.01,0.02), bevel=0.004))
     P.append(sweep(C, 0, [(0.31,0.015),(0.36,-0.03),(0.30,-0.07),(0.12,-0.08)], 0.02, y=0.2))          # lead pipe into the coils
-    P += bell(C, 0, 2, (0.16,-0.42), (1,-0.35), 0.40, 0.02, 0.19, y=0.225, ymax=0.06)
+    P += bell(C, 0, 2, (0.17,-0.42), (0.35,-1), 0.32, 0.02, 0.19, y=0.225, ymax=0.06)   # angled down so the rim stays in the showcase frame
     return P

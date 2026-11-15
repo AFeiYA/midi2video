@@ -1,0 +1,83 @@
+{
+ "name": "pan_flute",
+ "section": 149,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 49 Pan Flute: the bamboo crossbar wrapped in red cord is the striker; behind it a row of twelve bamboo pipes of graded length (long at the left, short at the right) with aligned open tops and a second corded binding band.",
+ "slots": [
+  "body",
+  "cord",
+  "pipe",
+  "dark",
+  "node",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.9,
+  0.55
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04497,
+   "bbox": [
+    [
+     -0.31299999356269836,
+     -0.029999999329447746,
+     -0.3799999952316284
+    ],
+    [
+     0.3230000138282776,
+     0.3100000023841858,
+     0.12099999934434891
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 43484,
+   "triangles": 5562
+  }
+ }
+}

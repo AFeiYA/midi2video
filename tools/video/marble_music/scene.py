@@ -179,7 +179,7 @@ for _ki,k in enumerate(P['keys']):
         for ap_ in meta.get('aligned',[]):                    # v5: re-aim the part along the camera ray every 2 frames while the key can be on screen
             ao=bpy.data.objects.new(f"key{k['i']}_{ap_['name']}",_ALN[(an,ap_['name'])]); sc.collection.objects.link(ao); ao.parent=o
             ao.material_slots[bi].link='OBJECT'; ao.material_slots[bi].material=m
-            fh_=int(round(fh)); fr_=[f for f in range(max(0,fh_-150),min(len(P['camera'])-1,fh_+150)+1,2) if abs(P['camera'][f][1]-k['z'])<4.0] or [fh_]
+            fh_=int(round(fh)); fr_=[f for f in range(max(0,fh_-150),min(len(P['camera'])-1,fh_+150)+1,2) if abs(P['camera'][f][1]-k['z'])<4.0] or [min(max(fh_,0),len(P['camera'])-1)]   # never-hit keys (showcase t=-100) -> clamp
             prev=None
             for f in fr_:
                 lc,ph,scl=ALIB.aligned_local(k,P['camera'][f],ap_)

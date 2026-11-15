@@ -1,0 +1,83 @@
+{
+ "name": "shakuhachi",
+ "section": 150,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 50 Shakuhachi: thick green-gold bamboo with raised nodes is the striker; the angled blowing edge with white horn inlay at the left, four big finger holes, the flared root end with root nubs at the right, and a purple silk cord with tassel.",
+ "slots": [
+  "body",
+  "node",
+  "dark",
+  "inlay",
+  "cord",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.9,
+  1.0,
+  0.6
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04496,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.04399999976158142,
+     -0.2800000011920929
+    ],
+    [
+     0.44530001282691956,
+     0.3100000023841858,
+     0.05040000006556511
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 17089,
+   "triangles": 2168
+  }
+ }
+}

@@ -1,0 +1,85 @@
+{
+ "name": "bassoon",
+ "section": 144,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 44 Bassoon: big orange-red flamed-maple bassoon on its side - the wing joint is the striker; behind it the parallel bass joint runs further left to the bell with an IVORY ring, joined at the right by the black-capped boot (U-bend); silver keys and an S-curved silver bocal with reed.",
+ "slots": [
+  "body",
+  "keys",
+  "dark",
+  "ivory",
+  "cork",
+  "thread",
+  "cane",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.75,
+  0.5
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04495,
+   "bbox": [
+    [
+     -0.6255999803543091,
+     -0.04600000008940697,
+     -0.18000000715255737
+    ],
+    [
+     0.4659999907016754,
+     0.3100000023841858,
+     0.12929999828338623
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 33558,
+   "triangles": 2666
+  }
+ }
+}

@@ -1,0 +1,82 @@
+{
+ "name": "recorder",
+ "section": 148,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 48 Recorder: honey-coloured boxwood baroque recorder with chocolate-brown turned rings - the body is the striker; open finger holes (double holes at the bottom), no keys; the head with its square window and the curved beak mouthpiece at the left, the flared foot at the right.",
+ "slots": [
+  "body",
+  "ring",
+  "dark",
+  "edge",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.9,
+  0.6
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.4336000084877014,
+     -0.04399999976158142,
+     -0.04899999871850014
+    ],
+    [
+     0.38499999046325684,
+     0.3100000023841858,
+     0.06700000166893005
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 18645,
+   "triangles": 2470
+  }
+ }
+}

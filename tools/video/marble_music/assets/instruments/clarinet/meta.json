@@ -1,0 +1,84 @@
+{
+ "name": "clarinet",
+ "section": 145,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 45 Clarinet: jet-black grenadilla wood with bright silver rings, key cups and rods - the body is the striker; at the left the barrel and black beak mouthpiece with a silver ligature, at the right the flared black bell with a silver rim. Clearly not the straight SILVER soprano sax.",
+ "slots": [
+  "body",
+  "keys",
+  "dark",
+  "pad",
+  "mouth",
+  "reed",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.85,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04499,
+   "bbox": [
+    [
+     -0.5419999957084656,
+     -0.04600000008940697,
+     -0.0820000022649765
+    ],
+    [
+     0.5220000147819519,
+     0.3100000023841858,
+     0.09600000083446503
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 28552,
+   "triangles": 4294
+  }
+ }
+}
