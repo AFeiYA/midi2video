@@ -1,0 +1,90 @@
+{
+ "name": "violin",
+ "section": 125,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": 0.1,
+   "z": -0.07,
+   "y_start": 0.24,
+   "radius": 0.022
+  },
+  {
+   "x": -0.1,
+   "z": -0.07,
+   "y_start": 0.24,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 25 Violin: four steel strings (the striker) over a bright orange-red varnished violin face-on (f-holes, ebony fingerboard and chinrest, scroll) with its bow laid diagonally across it - bowed, unlike pizzicato (23).",
+ "slots": [
+  "body",
+  "ebony",
+  "dark",
+  "steel",
+  "pale",
+  "stick",
+  "hair",
+  "pearl",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "steel"
+ ],
+ "flash_color": [
+  1.0,
+  0.75,
+  0.4
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": null,
+   "bbox": [
+    [
+     -0.5277000069618225,
+     -0.10999999940395355,
+     -0.24320000410079956
+    ],
+    [
+     0.503600001335144,
+     0.3100000023841858,
+     0.3163999915122986
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 35767,
+   "triangles": 2984
+  }
+ }
+}

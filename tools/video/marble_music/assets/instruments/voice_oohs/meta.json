@@ -1,0 +1,87 @@
+{
+ "name": "voice_oohs",
+ "section": 131,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.12,
+   "z": 0.0,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.12,
+   "z": 0.0,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 31 Voice Oohs: a vintage 1950s studio microphone - the chrome boom arm (with a counterweight ball) is the striker; the art-deco chrome capsule with horizontal grille slots sits on a gold yoke at its right end, the boom clamps onto a chrome stand with a black cast base and a coiled cable, and a red ON-AIR lamp glows above.",
+ "slots": [
+  "body",
+  "grille",
+  "gold",
+  "black",
+  "red",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "grille"
+ ],
+ "flash_color": [
+  1.0,
+  0.9,
+  0.7
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04492,
+   "bbox": [
+    [
+     -0.6000000238418579,
+     -0.05000000074505806,
+     -0.6600000262260437
+    ],
+    [
+     0.6340000033378601,
+     0.3100000023841858,
+     0.3499999940395355
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 36538,
+   "triangles": 4724
+  }
+ }
+}

@@ -21,3 +21,11 @@ __pycache__/
 /fretless_bass/model*
 /pizzicato/model*
 /harp/model*
+/violin/model*
+/viola/model*
+/cello/model*
+/contrabass/model*
+/string_ensemble/model*
+/choir/model*
+/voice_oohs/model*
+/orchestra_hit/model*

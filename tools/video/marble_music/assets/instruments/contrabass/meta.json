@@ -1,0 +1,90 @@
+{
+ "name": "contrabass",
+ "section": 128,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 28 Contrabass: the BOW is the striker (pernambuco stick flush with the contact face, white hair, ebony frog with pearl eye, ivory tip), crossing the strings of a BIG near-black double bass with sloping shoulders standing upright behind it (tall neck and scroll, f-holes, bridge, strings, end-pin) - bowed, unlike the plucked, lying acoustic bass (21).",
+ "slots": [
+  "body",
+  "ebony",
+  "dark",
+  "steel",
+  "pale",
+  "stick",
+  "hair",
+  "pearl",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "hair"
+ ],
+ "flash_color": [
+  1.0,
+  0.7,
+  0.4
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04494,
+   "bbox": [
+    [
+     -0.30000001192092896,
+     -0.03799999877810478,
+     -0.40380001068115234
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.8424999713897705
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 50392,
+   "triangles": 2866
+  }
+ }
+}
