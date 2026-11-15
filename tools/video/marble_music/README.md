@@ -271,8 +271,9 @@ tools/video/marble_music/run_zigzag.sh \
 - 流程：`extract_hits.py --tutti-min 3`（齐奏终章用一颗弹珠，同时起音合并成一次击打）→ `fix_clearance.py` → `hold_camera_end.py`（最后一击后相机缓停，结尾不会跟着弹珠拍空墙）→ `scene.py --look v5` → `titles.py` → `composite.sh`
 - `titles.py` 支持 `01/09.` 编号和 hook50 的乐器（13 管钟+响板、14 八音盒、15 古筝、16 8-bit 方波、17 风笛、18 齐奏终章），字体子集已用 `fonts/make_subset.sh` 重建。
 
-### 结尾落点（ending.py，可选）
+### 结尾落点（ending.py，可选，v2）
 
-- `ending.py plan.json plan_end.json`：最后一击后弹珠划弧落到金色终点台（黑漆台身 + 棋盘格终点旗台面 + 金边 + 正面金星，`ending_pad.py` 由 `scene.py` 按 `P['ending']` 自动搭建），撞台时台子下沉、金光一闪、星星保持点亮；随后弹珠向镜头方向（`marble_y`）弹起并从画面中间下方出画，相机缓降对准终点台。默认：最后一击后 0.53 s 落台，视频在最后一击后再延长 2.63 s。参数见脚本头部。
-- 同时写出 `plan_end.sfx.json`（撞击时间点）；`ending_sfx.py MUSIC.wav plan_end.sfx.json out.wav` 合成玻璃弹珠撞台声（清脆 click + 玻璃泛音 + 木台敲击 + 轻微低频 thump + 短混响，外加一声较轻的画外第二次弹跳）并混进音乐，之后照常 `loudnorm I=-14:TP=-1`。
-- 只需重渲终点台进入画面之后的帧（hook50@196：1264–1365），之前的帧不变。
+- `ending.py plan.json plan_end.json`：最后一击后弹珠划弧落到金色终点台（黑漆台身 + 棋盘格终点旗台面 + 金边 + 正面金星；台子离墙，由黄铜悬臂支架托住：上下两块带螺栓的墙板 + 台下横臂 + 两根斜撑），撞台时台子下沉、金光一闪、星星保持点亮；随后弹珠朝镜头方向在台面上小跳两下、滚到台面前部停住，再静止 `--hold` 秒（默认 0.5 s）。最后一帧就是交接帧，可导出给图生视频工具。相机缓降，让终点台落在画面中下部。
+- `--subscribe`（可选）：停住后弹珠升起、发光变大，在画面上部炸开（闪光 + 金色火花），变成面向镜头的 3D 金色立体字（第 1 行 `--line1`，默认 SUBSCRIBE；第 2 行 `--line2`，默认 @LucaMarbleMusic），自动按画面宽度 74%/80% 排版，位于标题标签下方，再保持 `--sub-hold` 秒。字体默认 Poppins ExtraBold（找不到时退回 DejaVu Sans Bold）。
+- `ending_pad.py` 由 `scene.py` 按 `P['ending']` 自动搭建终点台和字；同时写出 `plan_end.sfx.json`（撞击、小跳、whoosh、chime 的时间点）。`ending_sfx.py MUSIC.wav plan_end.sfx.json out.wav` 合成玻璃弹珠撞台声（click + 玻璃泛音 + 木台敲击 + 低频 thump + 短混响）、小跳的轻 tick，以及订阅版的上扬 whoosh 和柔和铃声，混进音乐；之后照常 `loudnorm I=-14:TP=-1`。
+- 只需重渲终点台进入画面之后的帧（hook50@196：从 1264 帧起），之前的帧不变。
