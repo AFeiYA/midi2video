@@ -43,15 +43,15 @@ def sheet(plan_path, fd, out, closeups=None, cols=4, labels=None):
         p = f'{fd}/{P["showcase_frames"][i]:05d}.png'; x = (i % cols) * tw; y = (i // cols) * (th + hd)
         if os.path.exists(p):
             im = Image.open(p).convert('RGB'); S.paste(im.resize((tw, th)), (x, y + hd))
-            W, H = im.size; c = im.crop((int(W * 0.06), int(H * 0.17), int(W * 0.94), int(H * 0.17) + int(W * 0.88))); crops.append((tr, c))
+            W, H = im.size; y0 = int(H * 0.04); c = im.crop((0, y0, W, y0 + int(W * 1.2))); crops.append((tr, c))   # full width x 1.2W: all three strikers + backdrops, nothing clipped
         l1, l2 = labels.get(tr, (tr, ''))
         while d.textlength(l1, font=FB) > tw - 16 and len(l1) > 4: l1 = l1[:-2] + '…' if not l1.endswith('…') else l1[:-2] + '…'
         d.text((x + 10, y + 6), l1, fill=(255, 255, 255), font=FB); d.text((x + 10, y + 42), l2, fill=(190, 190, 190), font=FR)
     S.save(out); print('saved', out)
     if closeups and crops:
-        cw = 480; rows = (len(crops) + cols - 1) // cols; C_ = Image.new('RGB', (cols * cw, rows * (cw + 44)), (18, 18, 18)); d = ImageDraw.Draw(C_)
+        cw = 560; ch = int(cw * 1.2); rows = (len(crops) + cols - 1) // cols; C_ = Image.new('RGB', (cols * cw, rows * (ch + 44)), (18, 18, 18)); d = ImageDraw.Draw(C_)
         for i, (tr, c) in enumerate(crops):
-            x = (i % cols) * cw; y = (i // cols) * (cw + 44); C_.paste(c.resize((cw, cw)), (x, y + 44)); d.text((x + 8, y + 6), labels.get(tr, (tr, ''))[0], fill=(255, 255, 255), font=FB)
+            x = (i % cols) * cw; y = (i // cols) * (ch + 44); C_.paste(c.resize((cw, ch)), (x, y + 44)); d.text((x + 8, y + 6), labels.get(tr, (tr, ''))[0], fill=(255, 255, 255), font=FB)
         C_.save(closeups); print('saved', closeups)
 
 if __name__ == '__main__':

@@ -1,0 +1,88 @@
+{
+ "name": "harp",
+ "section": 124,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 24 Orchestral Harp: the gilt carved harp neck is the striker; below it a concert harp in side elevation - fluted gold column with a crown on the left, maple soundboard slanting down to the gilt base with pedals, and a fan of strings (red C strings, blue F strings, the rest cream) from the neck to the soundboard.",
+ "slots": [
+  "body",
+  "gold",
+  "maple",
+  "s_cream",
+  "s_red",
+  "s_blue",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "gold"
+ ],
+ "flash_color": [
+  1.0,
+  0.85,
+  0.45
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.4950000047683716,
+     -0.15000000596046448,
+     -0.6299999952316284
+    ],
+    [
+     0.4803999960422516,
+     0.3100000023841858,
+     0.1599999964237213
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 43862,
+   "triangles": 1628
+  }
+ }
+}

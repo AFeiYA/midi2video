@@ -1,0 +1,114 @@
+{
+ "name": "church_organ",
+ "section": 114,
+ "tracks_regex": "(?!)",
+ "variants": [
+  "white",
+  "black"
+ ],
+ "variant_rule": "pitch",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 14 Church Organ: pitch-chosen key on a dark-oak console flanked by rows of ivory stop knobs, with a V-shaped facade of silver tin pipes (gold mouths, short in the middle so the marble sits in the notch) rising behind it from a carved oak impost between two gothic towers with gold pinnacles; console and pedalboard below.",
+ "slots": [
+  "body",
+  "oak",
+  "tin",
+  "gold",
+  "ivory",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.9,
+  0.65
+ ],
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "white": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.5899999737739563,
+     -0.15000000596046448,
+     -0.39750000834465027
+    ],
+    [
+     0.5899999737739563,
+     0.3100000023841858,
+     0.5950000286102295
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 100396,
+   "triangles": 2976
+  },
+  "black": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.5899999737739563,
+     -0.10999999940395355,
+     -0.39750000834465027
+    ],
+    [
+     0.5899999737739563,
+     0.3100000023841858,
+     0.5950000286102295
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.3100000023841858,
+     0.10999999940395355,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 94822,
+   "triangles": 2828
+  }
+ }
+}

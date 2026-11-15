@@ -1,0 +1,89 @@
+{
+ "name": "nylon_guitar",
+ "section": 117,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": 0.12,
+   "z": -0.12,
+   "y_start": 0.24,
+   "radius": 0.022
+  },
+  {
+   "x": -0.12,
+   "z": -0.12,
+   "y_start": 0.24,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 17 Acoustic Guitar Nylon (classical): three clear-white nylon trebles and three silver-wound basses (the striker) over a pale spruce classical body face-on - wide figure-of-eight outline with rosewood binding, green/gold mosaic rosette, tie-block bridge - cedar neck and a slotted headstock with white rollers and side tuners (adapted from guitar v5, which keeps the steel-string sunburst).",
+ "slots": [
+  "body",
+  "nylon",
+  "wound",
+  "rosewood",
+  "dark",
+  "mosaic",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "nylon",
+  "wound"
+ ],
+ "flash_color": [
+  1.0,
+  0.9,
+  0.65
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04108,
+   "bbox": [
+    [
+     -0.8700000047683716,
+     -0.11999999731779099,
+     -0.24079999327659607
+    ],
+    [
+     0.3646000027656555,
+     0.3100000023841858,
+     0.24079999327659607
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 63543,
+   "triangles": 3494
+  }
+ }
+}

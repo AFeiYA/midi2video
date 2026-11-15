@@ -10,3 +10,14 @@ __pycache__/
 /jb_vibraphone/model*
 /jb_xylophone/model*
 /dulcimer/model*
+/drawbar_organ/model*
+/church_organ/model*
+/accordion/model*
+/harmonica/model*
+/nylon_guitar/model*
+/electric_guitar/model*
+/distortion_guitar/model*
+/upright_bass/model*
+/fretless_bass/model*
+/pizzicato/model*
+/harp/model*

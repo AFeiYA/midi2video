@@ -1,0 +1,88 @@
+{
+ "name": "upright_bass",
+ "section": 121,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": 0.12,
+   "z": -0.12,
+   "y_start": 0.24,
+   "radius": 0.022
+  },
+  {
+   "x": -0.12,
+   "z": -0.12,
+   "y_start": 0.24,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 21 Acoustic Bass (jazz upright, plucked): four thick gut strings (the striker) over a large dark-amber violin-family body face-on - sloping upper bouts, C-bouts, f-holes, ebony fingerboard, tall maple bridge, black tailpiece and chrome end-pin - with a long neck ending in a carved scroll and four brass tuning machines. No bow (the orchestral contrabass, 28, gets one).",
+ "slots": [
+  "body",
+  "gut",
+  "ebony",
+  "maple",
+  "dark",
+  "brass",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "gut"
+ ],
+ "flash_color": [
+  1.0,
+  0.75,
+  0.4
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.03745,
+   "bbox": [
+    [
+     -0.9129999876022339,
+     -0.10999999940395355,
+     -0.23280000686645508
+    ],
+    [
+     0.5799999833106995,
+     0.3100000023841858,
+     0.23280000686645508
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 59269,
+   "triangles": 2838
+  }
+ }
+}

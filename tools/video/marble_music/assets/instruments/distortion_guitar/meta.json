@@ -1,0 +1,89 @@
+{
+ "name": "distortion_guitar",
+ "section": 120,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": 0.0,
+   "z": 0.05,
+   "y_start": 0.24,
+   "radius": 0.022
+  },
+  {
+   "x": 0.0,
+   "z": -0.05,
+   "y_start": 0.24,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 20 Distortion Guitar: six chrome strings (the striker) over a glossy red V-shaped rock guitar with white binding, two black humbuckers with chrome poles, black arrow headstock on a rosewood neck, plugged by a coiled cable into a black mini amp stack with a gold-framed grille and chrome knobs below it.",
+ "slots": [
+  "body",
+  "chrome",
+  "black",
+  "white",
+  "rosewood",
+  "gold",
+  "grille",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_slots": [
+  "body",
+  "chrome"
+ ],
+ "flash_color": [
+  1.0,
+  0.35,
+  0.25
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04071,
+   "bbox": [
+    [
+     -0.9761999845504761,
+     -0.10999999940395355,
+     -0.5199999809265137
+    ],
+    [
+     0.5022000074386597,
+     0.3100000023841858,
+     0.2808000147342682
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 62706,
+   "triangles": 2523
+  }
+ }
+}
