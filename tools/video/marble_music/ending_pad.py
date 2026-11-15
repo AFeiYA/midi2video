@@ -89,7 +89,7 @@ def build(P, mat, fps):
     lo = bpy.data.objects.new('end_glow', ld); sc.collection.objects.link(lo); lo.location = (px, yc - r - 0.35, zt - h / 2)
     for f, v in [(0, 0), (fc - 0.5, 0), (fc, 40.0), (fc + 8, 12.0), (fc + 24, 6.0)]:
         ld.energy = v; ld.keyframe_insert('energy', frame=f)
-    if E.get('subscribe'): build_subscribe(P, mat, fps)
+    if E.get('subscribe'): (build_subscribe_fall if E['subscribe'].get('style') == 'fall' else build_subscribe_rise)(P, mat, fps)
 
 def _cam_frame(P, f):
     """world camera position + basis at frame f (mirrors scene.py v2+ rig: offset (0.5,-5.3,1.0), aim (0,0,-0.9), lens 40, sensor 36 vertical)"""
@@ -98,7 +98,67 @@ def _cam_frame(P, f):
     tv = 18.0 / 40.0; th = tv * sc.render.resolution_x / sc.render.resolution_y
     return rig + off, q, q @ Vector((1, 0, 0)), q @ Vector((0, 1, 0)), q @ Vector((0, 0, -1)), th, tv
 
-def build_subscribe(P, mat, fps):
+def build_subscribe_fall(P, mat, fps):
+    """the marble's last bounce: while it falls it turns gold and grows, bursts (flash + sparks) at frame_burst into two lines of
+    extruded gold text that keep falling with the camera and land/settle on the empty wall (path precomputed by ending.py)."""
+    S = P['ending']['subscribe']; f_r, fb, fl = S['frame_release'], S['frame_burst'], S['frame_land']; sc = bpy.context.scene
+    nfr = len(P['marble']); cam, q, rt, up, fw, th, tv = _cam_frame(P, nfr - 1); full_w = S['full_w']
+    path = {int(k): Vector(v) for k, v in S['path'].items()}
+    tm, tb = mat('end_text', (0.62, 0.38, 0.06), rough=0.30, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.66, 0.22, 1)
+    font = next((bpy.data.fonts.load(f) for f in FONT_CANDIDATES if os.path.exists(f)), None)
+    objs = []
+    for body, wf in ((S['line1'], 0.74), (S['line2'], S['width_frac'])):
+        cu = bpy.data.curves.new(f'txt_{len(objs)}', 'FONT'); cu.body = body; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'
+        if font: cu.font = font
+        cu.size = 1.0; cu.extrude = 0.07; cu.bevel_depth = 0.018; cu.bevel_resolution = 3; cu.resolution_u = 8
+        o = bpy.data.objects.new(f'txt_{len(objs)}', cu); sc.collection.objects.link(o); o.data.materials.append(tm)
+        bpy.context.view_layer.update(); s_ = wf * full_w / max(o.dimensions.x, 1e-6); cu.size = s_; cu.extrude = 0.07 * s_; cu.bevel_depth = 0.018 * s_
+        bpy.context.view_layer.update(); objs.append((o, o.dimensions.y))
+    (o1, h1), (o2, h2) = objs; gap = 0.35 * h2; offs = [up * ((h2 + gap) / 2), -up * ((h1 + gap) / 2)]
+    blk = bpy.data.objects.new('txt_block', None); sc.collection.objects.link(blk); blk.rotation_euler = q.to_euler()
+    for (o, _), d in zip(objs, offs):
+        o.parent = blk; o.location = q.inverted() @ d                  # local offsets inside the camera-facing block
+    for f in range(fb, nfr):
+        blk.location = path.get(f, path[max(path)]); blk.keyframe_insert('location', frame=f)
+    for k, (o, _) in enumerate(objs):                                  # grow out of the burst (line 2 a beat later)
+        f1 = fb + 1 + 2 * k
+        o.hide_render = True; o.keyframe_insert('hide_render', frame=0); o.hide_render = False; o.keyframe_insert('hide_render', frame=f1)
+        for f, s_ in [(f1 - 1, 0.001), (f1, 0.08), (f1 + 6, 1.06), (f1 + 10, 0.98), (f1 + 14, 1.0)]:
+            o.scale = (s_, s_, s_); o.keyframe_insert('scale', frame=f)
+    _key(tb.inputs['Emission Strength'], [(0, 0), (fb, 3.0), (fb + 8, 0.6), (fl, 0.25), (fl + 3, 0.9), (fl + 16, 0.03)])   # small glint on landing
+    # marble turns into solid glowing gold while it falls, grows a little, collapses into the burst
+    mb = bpy.data.objects['marble']; mm = mb.active_material; nt = mm.node_tree; bs = nt.nodes['Principled BSDF']
+    bs.inputs['Emission Color'].default_value = (1.0, 0.50, 0.08, 1); g0 = f_r + 1; g1 = min(fb - 1, f_r + 5)   # quick green->gold (a slow blend reads olive)
+    _key(bs.inputs['Transmission Weight'], [(g0, 1.0), (g1, 0.0)]); _key(bs.inputs['Metallic'], [(g0, 0.0), (g1, 1.0)])
+    _key(bs.inputs['Roughness'], [(g0, 0.02), (g1, 0.24)]); _key(bs.inputs['Emission Strength'], [(0, 0), (g0, 0.0), (g1, 0.5), (fb, 1.2)])
+    bc = bs.inputs['Base Color']; bc.default_value = (0.05, 0.75, 0.35, 1); bc.keyframe_insert('default_value', frame=g0)
+    bc.default_value = (0.80, 0.48, 0.09, 1); bc.keyframe_insert('default_value', frame=g1)
+    vol = next((n for n in nt.nodes if n.type == 'VOLUME_ABSORPTION'), None)
+    if vol: _key(vol.inputs['Density'], [(g0, 6.0), (g1, 0.0)])
+    for f, s_ in [(g0, 1.0), (fb, 1.35), (fb + 2, 0.02)]:
+        mb.scale = (s_, s_, s_); mb.keyframe_insert('scale', frame=f)
+    mb.hide_render = False; mb.keyframe_insert('hide_render', frame=0); mb.hide_render = True; mb.keyframe_insert('hide_render', frame=fb + 3)
+    Pb = path[fb]
+    ld = bpy.data.lights.new('sub_flash', 'POINT'); ld.color = (1.0, 0.68, 0.28); ld.shadow_soft_size = 0.4
+    lo = bpy.data.objects.new('sub_flash', ld); sc.collection.objects.link(lo); lo.location = Pb - fw * 0.4
+    for f, v in [(0, 0), (fb - 3, 0), (fb, 260), (fb + 5, 70), (fb + 14, 0)]:
+        ld.energy = v; ld.keyframe_insert('energy', frame=f)
+    spm, spb = mat('end_spark', (1.0, 0.78, 0.35), rough=0.2, metal=1.0); spb.inputs['Emission Color'].default_value = (1.0, 0.72, 0.3, 1); spb.inputs['Emission Strength'].default_value = 6.0
+    bpy.ops.mesh.primitive_ico_sphere_add(radius=1.0, subdivisions=2); tmpl = bpy.context.object; tmpl.data.materials.append(spm); smesh = tmpl.data
+    bpy.data.objects.remove(tmpl, do_unlink=True); rnd = random.Random(5)
+    for i in range(40):
+        a_ = 2 * math.pi * i / 40 + rnd.uniform(-0.08, 0.08); spd = rnd.uniform(1.3, 2.8); life = rnd.randint(14, 22)
+        dirv = (rt * math.cos(a_) + up * math.sin(a_) * 0.75 - fw * rnd.uniform(-0.2, 0.4)).normalized(); r0 = rnd.uniform(0.012, 0.024)
+        o = bpy.data.objects.new(f'spark{i}', smesh); sc.collection.objects.link(o)
+        o.hide_render = True; o.keyframe_insert('hide_render', frame=0); o.hide_render = False; o.keyframe_insert('hide_render', frame=fb + 1)
+        o.hide_render = True; o.keyframe_insert('hide_render', frame=fb + 1 + life)
+        for j in range(0, life + 1, 2):
+            t = j / fps; dist = spd * (1 - math.exp(-t * 5)) / 5; base = path.get(fb + 1 + j, Pb).lerp(Pb, 0.55)   # drift down partly with the text
+            o.location = base + dirv * dist * 1.2 + Vector((0, 0, -0.6 * t * t)); s_ = r0 * (1 - j / (life + 1)); o.scale = (s_, s_, s_)
+            o.keyframe_insert('location', frame=fb + 1 + j); o.keyframe_insert('scale', frame=fb + 1 + j)
+
+def build_subscribe_rise(P, mat, fps):
+    """ending v2 'rise' morph (unchanged): the resting marble lifts, glows and bursts into text above the pad"""
     S = P['ending']['subscribe']; f_m0, ff = S['frame_morph'], S['frame_flash']; sc = bpy.context.scene
     cam, q, rt, up, fw, th, tv = _cam_frame(P, ff); wall_y = P['KD'] / 2 + 0.12
     def ray(sx, sy): return fw + (sx - 0.5) * 2 * th * rt + (0.5 - sy) * 2 * tv * up

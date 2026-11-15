@@ -27,6 +27,8 @@ ap.add_argument('--cards', action='store_true', help='opt-in: also show the big 
 ap.add_argument('--card-scale', type=float, default=0.8); ap.add_argument('--card-alpha', type=int, default=150)
 ap.add_argument('--first-delay', type=float, default=None, help='a section starting at t<delay starts its label/card at t=delay (no pop-in on frame 0); default 0.2 s for labels, 0.4 s with --cards')
 ap.add_argument('--label-fade', type=float, default=0.3, help='corner label fade-in / cross-fade time at section changes (s)')
+ap.add_argument('--end-label', default='', help="e.g. 'Thanks for watching!': cross-fades the corner label to this text (star icon, gold) from --end-label-at")
+ap.add_argument('--end-label-at', type=float, default=-1, help='seconds; default = ending.py marble release (P[ending][frame_release]) or the last hit')
 ap.add_argument('--still', type=int, default=-1); ap.add_argument('--bg', default='')
 ap.add_argument('--png', default='', help='with --still: output composite png')
 _FD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
@@ -221,6 +223,17 @@ LBL = {n: _LK[(INST[n], NUM[n], secs[n][1])] for n in order}   # canonical secti
 CARD = {n: title_card(n, secs[n][1]) for n in set(LBL.values())}; CARD = {n: CARD[LBL[n]] for n in order}
 PILL = {n: corner(n) for n in set(LBL.values())}; PILL = {n: PILL[LBL[n]] for n in order}
 PILL_XY = (int(48*S), int(222*S))
+if a.end_label:                                                    # ending label pill: finale star icon + gold accent, no number
+    def end_pill(txt):
+        acc = (232, 176, 80); f1 = font(True, 30); tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1)))
+        w = int(64*S + tmp.textlength(txt, font=f1) + 26*S); h = int(56*S); im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        d.rounded_rectangle([0, 0, w-1, h-1], radius=h//2, fill=(16, 16, 22, 170), outline=acc + (200,), width=max(1, int(2*S)))
+        fin = [n for n in order if 'finale' in NAMES[INST[n]][1].lower()]
+        if fin: im.alpha_composite(icon(INST[fin[-1]], int(44*S)), (int(10*S), int(6*S)))
+        d.text((int(62*S), int(6*S)), txt, font=f1, fill=(255, 255, 255, 255)); return im
+    PILL['END'] = end_pill(a.end_label)
+    E_ = P.get('ending', {})
+    END_AT = a.end_label_at if a.end_label_at >= 0 else (E_.get('frame_release', E_.get('frame_last_hit', max(k['t'] for k in P['keys'])*fps)) / fps)
 START = {n: max(secs[n][0], a.first_delay) for n in order}          # card start time per section (first section delayed)
 
 # ------------------------------------------------------------------ v5b: per-section card placement from projected striker / marble positions
@@ -275,6 +288,8 @@ def state(f):
         return (cur, q(ca), q(pa), None, 0)
     # default: corner label only, visible from the start of each section; cross-fades from the previous section's label
     if a.no_corner: return (cur, 0, 0, None, 0)
+    if a.end_label and t >= END_AT:
+        u = min(1, (t - END_AT) / max(a.label_fade, 1e-6)); return ('END', 0, q(0.8*u), LBL[cur] if u < 1 else None, q(0.8*(1-u)))
     u = 1.0 if a.label_fade <= 0 else min(1, max(0, dt/a.label_fade))
     pp = (1-u) if prev is not None else 0
     return (LBL[cur], 0, q(0.8*u), LBL[prev] if pp > 0 else None, q(0.8*pp))

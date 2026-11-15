@@ -1,7 +1,8 @@
 """Synthesised marble-landing SFX for ending.py + final audio mix.
 Main hit = glass marble on a lacquered pad: broadband click transient + inharmonic glass ring modes + wooden body knock + a
 little low thump + a short room tail. Hop ticks (cues 'hops': [[t, linear gain], ...]) for the small bounces on the pad; legacy 'bounce2' = one off-screen tick.
-Subscribe variant: cues 'whoosh' [t0, t1] (rising airy sweep while the marble lifts) and 'chime' t (soft bell shimmer on the burst).
+Subscribe variant: cues 'whoosh' [t0, t1] (rising airy sweep while the marble lifts/falls), 'chime' t (soft bell shimmer on the
+burst) and, for the fall style, 'settle' t (soft low metallic thunk when the text lands on the wall).
 usage: python ending_sfx.py MUSIC.wav plan_end.sfx.json OUT.wav [--gain-db -4] [--tick-db -13] [--fade 0.6] [--sfx-only sfx.wav]
 MUSIC.wav must start at t=0 of the song (e.g. h196_master.wav); output is trimmed to the ending duration and NOT yet
 loudness-normalised (run ffmpeg loudnorm I=-14:TP=-1 afterwards, as for the rest of the pipeline)."""
@@ -9,7 +10,7 @@ import json, argparse, wave, numpy as np
 ap = argparse.ArgumentParser(); ap.add_argument('music'); ap.add_argument('cues'); ap.add_argument('out')
 ap.add_argument('--gain-db', type=float, default=-4.0, help='main hit peak level (dBFS) before loudnorm')
 ap.add_argument('--tick-db', type=float, default=-13.0, help='second tick peak level (dBFS); <= -60 disables')
-ap.add_argument('--fade', type=float, default=0.6); ap.add_argument('--chime-db', type=float, default=-9.0); ap.add_argument('--whoosh-db', type=float, default=-16.0); ap.add_argument('--sfx-only', default=''); ap.add_argument('--seed', type=int, default=7)
+ap.add_argument('--fade', type=float, default=0.6); ap.add_argument('--chime-db', type=float, default=-9.0); ap.add_argument('--whoosh-db', type=float, default=-16.0); ap.add_argument('--settle-db', type=float, default=-15.0, help="fall style: soft thunk when the text lands ('settle' cue)"); ap.add_argument('--sfx-only', default=''); ap.add_argument('--seed', type=int, default=7)
 a = ap.parse_args(); rng = np.random.default_rng(a.seed)
 
 def hit(sr, scale=1.0, thump=1.0, bright=1.0):
@@ -58,6 +59,7 @@ def chime(dur=1.8):
         sp[i0:i0 + m] += rng.uniform(0.1, 0.25) * np.sin(2 * np.pi * f * tt) * np.exp(-tt / 0.03)
     return (y + sp) / np.max(np.abs(y + sp))
 if 'whoosh' in C: place(whoosh(C['whoosh'][1] - C['whoosh'][0] + 0.05), C['whoosh'][0], a.whoosh_db)
+if 'settle' in C and C['settle'] < C['duration'] - 0.05: place(hit(sr, 0.62, 0.9, 0.35), C['settle'], a.settle_db, 0.0)
 if 'chime' in C:
     ch_ = chime(); place(ch_, C['chime'], a.chime_db, -0.15); place(ch_ * 0.6, C['chime'] + 0.012, a.chime_db - 4, 0.3)
 if ch == 1: x = np.repeat(x, 2, 1)
