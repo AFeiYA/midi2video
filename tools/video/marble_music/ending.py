@@ -21,6 +21,7 @@ ap.add_argument('--subscribe', action='store_true'); ap.add_argument('--line1', 
 ap.add_argument('--subscribe-style', choices=['rise', 'fall'], default='rise', help='rise (v2): settle + hold on the pad, then the marble lifts and bursts '
                 'into the text above the pad; fall (v3): the 2nd contact is the last bounce, the marble falls off the pad and morphs into the text, '
                 'camera follows down to empty wall')
+ap.add_argument('--look', choices=['v2', 'v4'], default='v4', help='ending look: v4 (default) = gold marble glow, deeper gold text 0.15 m off the wall, refined bracket; v2 = ending v2 exactly')
 ap.add_argument('--sub-wait', type=float, default=0.3, help='rise: pause after the hold'); ap.add_argument('--sub-rise', type=float, default=0.5, help='rise: lift time')
 ap.add_argument('--sub-burst', type=float, default=0.40, help='s after the last bounce when the falling marble bursts into the text')
 ap.add_argument('--sub-land', type=float, default=0.70, help='s from the burst until the text lands on the wall')
@@ -61,7 +62,7 @@ if not FALL:
         f_m0 = f_hold_end - int(round(a.hold * fps)) + int(round(a.sub_wait * fps)); f_flash = f_m0 + int(round(a.sub_rise * fps))
         N = f_flash + 12 + int(round(a.sub_hold * fps)) + 1
         E['subscribe'] = {'style': 'rise', 'frame_morph': f_m0, 'frame_flash': f_flash, 'line1': a.line1, 'line2': a.line2,
-                          'screen': [0.5, 0.255], 'wall_gap': 0.3, 'width_frac': 0.80}
+                          'screen': [0.5, 0.255], 'wall_gap': 0.3 if a.look == 'v2' else 0.15, 'width_frac': 0.80}
     for f in range(fc + 1, N):
         x, y, z = path((f - fc) / fps); M.append([x, z]); Y.append(y)
     for f in range(f0 + 1, N): C.append(cam_pad(f))
@@ -105,6 +106,7 @@ P['marble'] = M; P['camera'] = C; P['marble_y'] = Y; P['duration'] = round(N / f
 E.update({'frame_last_hit': f0, 'frame_contact': fc, 'frames_hop': [int(round(t * fps)) for t in t_c[1:len(hops) + 1]], 'frame_stop': f_stop,
           'frame_hold_end': f_hold_end, 't_contact': fc / fps, 'rest': list(path(t_tot)),
           'pad': {'x': px, 'y': a.pad_y, 'z_top': pad_top, 'r': a.pad_r, 'h': a.pad_h}})
+if a.look != 'v2': E['look'] = a.look
 P['ending'] = E
 sfx = {'contact': fc / fps, 'hops': [[t, 10 ** (-(9 + 8 * i) / 20)] for i, t in enumerate(t_c[1:len(hops) + 1])], 'v_impact': vz_in,
        'last_hit': last['t'], 'duration': N / fps}

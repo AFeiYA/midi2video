@@ -78,6 +78,12 @@ def build(P, mat, fps):
         bpy.ops.mesh.primitive_uv_sphere_add(radius=0.045, segments=24, ring_count=12, location=(px + sx * 1.6, ytip, zb - 0.04)); add(bpy.context.object, gold)
         bpy.ops.mesh.primitive_uv_sphere_add(radius=0.045, segments=24, ring_count=12, location=(px + sx, wall_y - 0.05, zp)); add(bpy.context.object, gold)
     add(_rod((px - 0.12 * 1.3, (wall_y + ytip) / 2 + 0.05, zp + drop * 0.62), (px + 0.12 * 1.3, (wall_y + ytip) / 2 + 0.05, zp + drop * 0.62), 0.02, brass))
+    if E.get('look') == 'v4':                                       # v4: centre spine + gold collars where the struts meet the plate
+        add(_rod((px, wall_y - 0.04, zp + ph / 2 - 0.02), (px, ytip + 0.12, zb - 0.06), 0.026, brass))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.036, segments=24, ring_count=12, location=(px, ytip + 0.12, zb - 0.06)); add(bpy.context.object, gold)
+        for sx in (-0.12, 0.12):
+            bpy.ops.mesh.primitive_torus_add(major_radius=0.045, minor_radius=0.012, major_segments=32, minor_segments=8, location=(px + sx, wall_y - 0.06, zp))
+            tr = bpy.context.object; tr.rotation_euler = (math.pi / 2, 0, 0); add(tr, gold)
     # contact: dip + gold flash (smaller dips on the hops), star stays lit afterwards
     kv = [(fc - 1, 0), (fc, 0), (fc + 1, -0.035), (fc + 3, -0.01), (fc + 7, 0)]
     for fh_ in E.get('frames_hop', []): kv += [(fh_, 0), (fh_ + 1, -0.01), (fh_ + 4, 0)]
@@ -158,14 +164,16 @@ def build_subscribe_fall(P, mat, fps):
             o.keyframe_insert('location', frame=fb + 1 + j); o.keyframe_insert('scale', frame=fb + 1 + j)
 
 def build_subscribe_rise(P, mat, fps):
-    """ending v2 'rise' morph (unchanged): the resting marble lifts, glows and bursts into text above the pad"""
+    """'rise' morph (look v2 = ending v2 unchanged; look v4 = gold glow + deeper text closer to the wall): the resting marble lifts, glows and bursts into text above the pad"""
     S = P['ending']['subscribe']; f_m0, ff = S['frame_morph'], S['frame_flash']; sc = bpy.context.scene
     cam, q, rt, up, fw, th, tv = _cam_frame(P, ff); wall_y = P['KD'] / 2 + 0.12
     def ray(sx, sy): return fw + (sx - 0.5) * 2 * th * rt + (0.5 - sy) * 2 * tv * up
     r0 = ray(*S['screen']); D = (wall_y - S.get('wall_gap', 0.3) - cam.y) / r0.y     # text plane sits wall_gap in front of the wall (in focus, casts a shadow)
     def pt(sx, sy, d=D): return cam + d * ray(sx, sy)
     Pc = pt(*S['screen']); full_w = 2 * D * th
-    tm, tb = mat('end_text', (0.95, 0.60, 0.16), rough=0.22, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.75, 0.32, 1)
+    V4L = P['ending'].get('look') == 'v4'                                   # v4: deeper warmer gold text, gold (not pale) marble glow
+    if V4L: tm, tb = mat('end_text', (0.62, 0.38, 0.06), rough=0.30, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.66, 0.22, 1)
+    else: tm, tb = mat('end_text', (0.95, 0.60, 0.16), rough=0.22, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.75, 0.32, 1)
     font = next((bpy.data.fonts.load(f) for f in FONT_CANDIDATES if os.path.exists(f)), None)
     objs = []
     for body, wf in ((S['line1'], 0.74), (S['line2'], S['width_frac'])):
@@ -183,7 +191,7 @@ def build_subscribe_rise(P, mat, fps):
         o.hide_render = True; o.keyframe_insert('hide_render', frame=0); o.hide_render = False; o.keyframe_insert('hide_render', frame=f1)
         for f, s in [(f1 - 1, 0.001), (f1, 0.05), (f1 + 5, 1.08), (f1 + 9, 0.98), (f1 + 12, 1.0)]:
             o.scale = (s, s, s); o.keyframe_insert('scale', frame=f)
-    _key(tb.inputs['Emission Strength'], [(0, 0), (ff, 4.0), (ff + 8, 0.8), (ff + 22, 0.04)])
+    _key(tb.inputs['Emission Strength'], [(0, 0), (ff, 3.0 if V4L else 4.0), (ff + 8, 0.6 if V4L else 0.8), (ff + 22, 0.03 if V4L else 0.04)])
     # marble: lift from the pad to the text centre, grow + glow gold, then collapse into the flash
     mb = bpy.data.objects['marble']; mm = mb.active_material; bs = mm.node_tree.nodes['Principled BSDF']
     bs.inputs['Emission Color'].default_value = (1.0, 0.72, 0.3, 1)
@@ -199,11 +207,19 @@ def build_subscribe_rise(P, mat, fps):
     mb.hide_render = False; mb.keyframe_insert('hide_render', frame=0); mb.hide_render = True; mb.keyframe_insert('hide_render', frame=ff + 4)
     for f in range(ff + 4, len(P['marble'])):                               # park it (scene.py keyed rest positions there)
         mb.location = Pc; mb.keyframe_insert('location', frame=f)
-    _key(bs.inputs['Emission Strength'], [(0, 0), (f_m0, 0), (f_m0 + n * 0.6, 1.5), (ff, 5.0)])
+    if V4L:                                                                # quick green -> solid gold as it lifts (a slow blend reads olive / pale)
+        bs.inputs['Emission Color'].default_value = (1.0, 0.50, 0.08, 1); g0, g1 = f_m0, f_m0 + 5; nt_ = mm.node_tree
+        _key(bs.inputs['Transmission Weight'], [(g0, 1.0), (g1, 0.0)]); _key(bs.inputs['Metallic'], [(g0, 0.0), (g1, 1.0)])
+        _key(bs.inputs['Roughness'], [(g0, 0.02), (g1, 0.24)]); _key(bs.inputs['Emission Strength'], [(0, 0), (g0, 0), (g1, 0.4), (ff, 1.2)])
+        bc = bs.inputs['Base Color']; bc.default_value = (0.05, 0.75, 0.35, 1); bc.keyframe_insert('default_value', frame=g0)
+        bc.default_value = (0.80, 0.48, 0.09, 1); bc.keyframe_insert('default_value', frame=g1)
+        vol = next((n_ for n_ in nt_.nodes if n_.type == 'VOLUME_ABSORPTION'), None)
+        if vol: _key(vol.inputs['Density'], [(g0, 6.0), (g1, 0.0)])
+    else: _key(bs.inputs['Emission Strength'], [(0, 0), (f_m0, 0), (f_m0 + n * 0.6, 1.5), (ff, 5.0)])
     # flash light + sparks bursting out in the camera plane
-    ld = bpy.data.lights.new('sub_flash', 'POINT'); ld.color = (1.0, 0.8, 0.45); ld.shadow_soft_size = 0.4
+    ld = bpy.data.lights.new('sub_flash', 'POINT'); ld.color = (1.0, 0.68, 0.28) if V4L else (1.0, 0.8, 0.45); ld.shadow_soft_size = 0.4
     lo = bpy.data.objects.new('sub_flash', ld); sc.collection.objects.link(lo); lo.location = Pc - fw * 0.4
-    for f, v in [(0, 0), (f_m0, 0), (ff - 2, 60), (ff + 1, 450), (ff + 6, 120), (ff + 16, 25)]:
+    for f, v in ([(0, 0), (f_m0, 0), (ff - 2, 40), (ff + 1, 300), (ff + 6, 80), (ff + 16, 0)] if V4L else [(0, 0), (f_m0, 0), (ff - 2, 60), (ff + 1, 450), (ff + 6, 120), (ff + 16, 25)]):
         ld.energy = v; ld.keyframe_insert('energy', frame=f)
     spm, spb = mat('end_spark', (1.0, 0.8, 0.4), rough=0.2, metal=1.0); spb.inputs['Emission Color'].default_value = (1.0, 0.82, 0.45, 1); spb.inputs['Emission Strength'].default_value = 8.0
     bpy.ops.mesh.primitive_ico_sphere_add(radius=1.0, subdivisions=2); tmpl = bpy.context.object; tmpl.data.materials.append(spm); smesh = tmpl.data

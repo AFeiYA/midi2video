@@ -10,7 +10,7 @@ import json, argparse, wave, numpy as np
 ap = argparse.ArgumentParser(); ap.add_argument('music'); ap.add_argument('cues'); ap.add_argument('out')
 ap.add_argument('--gain-db', type=float, default=-4.0, help='main hit peak level (dBFS) before loudnorm')
 ap.add_argument('--tick-db', type=float, default=-13.0, help='second tick peak level (dBFS); <= -60 disables')
-ap.add_argument('--fade', type=float, default=0.6); ap.add_argument('--chime-db', type=float, default=-9.0); ap.add_argument('--whoosh-db', type=float, default=-16.0); ap.add_argument('--settle-db', type=float, default=-15.0, help="fall style: soft thunk when the text lands ('settle' cue)"); ap.add_argument('--sfx-only', default=''); ap.add_argument('--seed', type=int, default=7)
+ap.add_argument('--fade', type=float, default=0.6); ap.add_argument('--tail-reverb', type=float, default=None, help='dB: long hall reverb on the music from the last hit on (no new notes), so the tail carries the final hold; e.g. -4'); ap.add_argument('--tail-rt60', type=float, default=3.4); ap.add_argument('--chime-db', type=float, default=-9.0); ap.add_argument('--whoosh-db', type=float, default=-16.0); ap.add_argument('--settle-db', type=float, default=-15.0, help="fall style: soft thunk when the text lands ('settle' cue)"); ap.add_argument('--sfx-only', default=''); ap.add_argument('--seed', type=int, default=7)
 a = ap.parse_args(); rng = np.random.default_rng(a.seed)
 
 def hit(sr, scale=1.0, thump=1.0, bright=1.0):
@@ -32,7 +32,18 @@ w = wave.open(a.music); sr, ch, sw = w.getframerate(), w.getnchannels(), w.getsa
 x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64).reshape(-1, ch) / 32768; w.close()
 C = json.load(open(a.cues)); N = int(round(C['duration'] * sr))
 if len(x) < N: x = np.vstack([x, np.zeros((N - len(x), ch))])
-x = x[:N].copy(); nf = int(a.fade * sr); x[-nf:] *= np.linspace(1, 0, nf)[:, None] ** 2
+x = x[:N].copy()
+if a.tail_reverb is not None:                                    # hall tail on the last notes only (wet ramps in at the last hit)
+    from scipy.signal import fftconvolve, lfilter
+    i0 = max(0, int((C['last_hit'] - 0.5) * sr)); seg = x[i0:].copy(); seg[:int(0.05 * sr)] *= np.linspace(0, 1, int(0.05 * sr))[:, None]
+    L = int(sr * a.tail_rt60 * 1.2); tt = np.arange(L) / sr; wet = np.zeros_like(seg)
+    for c in range(seg.shape[1]):
+        ir = rng.standard_normal(L) * np.exp(-6.91 * tt / a.tail_rt60); ir = lfilter([0.18], [1, -0.82], ir)   # darker diffuse tail
+        ir[:int(0.02 * sr)] = 0; ir /= np.sqrt(np.sum(ir ** 2))
+        wet[:, c] = fftconvolve(seg[:, c], ir)[:len(seg)]
+    ramp = np.clip((np.arange(len(seg)) / sr - 1.0) / 0.7, 0, 1)[:, None] ** 2   # wet fades in ~0.5-1.2 s after the last hit: carries the decay, leaves the notes dry
+    x[i0:] += wet * ramp * 10 ** (a.tail_reverb / 20)
+nf = int(a.fade * sr); x[-nf:] *= np.linspace(1, 0, nf)[:, None] ** 2
 S = np.zeros((N, 2))
 def place(y, t0, db, pan=0.0):
     i = int(round(t0 * sr)); y = y[:max(0, N - i)] * 10 ** (db / 20); L, R = np.cos((pan + 1) * np.pi / 4), np.sin((pan + 1) * np.pi / 4)
