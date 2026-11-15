@@ -29,3 +29,12 @@ __pycache__/
 /choir/model*
 /voice_oohs/model*
 /orchestra_hit/model*
+/trumpet/model*
+/trombone/model*
+/tuba/model*
+/muted_trumpet/model*
+/french_horn/model*
+/brass_section/model*
+/soprano_sax/model*
+/alto_sax/model*
+/tenor_sax/model*

@@ -47,3 +47,50 @@ def body(C, name, j, note, variant):
     if variant == 'black': return C.mat(name,(0.015,0.015,0.017),rough=0.12,coat=1.0)
     return C.mat(name,(0.93,0.89,0.80),rough=0.16,coat=0.7)
 '''
+
+# brass / woodwind tubing: swept tubes along XZ polylines (cross-section flattened in Y so they stay in the backplate band),
+# flared bells, camera-facing bells. Used by jewelbox_f4+ (paste after H).
+BRASS = '''
+def _ring_mesh(C, name, rings, mi, cap0=False, cap1=False, angle=1.0):
+    import bpy, bmesh
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    vs = [[bm.verts.new(p) for p in ring] for ring in rings]; n = len(rings[0])
+    for a, b in zip(vs[:-1], vs[1:]):
+        for i in range(n): bm.faces.new((a[i], a[(i+1)%n], b[(i+1)%n], b[i]))
+    if cap0: bm.faces.new(vs[0][::-1])
+    if cap1: bm.faces.new(vs[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:]); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o); C._ensure_slots(o)
+    for p in me.polygons: p.material_index = mi
+    C.shade_by_angle(o, angle); return o
+def sweep(C, mi, pts, radii, y=0.22, ymax=0.058, n=24, cap0=True, cap1=True, name='tube'):
+    """tube along an XZ polyline pts=[(x,z)...] (radius per point or one float); Y radius clamped to ymax"""
+    rings = []
+    for i, (x, z) in enumerate(pts):
+        a = pts[max(i-1, 0)]; b = pts[min(i+1, len(pts)-1)]
+        tx, tz = b[0]-a[0], b[1]-a[1]; L = math.hypot(tx, tz) or 1.0; tx, tz = tx/L, tz/L; nx, nz = -tz, tx
+        r = radii[i] if isinstance(radii, (list, tuple)) else radii; ry = min(r, ymax)
+        rings.append([(x + r*nx*math.cos(t), y + ry*math.sin(t), z + r*nz*math.cos(t)) for t in [2*math.pi*k/n for k in range(n)]])
+    return _ring_mesh(C, name, rings, mi, cap0, cap1)
+def arc_pts(cx, cz, R, a0, a1, m=16):
+    return [(cx + R*math.cos(a0 + (a1-a0)*k/m), cz + R*math.sin(a0 + (a1-a0)*k/m)) for k in range(m+1)]
+def bell(C, mi, dark, p0, d, L, r0, r1, y=0.22, ymax=0.058, power=3.0, m=18, name='bell'):
+    """flared bell from p0 along direction d (XZ), length L, throat r0 -> rim r1; dark disc just inside the rim"""
+    dl = math.hypot(*d); dx, dz = d[0]/dl, d[1]/dl
+    pts = [(p0[0] + dx*L*k/m, p0[1] + dz*L*k/m) for k in range(m+1)]
+    rad = [r0 + (r1-r0)*(k/m)**power for k in range(m+1)]
+    o = [sweep(C, mi, pts, rad, y, ymax, n=32, cap0=False, cap1=False, name=name)]
+    e = (p0[0] + dx*L*0.97, p0[1] + dz*L*0.97); r = r0 + (r1-r0)*0.97**power
+    o.append(sweep(C, dark, [(e[0]-dx*0.004, e[1]-dz*0.004), e], r*0.96, y, ymax*0.96, n=32, name=name+'_m'))
+    return o
+def front_bell(C, mi, dark, x, z, r, y0=0.165, depth=0.11, r0=0.02, m=14, n=40, name='fbell'):
+    """bell facing the camera (axis -Y): rim radius r at y0, throat r0 at y0+depth"""
+    rings = []
+    for k in range(m+1):
+        t = k/m; rr = r0 + (r-r0)*(1-t)**3; yy = y0 + depth*t
+        rings.append([(x + rr*math.cos(a), yy, z + rr*math.sin(a)) for a in [2*math.pi*j/n for j in range(n)]])
+    o = [_ring_mesh(C, name, rings, mi, angle=1.2)]
+    rr = r*0.55; yy = y0 + 0.035
+    o.append(_ring_mesh(C, name+'_m', [[(x + rr*math.cos(a), yy, z + rr*math.sin(a)) for a in [2*math.pi*j/n for j in range(n)]]], dark, cap0=True))
+    return o
+'''

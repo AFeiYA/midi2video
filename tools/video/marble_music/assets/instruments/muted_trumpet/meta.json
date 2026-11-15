@@ -1,0 +1,83 @@
+{
+ "name": "muted_trumpet",
+ "section": 136,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 36 Muted Trumpet: the same trumpet in SILVER plate (gold valve caps and buttons) with a big dark copper-and-black Harmon (wah-wah) mute and cork ring jammed in the bell - unmistakably different from the open gold trumpet (33).",
+ "slots": [
+  "body",
+  "pearl",
+  "trim",
+  "dark",
+  "mute",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.5
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04498,
+   "bbox": [
+    [
+     -0.4300000071525574,
+     -0.02800000086426735,
+     -0.30000001192092896
+    ],
+    [
+     0.7450000047683716,
+     0.3100000023841858,
+     0.18700000643730164
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 31283,
+   "triangles": 1752
+  }
+ }
+}

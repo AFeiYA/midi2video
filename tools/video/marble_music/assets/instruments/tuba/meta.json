@@ -1,0 +1,81 @@
+{
+ "name": "tuba",
+ "section": 135,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 35 Tuba: a thick deep-gold branch tube is the striker; behind it the tuba stands upright - wide conical body, big bottom bow and a HUGE bell flaring straight up, four rotary valves with silver levers and coiled valve tubing, mouthpipe from the left.",
+ "slots": [
+  "body",
+  "trim",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.45
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04496,
+   "bbox": [
+    [
+     -0.5130000114440918,
+     -0.03999999910593033,
+     -0.6449999809265137
+    ],
+    [
+     0.5600000023841858,
+     0.3100000023841858,
+     0.30000001192092896
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 43028,
+   "triangles": 2020
+  }
+ }
+}

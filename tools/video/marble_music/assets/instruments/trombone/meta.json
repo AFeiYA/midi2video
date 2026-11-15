@@ -1,0 +1,81 @@
+{
+ "name": "trombone",
+ "section": 134,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.03,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 34 Trombone: the inner slide tubes are the striker; the slide continues behind the marble plane to its U-crook, with the slide brace, a silver mouthpiece, the tuning-slide loop and the bell section below ending in a big flared gold bell facing forward.",
+ "slots": [
+  "body",
+  "trim",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.5
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04495,
+   "bbox": [
+    [
+     -0.5189999938011169,
+     -0.019999999552965164,
+     -0.3050000071525574
+    ],
+    [
+     0.6859999895095825,
+     0.3100000023841858,
+     0.05700000002980232
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 20650,
+   "triangles": 1528
+  }
+ }
+}
