@@ -12,7 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.jo
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('--look', default='v5'); ap.add_argument('--min', type=float, default=0.01)
 ap.add_argument('--strict', action='store_true'); ap.add_argument('--out', default='')
 ap.add_argument('--whitelist', default=os.path.join(HERE, 'assets', 'instruments', 'pairs_whitelist.json')); a = ap.parse_args()
-P = json.load(open(a.plan)); K = P['keys']; M = library.metas(a.look); asg = library.assign(K, M)
+P = json.load(open(a.plan)); K = P['keys']; M = library.metas(a.look); asg = library.assign(K, M, P.get('instrument_set'))
 probes = {(n, v): np.load(os.path.join(m['_dir'], f'probe_{v}.npy')).astype(np.float64)[::2] for n, m in M.items() for v in m['variants']}
 W = []
 for k, (n, v, j) in zip(K, asg):

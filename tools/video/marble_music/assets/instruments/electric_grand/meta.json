@@ -1,0 +1,113 @@
+{
+ "name": "electric_grand",
+ "section": 102,
+ "tracks_regex": "(?!)",
+ "variants": [
+  "white",
+  "black"
+ ],
+ "variant_rule": "pitch",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 02 Electric Grand Piano (CP-80 style): pitch-chosen key on a black key bed with red felt, in front of a compact pearl-white stage grand with a short angled tail and a closed flat lid, red stripe, chrome knob, chrome X-stand and a coiled black cable.",
+ "slots": [
+  "body",
+  "case",
+  "chrome",
+  "red",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.55,
+  0.45
+ ],
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "white": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.49000000953674316,
+     -0.15000000596046448,
+     -0.47749999165534973
+    ],
+    [
+     0.49799999594688416,
+     0.3100000023841858,
+     0.06499999761581421
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 58762,
+   "triangles": 3217
+  },
+  "black": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.49000000953674316,
+     -0.10999999940395355,
+     -0.47749999165534973
+    ],
+    [
+     0.49799999594688416,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.3100000023841858,
+     0.10999999940395355,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 53188,
+   "triangles": 3069
+  }
+ }
+}

@@ -1,0 +1,84 @@
+{
+ "name": "dulcimer",
+ "section": 112,
+ "tracks_regex": "(?!)",
+ "description": "Jewelbox 12 Hammered Dulcimer (扬琴): walnut rail striker with five silver strings across its top, in front of a trapezoid spruce soundboard in a walnut frame with two gold rosettes, a dozen silver string courses, two dark bridges, and two crossed wooden hammers.",
+ "slots": [
+  "body",
+  "spruce",
+  "walnut",
+  "silver",
+  "gold",
+  "dark",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.5
+ ],
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04471,
+   "bbox": [
+    [
+     -0.5460000038146973,
+     -0.15000000596046448,
+     -0.5254999995231628
+    ],
+    [
+     0.5460000038146973,
+     0.3100000023841858,
+     0.04470000043511391
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 70842,
+   "triangles": 1662
+  }
+ }
+}

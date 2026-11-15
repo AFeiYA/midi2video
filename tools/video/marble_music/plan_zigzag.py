@@ -66,7 +66,7 @@ keys=[]
 for i in range(n):
     c,nrm=paddles[i]; tilt=math.degrees(math.acos(max(-1,min(1,nrm[1]))))
     keys.append(dict(i=i,x=float(c[0]),z=float(c[1]),nx=float(nrm[0]),nz=float(nrm[1]),ang=math.atan2(nrm[0],nrm[1]),tilt=tilt,
-        cx=xs[i],cz=zs[i],t=T[i],t_audio=hits[i]['time'],note=hits[i]['note'],track=hits[i]['track_name'],drum=hits[i]['drum'],side=side[i]))
+        cx=xs[i],cz=zs[i],t=T[i],t_audio=hits[i]['time'],note=hits[i]['note'],track=hits[i]['track_name'],drum=hits[i]['drum'],program=hits[i].get('program'),side=side[i]))
 def pos(t):
     s=allsegs[0]
     for s_ in allsegs:
@@ -101,4 +101,6 @@ print('max |marble-cam| z: %.2f'%float(np.max(np.abs(arr[:,1]-cz))))
 print('tilt min/mean/max %.0f %.0f %.0f'%(min(k['tilt'] for k in keys),np.mean([k['tilt'] for k in keys]),max(k['tilt'] for k in keys)))
 if a.verbose:
   for k in keys: print(f"key {k['i']:2d} t={k['t']:.3f} f={k['t']*fps:5.1f} side={k['side']:+d} z={k['cz']:7.2f} tilt={k['tilt']:5.1f}")
-json.dump(dict(fps=fps,duration=dur,R=R,KW=PL,KD=KD,KH=PT,g=g,layout='zigzag',keys=keys,marble=frames,camera=cam),open(a.o,'w'))
+PLAN=dict(fps=fps,duration=dur,R=R,KW=PL,KD=KD,KH=PT,g=g,layout='zigzag',keys=keys,marble=frames,camera=cam)
+if H.get('instrument_set'): PLAN['instrument_set']=H['instrument_set']
+json.dump(PLAN,open(a.o,'w'))

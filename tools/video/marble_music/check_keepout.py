@@ -9,7 +9,7 @@ INST = os.path.join(HERE, 'assets', 'instruments')
 sys.path.insert(0, INST); import library
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('--out', default=''); ap.add_argument('--sub', type=int, default=8); ap.add_argument('--strict', action='store_true'); ap.add_argument('--look', default='v4'); a = ap.parse_args()
 P = json.load(open(a.plan)); fps = P['fps']; R = P['R']; K = P['keys']
-M = library.metas(a.look); asg = library.assign(K, M); print('look', a.look)
+M = library.metas(a.look); asg = library.assign(K, M, P.get('instrument_set')); print('look', a.look)
 probes = {}
 for n, m in M.items():
     for v in m['variants']: probes[(n, v)] = np.load(os.path.join(m['_dir'], f'probe_{v}.npy')).astype(np.float64)

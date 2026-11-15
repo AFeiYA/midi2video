@@ -1,0 +1,118 @@
+{
+ "name": "jb_vibraphone",
+ "section": 108,
+ "tracks_regex": "(?!)",
+ "description": "Jewelbox 08 Vibraphone: brushed-aluminium bar on maroon cords, two smaller neighbour bars, black frame rail, three gold resonator tubes hanging world-vertical (meta.hanging) with black fan discs on a chrome motor shaft and a small motor box at the end.",
+ "slots": [
+  "body",
+  "cord",
+  "resonator",
+  "dark",
+  "chrome",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.45,
+  0.7,
+  1.0
+ ],
+ "pins": [
+  {
+   "x": -0.14,
+   "z": 0.0,
+   "y_start": 0.17,
+   "radius": 0.022
+  },
+  {
+   "x": 0.14,
+   "z": 0.0,
+   "y_start": 0.17,
+   "radius": 0.022
+  }
+ ],
+ "hanging": [
+  {
+   "attach": [
+    -0.47,
+    0.222,
+    -0.075
+   ],
+   "radius": 0.058,
+   "inner": 0.048,
+   "length": 0.46,
+   "role": "resonator"
+  },
+  {
+   "attach": [
+    0.0,
+    0.222,
+    -0.075
+   ],
+   "radius": 0.058,
+   "inner": 0.048,
+   "length": 0.4,
+   "role": "resonator"
+  },
+  {
+   "attach": [
+    0.47,
+    0.222,
+    -0.075
+   ],
+   "radius": 0.058,
+   "inner": 0.048,
+   "length": 0.34,
+   "role": "resonator"
+  }
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.6499999761581421,
+     -0.17000000178813934,
+     -0.13600000739097595
+    ],
+    [
+     0.6600000262260437,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 32114,
+   "triangles": 664
+  }
+ }
+}

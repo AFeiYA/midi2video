@@ -1,0 +1,114 @@
+{
+ "name": "harpsichord",
+ "section": 104,
+ "tracks_regex": "(?!)",
+ "variants": [
+  "white",
+  "black"
+ ],
+ "variant_rule": "pitch",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 04 Harpsichord: reversed key colours (ebony naturals, bone sharps) chosen by pitch, a second (upper) manual of tiny reversed keys behind it, a long red-lacquer wing case with gold trim, the open lid painted sky-blue inside with a gold border, and gilt turned legs.",
+ "slots": [
+  "body",
+  "lacquer",
+  "gold",
+  "bone",
+  "ebony",
+  "paint",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.8,
+  0.5
+ ],
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "white": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.5199999809265137,
+     -0.15000000596046448,
+     -0.47200000286102295
+    ],
+    [
+     0.6305999755859375,
+     0.3100000023841858,
+     0.27309998869895935
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 87274,
+   "triangles": 3427
+  },
+  "black": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.5199999809265137,
+     -0.10999999940395355,
+     -0.47200000286102295
+    ],
+    [
+     0.6305999755859375,
+     0.3100000023841858,
+     0.27309998869895935
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.3100000023841858,
+     0.10999999940395355,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 85156,
+   "triangles": 3475
+  }
+ }
+}

@@ -1,0 +1,1564 @@
+{
+ "series": {
+  "id": "jewelbox",
+  "en": "Jewelbox Orchestra",
+  "zh": "珠匣乐团",
+  "look": "v5",
+  "note": "working name; rename here (series.id is used by --instrument-set jewelbox)"
+ },
+ "families": {
+  "F1": {
+   "en": "Pianos, Bells & Mallets",
+   "zh": "键盘·钟·槌击"
+  },
+  "F2": {
+   "en": "Organs, Accordions, Guitars & Harp",
+   "zh": "风琴·手风琴·吉他·竖琴"
+  },
+  "F3": {
+   "en": "Solo Strings, Ensemble & Choir",
+   "zh": "弦乐·合奏·合唱"
+  },
+  "F4": {
+   "en": "Brass & Saxophones",
+   "zh": "铜管·萨克斯"
+  },
+  "F5": {
+   "en": "Woodwinds, Flutes & Ocarina",
+   "zh": "木管·笛·陶笛"
+  },
+  "F6": {
+   "en": "World Ethnic & Synth Leads",
+   "zh": "民族·合成器"
+  }
+ },
+ "sets": {
+  "hook50": [
+   "tubular_bells_castanets",
+   "music_box",
+   "marimba",
+   "steel_drums",
+   "kalimba",
+   "koto",
+   "synth_lead_square",
+   "bagpipe",
+   "grand_tutti_finale"
+  ],
+  "jingle12": [
+   "castanets_v5",
+   "acoustic_grand_piano",
+   "vibraphone",
+   "tubular_bells",
+   "marimba",
+   "kalimba",
+   "flute",
+   "xylophone",
+   "ocarina",
+   "glockenspiel",
+   "steel_drums",
+   "steel_guitar"
+  ]
+ },
+ "instruments": [
+  {
+   "num": 1,
+   "id": "acoustic_grand_piano",
+   "gm": 0,
+   "family": "F1",
+   "en": "Acoustic Grand Piano",
+   "zh": "大钢琴",
+   "aliases": [
+    "grand piano",
+    "acoustic piano",
+    "钢琴"
+   ],
+   "asset": "grand_piano",
+   "status": "adapt",
+   "title": {
+    "icon": 2,
+    "accent": [
+     236,
+     228,
+     210
+    ]
+   },
+   "track": "01. Acoustic Grand Piano (大钢琴)"
+  },
+  {
+   "num": 2,
+   "id": "electric_grand_piano",
+   "gm": 2,
+   "family": "F1",
+   "en": "Electric Grand Piano",
+   "zh": "电大钢琴",
+   "aliases": [
+    "electric grand",
+    "cp-80",
+    "电钢琴"
+   ],
+   "asset": "electric_grand",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     60,
+     60
+    ]
+   },
+   "track": "02. Electric Grand Piano (电大钢琴)"
+  },
+  {
+   "num": 3,
+   "id": "electric_piano_rhodes",
+   "gm": 4,
+   "family": "F1",
+   "en": "Electric Piano 1 / Rhodes",
+   "zh": "罗兹电钢",
+   "aliases": [
+    "rhodes",
+    "electric piano",
+    "ep1",
+    "罗兹"
+   ],
+   "asset": "rhodes",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     230,
+     120,
+     60
+    ]
+   },
+   "track": "03. Electric Piano 1 / Rhodes (罗兹电钢)"
+  },
+  {
+   "num": 4,
+   "id": "harpsichord",
+   "gm": 6,
+   "family": "F1",
+   "en": "Harpsichord",
+   "zh": "羽管键琴",
+   "aliases": [
+    "cembalo",
+    "大键琴"
+   ],
+   "asset": "harpsichord",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     190,
+     40,
+     40
+    ]
+   },
+   "track": "04. Harpsichord (羽管键琴)"
+  },
+  {
+   "num": 5,
+   "id": "celesta",
+   "gm": 8,
+   "family": "F1",
+   "en": "Celesta",
+   "zh": "钢片琴",
+   "aliases": [
+    "celeste"
+   ],
+   "asset": "celesta",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     230,
+     190,
+     110
+    ]
+   },
+   "track": "05. Celesta (钢片琴)"
+  },
+  {
+   "num": 6,
+   "id": "glockenspiel",
+   "gm": 9,
+   "family": "F1",
+   "en": "Glockenspiel",
+   "zh": "钟琴",
+   "aliases": [
+    "glock"
+   ],
+   "asset": "glockenspiel",
+   "status": "reuse",
+   "title": {
+    "icon": 10,
+    "accent": [
+     220,
+     60,
+     60
+    ]
+   },
+   "track": "06. Glockenspiel (钟琴)"
+  },
+  {
+   "num": 7,
+   "id": "music_box",
+   "gm": 10,
+   "family": "F1",
+   "en": "Music Box",
+   "zh": "八音盒",
+   "aliases": [],
+   "asset": "music_box",
+   "status": "reuse",
+   "title": {
+    "icon": 14,
+    "accent": [
+     220,
+     70,
+     80
+    ]
+   },
+   "track": "07. Music Box (八音盒)"
+  },
+  {
+   "num": 8,
+   "id": "vibraphone",
+   "gm": 11,
+   "family": "F1",
+   "en": "Vibraphone",
+   "zh": "颤音琴",
+   "aliases": [
+    "vibes",
+    "vibraharp"
+   ],
+   "asset": "jb_vibraphone",
+   "status": "adapt",
+   "title": {
+    "icon": 3,
+    "accent": [
+     170,
+     190,
+     220
+    ]
+   },
+   "track": "08. Vibraphone (颤音琴)"
+  },
+  {
+   "num": 9,
+   "id": "marimba",
+   "gm": 12,
+   "family": "F1",
+   "en": "Marimba",
+   "zh": "马林巴琴",
+   "aliases": [
+    "马林巴"
+   ],
+   "asset": "marimba",
+   "status": "reuse",
+   "title": {
+    "icon": 5,
+    "accent": [
+     200,
+     120,
+     60
+    ]
+   },
+   "track": "09. Marimba (马林巴琴)"
+  },
+  {
+   "num": 10,
+   "id": "xylophone",
+   "gm": 13,
+   "family": "F1",
+   "en": "Xylophone",
+   "zh": "木琴",
+   "aliases": [
+    "xylo"
+   ],
+   "asset": "jb_xylophone",
+   "status": "adapt",
+   "title": {
+    "icon": 8,
+    "accent": [
+     240,
+     120,
+     90
+    ]
+   },
+   "track": "10. Xylophone (木琴)"
+  },
+  {
+   "num": 11,
+   "id": "tubular_bells",
+   "gm": 14,
+   "family": "F1",
+   "en": "Tubular Bells",
+   "zh": "管钟",
+   "aliases": [
+    "chimes"
+   ],
+   "asset": "tubular_bells",
+   "status": "reuse",
+   "title": {
+    "icon": 4,
+    "accent": [
+     232,
+     176,
+     80
+    ]
+   },
+   "track": "11. Tubular Bells (管钟)"
+  },
+  {
+   "num": 12,
+   "id": "dulcimer",
+   "gm": 15,
+   "family": "F1",
+   "en": "Dulcimer",
+   "zh": "扬琴",
+   "aliases": [
+    "hammered dulcimer",
+    "santur",
+    "yangqin"
+   ],
+   "asset": "dulcimer",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     170,
+     110,
+     60
+    ]
+   },
+   "track": "12. Dulcimer (扬琴)"
+  },
+  {
+   "num": 13,
+   "id": "drawbar_organ",
+   "gm": 16,
+   "family": "F2",
+   "en": "Drawbar Organ",
+   "zh": "拉杆风琴",
+   "aliases": [
+    "hammond",
+    "b3",
+    "jazz organ"
+   ],
+   "asset": "drawbar_organ",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     180,
+     110,
+     60
+    ]
+   },
+   "track": "13. Drawbar Organ (拉杆风琴)"
+  },
+  {
+   "num": 14,
+   "id": "church_organ",
+   "gm": 19,
+   "family": "F2",
+   "en": "Church Organ",
+   "zh": "教堂管风琴",
+   "aliases": [
+    "pipe organ",
+    "管风琴"
+   ],
+   "asset": "church_organ",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     210,
+     190,
+     140
+    ]
+   },
+   "track": "14. Church Organ (教堂管风琴)"
+  },
+  {
+   "num": 15,
+   "id": "accordion",
+   "gm": 21,
+   "family": "F2",
+   "en": "Accordion",
+   "zh": "手风琴",
+   "aliases": [],
+   "asset": "accordion",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     40,
+     50
+    ]
+   },
+   "track": "15. Accordion (手风琴)"
+  },
+  {
+   "num": 16,
+   "id": "harmonica",
+   "gm": 22,
+   "family": "F2",
+   "en": "Harmonica",
+   "zh": "口琴",
+   "aliases": [
+    "blues harp"
+   ],
+   "asset": "harmonica",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     205,
+     215
+    ]
+   },
+   "track": "16. Harmonica (口琴)"
+  },
+  {
+   "num": 17,
+   "id": "nylon_guitar",
+   "gm": 24,
+   "family": "F2",
+   "en": "Acoustic Guitar Nylon",
+   "zh": "古典尼龙弦吉他",
+   "aliases": [
+    "classical guitar",
+    "nylon guitar",
+    "尼龙弦吉他"
+   ],
+   "asset": "nylon_guitar",
+   "status": "adapt",
+   "title": {
+    "icon": 12,
+    "accent": [
+     226,
+     170,
+     90
+    ]
+   },
+   "track": "17. Acoustic Guitar Nylon (古典尼龙弦吉他)"
+  },
+  {
+   "num": 18,
+   "id": "steel_guitar",
+   "gm": 25,
+   "family": "F2",
+   "en": "Acoustic Guitar Steel",
+   "zh": "民谣钢弦吉他",
+   "aliases": [
+    "folk guitar",
+    "steel guitar",
+    "acoustic guitar"
+   ],
+   "asset": "guitar",
+   "status": "reuse",
+   "title": {
+    "icon": 12,
+    "accent": [
+     226,
+     150,
+     60
+    ]
+   },
+   "track": "18. Acoustic Guitar Steel (民谣钢弦吉他)"
+  },
+  {
+   "num": 19,
+   "id": "electric_guitar_clean",
+   "gm": 27,
+   "family": "F2",
+   "en": "Electric Guitar Clean",
+   "zh": "清音电吉他",
+   "aliases": [
+    "clean guitar",
+    "jazz guitar"
+   ],
+   "asset": "electric_guitar",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     80,
+     150,
+     230
+    ]
+   },
+   "track": "19. Electric Guitar Clean (清音电吉他)"
+  },
+  {
+   "num": 20,
+   "id": "distortion_guitar",
+   "gm": 30,
+   "family": "F2",
+   "en": "Distortion Guitar",
+   "zh": "失真摇滚电吉他",
+   "aliases": [
+    "overdrive guitar",
+    "rock guitar"
+   ],
+   "asset": "distortion_guitar",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     220,
+     40,
+     40
+    ]
+   },
+   "track": "20. Distortion Guitar (失真摇滚电吉他)"
+  },
+  {
+   "num": 21,
+   "id": "acoustic_bass",
+   "gm": 32,
+   "family": "F2",
+   "en": "Acoustic Bass",
+   "zh": "原声立式贝斯",
+   "aliases": [
+    "upright bass",
+    "double bass solo"
+   ],
+   "asset": "upright_bass",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     150,
+     90,
+     50
+    ]
+   },
+   "track": "21. Acoustic Bass (原声立式贝斯)"
+  },
+  {
+   "num": 22,
+   "id": "fretless_bass",
+   "gm": 35,
+   "family": "F2",
+   "en": "Fretless Bass",
+   "zh": "无品贝斯",
+   "aliases": [
+    "fretless"
+   ],
+   "asset": "fretless_bass",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     110,
+     80,
+     160
+    ]
+   },
+   "track": "22. Fretless Bass (无品贝斯)"
+  },
+  {
+   "num": 23,
+   "id": "pizzicato_strings",
+   "gm": 45,
+   "family": "F2",
+   "en": "Pizzicato Strings",
+   "zh": "弦乐拨奏",
+   "aliases": [
+    "pizz",
+    "pizzicato"
+   ],
+   "asset": "pizzicato",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     130,
+     70
+    ]
+   },
+   "track": "23. Pizzicato Strings (弦乐拨奏)"
+  },
+  {
+   "num": 24,
+   "id": "orchestral_harp",
+   "gm": 46,
+   "family": "F2",
+   "en": "Orchestral Harp",
+   "zh": "管弦乐竖琴",
+   "aliases": [
+    "harp",
+    "竖琴"
+   ],
+   "asset": "harp",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     232,
+     190,
+     90
+    ]
+   },
+   "track": "24. Orchestral Harp (管弦乐竖琴)"
+  },
+  {
+   "num": 25,
+   "id": "violin",
+   "gm": 40,
+   "family": "F3",
+   "en": "Violin",
+   "zh": "小提琴",
+   "aliases": [],
+   "asset": "violin",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     100,
+     40
+    ]
+   },
+   "track": "25. Violin (小提琴)"
+  },
+  {
+   "num": 26,
+   "id": "viola",
+   "gm": 41,
+   "family": "F3",
+   "en": "Viola",
+   "zh": "中提琴",
+   "aliases": [],
+   "asset": "viola",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     180,
+     90,
+     40
+    ]
+   },
+   "track": "26. Viola (中提琴)"
+  },
+  {
+   "num": 27,
+   "id": "cello",
+   "gm": 42,
+   "family": "F3",
+   "en": "Cello",
+   "zh": "大提琴",
+   "aliases": [
+    "violoncello"
+   ],
+   "asset": "cello",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     160,
+     75,
+     35
+    ]
+   },
+   "track": "27. Cello (大提琴)"
+  },
+  {
+   "num": 28,
+   "id": "contrabass",
+   "gm": 43,
+   "family": "F3",
+   "en": "Contrabass",
+   "zh": "低音提琴",
+   "aliases": [
+    "double bass",
+    "string bass"
+   ],
+   "asset": "contrabass",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     130,
+     65,
+     30
+    ]
+   },
+   "track": "28. Contrabass (低音提琴)"
+  },
+  {
+   "num": 29,
+   "id": "string_ensemble",
+   "gm": 48,
+   "family": "F3",
+   "en": "String Ensemble",
+   "zh": "交响弦乐合奏",
+   "aliases": [
+    "strings",
+    "string section"
+   ],
+   "asset": "string_ensemble",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     120,
+     60
+    ]
+   },
+   "track": "29. String Ensemble (交响弦乐合奏)"
+  },
+  {
+   "num": 30,
+   "id": "choir_aahs",
+   "gm": 52,
+   "family": "F3",
+   "en": "Choir Aahs",
+   "zh": "人声合唱团 Aahs",
+   "aliases": [
+    "choir",
+    "aahs"
+   ],
+   "asset": "choir",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     240,
+     220,
+     190
+    ]
+   },
+   "track": "30. Choir Aahs (人声合唱团 Aahs)"
+  },
+  {
+   "num": 31,
+   "id": "voice_oohs",
+   "gm": 53,
+   "family": "F3",
+   "en": "Voice Oohs",
+   "zh": "人声哼鸣 Oohs",
+   "aliases": [
+    "oohs",
+    "voice"
+   ],
+   "asset": "voice_oohs",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     170,
+     230
+    ]
+   },
+   "track": "31. Voice Oohs (人声哼鸣 Oohs)"
+  },
+  {
+   "num": 32,
+   "id": "orchestra_hit",
+   "gm": 55,
+   "family": "F3",
+   "en": "Orchestra Hit",
+   "zh": "交响齐奏重音",
+   "aliases": [
+    "orch hit"
+   ],
+   "asset": "orchestra_hit",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     255,
+     180,
+     60
+    ]
+   },
+   "track": "32. Orchestra Hit (交响齐奏重音)"
+  },
+  {
+   "num": 33,
+   "id": "trumpet",
+   "gm": 56,
+   "family": "F4",
+   "en": "Trumpet",
+   "zh": "小号",
+   "aliases": [],
+   "asset": "trumpet",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     240,
+     190,
+     80
+    ]
+   },
+   "track": "33. Trumpet (小号)"
+  },
+  {
+   "num": 34,
+   "id": "trombone",
+   "gm": 57,
+   "family": "F4",
+   "en": "Trombone",
+   "zh": "长号",
+   "aliases": [],
+   "asset": "trombone",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     230,
+     175,
+     70
+    ]
+   },
+   "track": "34. Trombone (长号)"
+  },
+  {
+   "num": 35,
+   "id": "tuba",
+   "gm": 58,
+   "family": "F4",
+   "en": "Tuba",
+   "zh": "大号",
+   "aliases": [],
+   "asset": "tuba",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     215,
+     160,
+     60
+    ]
+   },
+   "track": "35. Tuba (大号)"
+  },
+  {
+   "num": 36,
+   "id": "muted_trumpet",
+   "gm": 59,
+   "family": "F4",
+   "en": "Muted Trumpet",
+   "zh": "弱音器爵士小号",
+   "aliases": [
+    "mute trumpet",
+    "harmon mute"
+   ],
+   "asset": "muted_trumpet",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     170,
+     110
+    ]
+   },
+   "track": "36. Muted Trumpet (弱音器爵士小号)"
+  },
+  {
+   "num": 37,
+   "id": "french_horn",
+   "gm": 60,
+   "family": "F4",
+   "en": "French Horn",
+   "zh": "圆号",
+   "aliases": [
+    "horn",
+    "圆号",
+    "法国号"
+   ],
+   "asset": "french_horn",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     235,
+     180,
+     75
+    ]
+   },
+   "track": "37. French Horn (圆号)"
+  },
+  {
+   "num": 38,
+   "id": "brass_section",
+   "gm": 61,
+   "family": "F4",
+   "en": "Brass Section",
+   "zh": "铜管组齐奏",
+   "aliases": [
+    "brass"
+   ],
+   "asset": "brass_section",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     250,
+     200,
+     90
+    ]
+   },
+   "track": "38. Brass Section (铜管组齐奏)"
+  },
+  {
+   "num": 39,
+   "id": "soprano_sax",
+   "gm": 64,
+   "family": "F4",
+   "en": "Soprano Sax",
+   "zh": "高音萨克斯",
+   "aliases": [
+    "soprano saxophone"
+   ],
+   "asset": "soprano_sax",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     240,
+     195,
+     90
+    ]
+   },
+   "track": "39. Soprano Sax (高音萨克斯)"
+  },
+  {
+   "num": 40,
+   "id": "alto_sax",
+   "gm": 65,
+   "family": "F4",
+   "en": "Alto Sax",
+   "zh": "中音萨克斯",
+   "aliases": [
+    "alto saxophone",
+    "sax",
+    "saxophone"
+   ],
+   "asset": "alto_sax",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     235,
+     185,
+     80
+    ]
+   },
+   "track": "40. Alto Sax (中音萨克斯)"
+  },
+  {
+   "num": 41,
+   "id": "tenor_sax",
+   "gm": 66,
+   "family": "F4",
+   "en": "Tenor Sax",
+   "zh": "次中音萨克斯",
+   "aliases": [
+    "tenor saxophone"
+   ],
+   "asset": "tenor_sax",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     225,
+     170,
+     70
+    ]
+   },
+   "track": "41. Tenor Sax (次中音萨克斯)"
+  },
+  {
+   "num": 42,
+   "id": "oboe",
+   "gm": 68,
+   "family": "F5",
+   "en": "Oboe",
+   "zh": "双簧管",
+   "aliases": [],
+   "asset": "oboe",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     60,
+     45,
+     40
+    ]
+   },
+   "track": "42. Oboe (双簧管)"
+  },
+  {
+   "num": 43,
+   "id": "english_horn",
+   "gm": 69,
+   "family": "F5",
+   "en": "English Horn",
+   "zh": "英国管",
+   "aliases": [
+    "cor anglais"
+   ],
+   "asset": "english_horn",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     80,
+     60,
+     50
+    ]
+   },
+   "track": "43. English Horn (英国管)"
+  },
+  {
+   "num": 44,
+   "id": "bassoon",
+   "gm": 70,
+   "family": "F5",
+   "en": "Bassoon",
+   "zh": "巴松管",
+   "aliases": [
+    "大管",
+    "fagott"
+   ],
+   "asset": "bassoon",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     150,
+     70,
+     40
+    ]
+   },
+   "track": "44. Bassoon (巴松管)"
+  },
+  {
+   "num": 45,
+   "id": "clarinet",
+   "gm": 71,
+   "family": "F5",
+   "en": "Clarinet",
+   "zh": "单簧管",
+   "aliases": [
+    "黑管"
+   ],
+   "asset": "clarinet",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     40,
+     40,
+     45
+    ]
+   },
+   "track": "45. Clarinet (单簧管)"
+  },
+  {
+   "num": 46,
+   "id": "piccolo",
+   "gm": 72,
+   "family": "F5",
+   "en": "Piccolo",
+   "zh": "短笛",
+   "aliases": [],
+   "asset": "piccolo",
+   "status": "adapt",
+   "title": {
+    "icon": 7,
+    "accent": [
+     225,
+     230,
+     240
+    ]
+   },
+   "track": "46. Piccolo (短笛)"
+  },
+  {
+   "num": 47,
+   "id": "flute",
+   "gm": 73,
+   "family": "F5",
+   "en": "Flute",
+   "zh": "长笛",
+   "aliases": [],
+   "asset": "flute",
+   "status": "reuse",
+   "title": {
+    "icon": 7,
+    "accent": [
+     214,
+     220,
+     230
+    ]
+   },
+   "track": "47. Flute (长笛)"
+  },
+  {
+   "num": 48,
+   "id": "recorder",
+   "gm": 74,
+   "family": "F5",
+   "en": "Recorder",
+   "zh": "竖笛",
+   "aliases": [
+    "blockflöte"
+   ],
+   "asset": "recorder",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     220,
+     190,
+     140
+    ]
+   },
+   "track": "48. Recorder (竖笛)"
+  },
+  {
+   "num": 49,
+   "id": "pan_flute",
+   "gm": 75,
+   "family": "F5",
+   "en": "Pan Flute",
+   "zh": "排箫",
+   "aliases": [
+    "panpipes",
+    "pan pipes"
+   ],
+   "asset": "pan_flute",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     200,
+     170,
+     100
+    ]
+   },
+   "track": "49. Pan Flute (排箫)"
+  },
+  {
+   "num": 50,
+   "id": "shakuhachi",
+   "gm": 77,
+   "family": "F5",
+   "en": "Shakuhachi",
+   "zh": "尺八",
+   "aliases": [],
+   "asset": "shakuhachi",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     190,
+     160,
+     90
+    ]
+   },
+   "track": "50. Shakuhachi (尺八)"
+  },
+  {
+   "num": 51,
+   "id": "whistle",
+   "gm": 78,
+   "family": "F5",
+   "en": "Whistle",
+   "zh": "爱尔兰哨笛",
+   "aliases": [
+    "tin whistle",
+    "irish whistle",
+    "penny whistle"
+   ],
+   "asset": "tin_whistle",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     70,
+     160,
+     90
+    ]
+   },
+   "track": "51. Whistle (爱尔兰哨笛)"
+  },
+  {
+   "num": 52,
+   "id": "ocarina",
+   "gm": 79,
+   "family": "F5",
+   "en": "Ocarina",
+   "zh": "陶笛",
+   "aliases": [],
+   "asset": "ocarina",
+   "status": "reuse",
+   "title": {
+    "icon": 9,
+    "accent": [
+     70,
+     170,
+     130
+    ]
+   },
+   "track": "52. Ocarina (陶笛)"
+  },
+  {
+   "num": 53,
+   "id": "sitar",
+   "gm": 104,
+   "family": "F6",
+   "en": "Sitar",
+   "zh": "印度西塔琴",
+   "aliases": [],
+   "asset": "sitar",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     230,
+     140,
+     40
+    ]
+   },
+   "track": "53. Sitar (印度西塔琴)"
+  },
+  {
+   "num": 54,
+   "id": "banjo",
+   "gm": 105,
+   "family": "F6",
+   "en": "Banjo",
+   "zh": "美洲班卓琴",
+   "aliases": [],
+   "asset": "banjo",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     230,
+     220,
+     200
+    ]
+   },
+   "track": "54. Banjo (美洲班卓琴)"
+  },
+  {
+   "num": 55,
+   "id": "shamisen",
+   "gm": 106,
+   "family": "F6",
+   "en": "Shamisen",
+   "zh": "日本三味线",
+   "aliases": [],
+   "asset": "shamisen",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     40,
+     30,
+     30
+    ]
+   },
+   "track": "55. Shamisen (日本三味线)"
+  },
+  {
+   "num": 56,
+   "id": "koto",
+   "gm": 107,
+   "family": "F6",
+   "en": "Koto",
+   "zh": "古筝/日本筝",
+   "aliases": [
+    "古筝",
+    "guzheng"
+   ],
+   "asset": "koto",
+   "status": "reuse",
+   "title": {
+    "icon": 15,
+    "accent": [
+     200,
+     110,
+     60
+    ]
+   },
+   "track": "56. Koto (古筝/日本筝)"
+  },
+  {
+   "num": 57,
+   "id": "kalimba",
+   "gm": 108,
+   "family": "F6",
+   "en": "Kalimba",
+   "zh": "非洲卡林巴拇指琴",
+   "aliases": [
+    "thumb piano",
+    "mbira",
+    "卡林巴"
+   ],
+   "asset": "kalimba",
+   "status": "reuse",
+   "title": {
+    "icon": 6,
+    "accent": [
+     190,
+     196,
+     206
+    ]
+   },
+   "track": "57. Kalimba (非洲卡林巴拇指琴)"
+  },
+  {
+   "num": 58,
+   "id": "bagpipe",
+   "gm": 109,
+   "family": "F6",
+   "en": "Bagpipe",
+   "zh": "苏格兰风笛",
+   "aliases": [
+    "bagpipes",
+    "风笛"
+   ],
+   "asset": "bagpipe",
+   "status": "reuse",
+   "title": {
+    "icon": 17,
+    "accent": [
+     210,
+     50,
+     55
+    ]
+   },
+   "track": "58. Bagpipe (苏格兰风笛)"
+  },
+  {
+   "num": 59,
+   "id": "shanai",
+   "gm": 111,
+   "family": "F6",
+   "en": "Shanai",
+   "zh": "唢呐/印度芦笛",
+   "aliases": [
+    "shehnai",
+    "suona",
+    "唢呐"
+   ],
+   "asset": "shanai",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     220,
+     150,
+     50
+    ]
+   },
+   "track": "59. Shanai (唢呐/印度芦笛)"
+  },
+  {
+   "num": 60,
+   "id": "steel_drums",
+   "gm": 114,
+   "family": "F6",
+   "en": "Steel Drums",
+   "zh": "加勒比钢鼓",
+   "aliases": [
+    "steel drum",
+    "steelpan",
+    "钢鼓"
+   ],
+   "asset": "steel_drums",
+   "status": "reuse",
+   "title": {
+    "icon": 11,
+    "accent": [
+     200,
+     205,
+     215
+    ]
+   },
+   "track": "60. Steel Drums (加勒比钢鼓)"
+  },
+  {
+   "num": 61,
+   "id": "woodblock_castanets",
+   "gm": 115,
+   "family": "F6",
+   "en": "Woodblock & Castanets",
+   "zh": "木鱼与弗拉门戈响板",
+   "aliases": [
+    "woodblock",
+    "castanets",
+    "木鱼",
+    "响板"
+   ],
+   "asset": "woodblock_castanets",
+   "status": "adapt",
+   "title": {
+    "icon": 1,
+    "accent": [
+     196,
+     92,
+     52
+    ]
+   },
+   "track": "61. Woodblock & Castanets (木鱼与弗拉门戈响板)"
+  },
+  {
+   "num": 62,
+   "id": "synth_lead_square",
+   "gm": 80,
+   "family": "F6",
+   "en": "Synth Lead Square",
+   "zh": "8-Bit 方波合成器",
+   "aliases": [
+    "square lead",
+    "8-bit",
+    "chiptune",
+    "方波"
+   ],
+   "asset": "pixel8bit",
+   "status": "reuse",
+   "title": {
+    "icon": 16,
+    "accent": [
+     70,
+     225,
+     240
+    ]
+   },
+   "track": "62. Synth Lead Square (8-Bit 方波合成器)"
+  },
+  {
+   "num": 63,
+   "id": "synth_lead_sawtooth",
+   "gm": 81,
+   "family": "F6",
+   "en": "Synth Lead Sawtooth",
+   "zh": "锯齿波电音合成器",
+   "aliases": [
+    "saw lead",
+    "sawtooth",
+    "锯齿波"
+   ],
+   "asset": "saw_lead",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     250,
+     80,
+     200
+    ]
+   },
+   "track": "63. Synth Lead Sawtooth (锯齿波电音合成器)"
+  },
+  {
+   "num": 64,
+   "id": "synth_pad_new_age",
+   "gm": 88,
+   "family": "F6",
+   "en": "Synth Pad New Age / Fantasia",
+   "zh": "梦幻新世纪合成器",
+   "aliases": [
+    "new age",
+    "fantasia",
+    "pad"
+   ],
+   "asset": "new_age_pad",
+   "status": "new",
+   "title": {
+    "icon": null,
+    "accent": [
+     150,
+     120,
+     250
+    ]
+   },
+   "track": "64. Synth Pad New Age / Fantasia (梦幻新世纪合成器)"
+  },
+  {
+   "num": 65,
+   "id": "grand_tutti_finale",
+   "gm": null,
+   "family": "finale",
+   "en": "Grand Orchestra Tutti (Finale)",
+   "zh": "齐奏终章",
+   "aliases": [
+    "tutti",
+    "finale",
+    "grand tutti"
+   ],
+   "asset": "finale",
+   "status": "reuse",
+   "title": {
+    "icon": 18,
+    "accent": [
+     255,
+     205,
+     90
+    ]
+   },
+   "track": "65. Grand Orchestra Tutti (Finale) (齐奏终章)"
+  },
+  {
+   "num": null,
+   "id": "tubular_bells_castanets",
+   "gm": null,
+   "family": "extra",
+   "en": "Tubular Bells & Castanets",
+   "zh": "管钟+响板",
+   "aliases": [
+    "tubular.*castanet"
+   ],
+   "asset": "bells_castanets",
+   "status": "reuse",
+   "title": {
+    "icon": 13,
+    "accent": [
+     232,
+     176,
+     80
+    ]
+   },
+   "track": "Tubular Bells & Castanets"
+  },
+  {
+   "num": null,
+   "id": "castanets_v5",
+   "gm": null,
+   "family": "extra",
+   "en": "Castanets",
+   "zh": "响板",
+   "aliases": [
+    "castanet"
+   ],
+   "asset": "castanets",
+   "status": "reuse",
+   "title": {
+    "icon": 1,
+    "accent": [
+     196,
+     92,
+     52
+    ]
+   },
+   "track": "Castanets"
+  }
+ ]
+}

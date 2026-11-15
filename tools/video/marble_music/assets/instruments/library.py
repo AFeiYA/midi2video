@@ -29,13 +29,22 @@ def hanging_world(k, h):
     """world-space top point of a hanging (world-vertical) part attached at local point h['attach'] of key k"""
     x, y, z = h['attach']; nx, nz = k['nx'], k['nz']
     return (k['x'] + x*nz + z*nx, y, k['z'] - x*nx + z*nz)
-def assign(keys, M=None):
-    """returns list of (asset, variant, j) per key; j = index of the key within its section."""
+def assign(keys, M=None, instrument_set=None):
+    """returns list of (asset, variant, j) per key; j = index of the key within its section.
+    instrument_set (e.g. 'jewelbox', 'jewelbox:F1'; plan['instrument_set']): resolve each key through registry.py first
+    (track / marker name, then key['program'] as GM program); keys it cannot resolve, or whose asset is not built yet,
+    fall back to the classic tracks_regex matching. Without it behaviour is unchanged."""
     M = M or metas(); out = []; count = {}
     order = sorted(M.values(), key=lambda m: (-m.get('priority', 0), m['section']))   # hook50: specific assets (e.g. 'tubular.*castanet') outrank generic ones
+    allowed = None
+    if instrument_set:
+        import registry; allowed = {e['asset'] for e in registry.instrument_set(instrument_set)}
     for k in keys:
-        t = k['track'].lower()
-        m = next((m for m in order if re.search(m['tracks_regex'], t)), None) or (M['castanets'] if k.get('drum') else M['piano'])
+        t = k['track'].lower(); m = None
+        if allowed is not None:
+            e = registry.resolve_track(k['track'], k.get('program'))
+            if e is not None and e['asset'] in allowed and e['asset'] in M: m = M[e['asset']]
+        m = m or next((m for m in order if re.search(m['tracks_regex'], t)), None) or (M['castanets'] if k.get('drum') else M['piano'])
         j = count.get(k['track'], 0); count[k['track']] = j + 1
         if m['variant_rule'] == 'alternate': v = m['variants'][j % len(m['variants'])]
         elif m['variant_rule'] == 'pitch': v = 'black' if int(k['note']) % 12 in (1, 3, 6, 8, 10) else 'white'   # v5 piano: shape follows the note

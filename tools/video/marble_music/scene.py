@@ -128,7 +128,7 @@ if V3:
     import os as _os
     sys.path.insert(0,_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'assets','instruments'))
     import _common as AC, library as ALIB
-    _AM=ALIB.metas(a.look if V3 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM); _MODS={}; _MESH={}; _SH={}; _HANG={}; _ALN={}
+    _AM=ALIB.metas(a.look if V3 else 'v3'); _ASG=ALIB.assign(P['keys'],_AM,P.get('instrument_set')); _MODS={}; _MESH={}; _SH={}; _HANG={}; _ALN={}
     for (an,av,_j) in sorted(set(_ASG)):
         if an not in _MODS:
             _MODS[an]=AC.load_asset(_AM[an]['_dir']); _SH[an]=_MODS[an][2].shared(AC)

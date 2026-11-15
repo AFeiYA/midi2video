@@ -1,0 +1,114 @@
+{
+ "name": "rhodes",
+ "section": 103,
+ "tracks_regex": "(?!)",
+ "variants": [
+  "white",
+  "black"
+ ],
+ "variant_rule": "pitch",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  },
+  {
+   "x": 0.15,
+   "z": -0.03,
+   "y_start": 0.2,
+   "radius": 0.022
+  }
+ ],
+ "description": "Jewelbox 03 Electric Piano 1 / Rhodes: pitch-chosen key in front of a suitcase piano: black tolex body with a silver sparkle-top lid, brushed-silver name rail, red logo plates, silver lid seam and latches, four splayed chrome legs and a chrome sustain pedal on a cable.",
+ "slots": [
+  "body",
+  "tolex",
+  "silver",
+  "red",
+  "dark",
+  "sparkle",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.65,
+  0.35
+ ],
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "white": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.49000000953674316,
+     -0.15000000596046448,
+     -0.5547000169754028
+    ],
+    [
+     0.49000000953674316,
+     0.3100000023841858,
+     0.06499999761581421
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": null,
+   "probe_points": 58604,
+   "triangles": 1394
+  },
+  "black": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.49000000953674316,
+     -0.10999999940395355,
+     -0.5547000169754028
+    ],
+    [
+     0.49000000953674316,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3100000023841858,
+     -0.10999999940395355,
+     -0.07000000029802322
+    ],
+    [
+     0.3100000023841858,
+     0.10999999940395355,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 53030,
+   "triangles": 1246
+  }
+ }
+}

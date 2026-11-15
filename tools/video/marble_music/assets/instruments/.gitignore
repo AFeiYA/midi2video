@@ -1,0 +1,12 @@
+# build_library.py caches: regenerate with  blender -b -P build_library.py -- --only <names>
+*.blend1
+__pycache__/
+# jewelbox (inst64) assets: only sources + probes are committed; model.blend / model.glb are rebuilt locally
+/grand_piano/model*
+/electric_grand/model*
+/rhodes/model*
+/harpsichord/model*
+/celesta/model*
+/jb_vibraphone/model*
+/jb_xylophone/model*
+/dulcimer/model*

@@ -63,3 +63,49 @@ python fix_clearance.py work_hook50/hits.json -o work_hook50/plan_zz_v2.json --l
 blender -b -P assets/instruments/build_library.py -- --only bells_castanets,music_box,koto,pixel8bit,bagpipe,finale,marimba/v5
 python hook50_sheet.py work_hook50/plan_zz_v2.json stills/ hook50_instrument_sheet.png
 ```
+
+## 珠匣乐团 Jewelbox Orchestra：64 乐器注册表（registry）
+
+64 款 GM 乐器（+ 终章 65）的统一入口，供程序化调用。系列名是工作名，只在 `registry.json` 的 `series` 里改。
+
+- `registry.json`：每个乐器一条：`num`（01–65）、`id`（稳定 slug）、`gm`（GM program 0–127）、`family`（F1–F6）、
+  `en` / `zh` / `aliases`（和 MIDI 标记里的写法一致）、`asset`（本目录下的击打件文件夹）、`status`
+  （`reuse` 直接用现有 / `adapt` 在现有基础上改的新文件夹 / `new` 全新）、`title.icon`（titles.py 的 NAMES 编号，没有就 null）、
+  `title.accent`（强调色 RGB）、`track`（标准标记文字 `"NN. Name (中文)"`）。`sets` 里是命名乐器组（hook50、jingle12）。
+- `registry.py`（不依赖 bpy）：
+  ```python
+  get_instrument('gm:0') / get_instrument('num:12') / get_instrument('id:dulcimer') / get_instrument('颤音琴') / get_instrument('08. Vibraphone (颤音琴)')
+  resolve_track(track_or_marker_name, program=None)   # 先按名字，再按 GM program
+  instrument_set('jewelbox')      # 65 条；'jewelbox:F1'..':F6' 单个家族；'hook50' / 'jingle12'
+  striker(entry, look='v5')       # 资产目录、接触点/法线、包围盒、keep-out、销钉、悬挂件、闪光色、变体
+  ```
+- 选择乐器组后的映射：`library.assign(keys, M, instrument_set=...)` 先用 registry 解析每个键的 track 名（或 `key['program']`），
+  解析不到或资产还没建的，回到原来的 `tracks_regex` 匹配。不传 `instrument_set` 时行为和以前完全一样。
+  scene.py / check_keepout.py / check_pairs.py 都读 `plan['instrument_set']`。
+- 珠匣新文件夹的 `tracks_regex` 都是 `(?!)`（永不匹配），所以老歌的乐器映射一个都不会变；只能通过 registry 用到。
+- 64 乐器 MIDI 一条龙：
+  ```bash
+  python extract_hits.py 02_Jingle_Bells_64_Instruments_Family_MultiTrack.mid --tracks 1,2,3,4,5,6 --markers --instrument-set jewelbox -o hits.json
+  python plan_zigzag.py hits.json -o plan.json        # plan 里带 instrument_set，每个键带 program
+  ```
+  `--markers` 用 Track 0 当前标记（"08. Vibraphone (颤音琴)"）给每个音命名（latin-1 → UTF-8 已修正），并记下 GM program。
+- 资产生成器在 `gen/`（纯 python，不要 bpy）：`gen/assetgen.py`（write 工具）、`gen/hook50.py`、`gen/jewelbox_f1.py`。
+  生成后用 `blender -b -P build_library.py -- --only grand_piano,rhodes,...` 建缓存和 probe。
+- 乐器展示图：`python showcase.py plan.json --set jewelbox:F1` → `scene.py --frames $(python showcase.py --frames plan.json)` →
+  `python showcase.py --sheet plan.json frames/ sheet.png --closeups close.png`（标签默认取自 registry）。
+
+### 家族 1（01–12，键盘·钟·槌击）
+| # | 乐器 | 资产 | 状态 |
+|---|---|---|---|
+| 01 | 大钢琴 | grand_piano | 新：象牙/乌木键（按音高）+ 黑漆三角钢琴侧影、撑起的琴盖、金弦、琴腿、踏板 |
+| 02 | 电大钢琴 | electric_grand | 新：珍珠白短尾舞台钢琴、红条、镀铬 X 架、卷线 |
+| 03 | 罗兹电钢 | rhodes | 新：黑色皮革手提箱、银色铭牌条、红色标牌、外撇镀铬腿、延音踏板 |
+| 04 | 羽管键琴 | harpsichord | 新：反色键（乌木白键/骨色黑键）+ 上层键盘、红漆长琴箱、彩绘琴盖、镀金车腿 |
+| 05 | 钢片琴 | celesta | 新：蜂蜜木立式琴柜、拱顶、镀金镂空格栅、竖琴形踏板架 |
+| 06 | 钟琴 | glockenspiel (v5) | 复用 |
+| 07 | 八音盒 | music_box | 复用 |
+| 08 | 颤音琴 | jb_vibraphone | 改：铝条 + 两侧小琴条、三根金色共鸣管（世界竖直）、风扇片 + 电机轴 |
+| 09 | 马林巴琴 | marimba (v5) | 复用 |
+| 10 | 木琴 | jb_xylophone | 改：按音高的彩虹琴条 + 彩虹儿童木琴图标、交叉琴槌 |
+| 11 | 管钟 | tubular_bells (v5) | 复用 |
+| 12 | 扬琴 | dulcimer | 新：带银弦的胡桃木击打条 + 梯形扬琴、两个金色音孔、琴码、交叉琴竹 |
