@@ -25,13 +25,17 @@ def trumpet(C, mute=False):
         for z in (0.10, -0.16): P.append(C.prim('cyl', 2, loc=(x,0.2,z), scale=(0.034,0.034,0.016), verts=24))
         P.append(C.prim('cyl', 2, loc=(x,0.2,0.13), scale=(0.006,0.006,0.05), verts=8))
         P.append(C.prim('cyl', 1, loc=(x,0.2,0.165), scale=(0.024,0.024,0.014), verts=24))       # pearl finger buttons
-    P.append(sweep(C, 0, [(0.08,-0.16),(0.08,-0.22)] + arc_pts(0.02,-0.22,0.06,0.0,-math.pi/2,6)[1:] + [(-0.22,-0.28)] + arc_pts(-0.22,-0.21,0.07,-math.pi/2,-math.pi,6)[1:] + [(-0.29,-0.03)], 0.02, y=0.2))
-    P += bell(C, 0, 3, (0.30,0.017), (1,0), 0.30, 0.028, 0.17, y=0.215)
-    P.append(sweep(C, 2, [(-0.43,0.017),(-0.38,0.017),(-0.33,0.017)], [0.03,0.012,0.014], y=0.19))  # mouthpiece
+        P.append(yport(C, 0, x, 0.017, 0.016, 0.0, 0.2))                                          # valve port: casing sits on the bell pipe
+    P.append(sweep(C, 0, [(0.08,-0.16),(0.08,-0.22)] + arc_pts(0.02,-0.22,0.06,0.0,-math.pi/2,6)[1:] + [(-0.22,-0.28)] + arc_pts(-0.22,-0.21,0.07,-math.pi/2,-math.pi,6)[1:] + [(-0.29,-0.035)], 0.02, y=0.2))
+    o, (bx, by) = chain(C, 0, 1, 0.017, 0.028, 0.215); P.append(o)                                # bell pipe folds back into the bell
+    P += bell(C, 0, 3, (bx,0.017), (1,0), 0.30, 0.028, 0.17, y=by)
+    o, (mx, my) = chain(C, 0, -1, -0.022, 0.02, 0.19); P.append(o)                                # lead pipe -> mouthpiece receiver
+    P.append(collar(C, 2, mx-0.004, -0.022, my, 0.025, w=0.016))
+    P.append(sweep(C, 2, [(mx,-0.022),(mx-0.06,-0.022),(mx-0.10,-0.022),(mx-0.115,-0.022)], [0.015,0.012,0.026,0.03], y=my))  # mouthpiece
     if mute:                                                                                      # Harmon mute in the bell
         prof = [(0.50,0.07),(0.53,0.11),(0.57,0.135),(0.61,0.12),(0.64,0.07),(0.66,0.03),(0.72,0.02),(0.74,0.06),(0.745,0.06)]
         P.append(sweep(C, 4, [(x,0.017) for x,_ in prof], [r for _,r in prof], y=0.215, ymax=0.06, n=32))
-        P.append(sweep(C, 2, [(0.525,0.017),(0.545,0.017)], 0.118, y=0.215, ymax=0.058, n=32))   # cork ring
+        P.append(sweep(C, 2, [(0.525,0.017),(0.545,0.017)], 0.118, y=0.215, ymax=0.058, n=32, smooth=1))   # cork ring
     return P
 '''
 
@@ -63,12 +67,14 @@ write('trombone', dict(name='trombone', section=134, tracks_regex=NEVER, pins=TU
 def build(C, variant=None):
     P = [C.prim('cyl', 0, loc=(0,0,z), rot=(0,math.pi/2,0), scale=(0.02,0.02,0.62), verts=24) for z in (0.025, -0.025)]
     P.append(C.prim('cube', 1, loc=(-0.22,0.0,0.0), scale=(0.02,0.03,0.07), bevel=0.004))           # slide brace
-    for z in (0.025, -0.025): P.append(sweep(C, 0, [(0.31,z),(0.64,z)], 0.021, y=0.18))
-    P.append(sweep(C, 0, arc_pts(0.64,0.0,0.025,math.pi/2,-math.pi/2,10), 0.021, y=0.18))           # crook
-    P.append(C.prim('cube', 1, loc=(0.50,0.19,0.0), scale=(0.02,0.03,0.07), bevel=0.004))
-    P.append(sweep(C, 1, [(-0.42,0.025),(-0.37,0.025),(-0.32,0.025)], [0.032,0.012,0.016], y=0.19))  # mouthpiece
-    P.append(sweep(C, 0, [(-0.31,-0.025),(-0.44,-0.025)] + arc_pts(-0.44,-0.085,0.06,math.pi/2,3*math.pi/2,10)[1:] + [(0.0,-0.145)], 0.019, y=0.21))
-    P += bell(C, 0, 2, (0.0,-0.145), (1,0), 0.32, 0.019, 0.16, y=0.215)
+    o, _ = chain(C, 0, 1, 0.025, 0.02, 0.185, cont=[(0.64,0.025)] + arc_pts(0.64,0.0,0.025,math.pi/2,-math.pi/2,12)[1:], n=20); P.append(o)   # outer slide + crook
+    o, _ = chain(C, 0, 1, -0.025, 0.02, 0.185, cont=[(0.64,-0.025)], n=20); P.append(o)
+    P.append(C.prim('cube', 1, loc=(0.50,0.185,0.0), scale=(0.02,0.03,0.07), bevel=0.004))
+    o, (mx, my) = chain(C, 0, -1, 0.025, 0.02, 0.19, n=20); P.append(o)                           # -> mouthpiece
+    P.append(collar(C, 1, mx-0.004, 0.025, my, 0.025, w=0.016))
+    P.append(sweep(C, 1, [(mx,0.025),(mx-0.06,0.025),(mx-0.10,0.025),(mx-0.115,0.025)], [0.016,0.013,0.028,0.032], y=my))
+    o, _ = chain(C, 0, -1, -0.025, 0.02, 0.21, cont=[(-0.44,-0.025)] + arc_pts(-0.44,-0.085,0.06,math.pi/2,3*math.pi/2,12)[1:] + [(0.0,-0.145)], radii=0.019, n=20); P.append(o)
+    P += bell(C, 0, 2, (0.0,-0.145), (1,0), 0.32, 0.019, 0.16, y=0.21, ymax=0.052)
     return P
 ''',
 f'''"""trombone materials"""
@@ -87,17 +93,19 @@ write('tuba', dict(name='tuba', section=135, tracks_regex=NEVER, pins=TUBEPINS,
 '''+SRC+'''
 def build(C, variant=None):
     P = [C.prim('cyl', 0, loc=(0,0,0.005), rot=(0,math.pi/2,0), scale=(0.04,0.04,0.62), verts=32)]
-    P.append(sweep(C, 0, [(-0.05,-0.03),(-0.05,-0.40)], [0.045,0.065], y=0.22))                      # body
-    P.append(sweep(C, 0, arc_pts(0.125,-0.40,0.175,math.pi,2*math.pi,16), [0.065+0.01*k/16 for k in range(17)], y=0.22))   # bottom bow
-    P.append(sweep(C, 0, [(0.30,-0.40),(0.30,0.0)], [0.075,0.09], y=0.22))
-    P += bell(C, 0, 2, (0.30,0.0), (0,1), 0.30, 0.09, 0.26, y=0.225, ymax=0.06)
+    P.append(yport(C, 0, -0.05, 0.005, 0.038, 0.0, 0.22))                                             # branch: striker -> body
+    P.append(sweep(C, 0, [(-0.05,0.0),(-0.05,-0.40)] + arc_pts(0.125,-0.40,0.175,math.pi,2*math.pi,16)[1:] + [(0.30,0.0)],
+                   [0.045,0.065] + [0.065+0.01*k/16 for k in range(1,17)] + [0.09], y=0.22, n=32))    # body + bottom bow + bell branch: one tube
+    P += bell(C, 0, 2, (0.30,0.0), (0,1), 0.30, 0.09, 0.26, y=0.22, ymax=0.06)
+    o, _ = chain(C, 0, 1, 0.005, 0.04, 0.22); P.append(o)                                            # striker end -> bell branch
     for i, x in enumerate((-0.33,-0.25,-0.17,-0.09)):                                                # rotary valves + levers
         P.append(C.prim('cyl', 0, loc=(x,0.2,-0.20), rot=(math.pi/2,0,0), scale=(0.034,0.034,0.06), verts=24))
         P.append(C.prim('cyl', 1, loc=(x,0.168,-0.20), rot=(math.pi/2,0,0), scale=(0.02,0.02,0.006), verts=16))
         P.append(bar(C, (x,-0.20), (x-0.06,-0.10), 0.012, 0.01, 1, 0.172))
-    P.append(sweep(C, 0, arc_pts(-0.21,-0.33,0.10,0.0,2*math.pi,24), 0.02, y=0.21))                 # valve tubing coil
-    P.append(sweep(C, 0, [(-0.31,0.005),(-0.40,-0.04),(-0.40,-0.16),(-0.34,-0.20)], 0.022, y=0.21))   # mouthpipe
-    P.append(sweep(C, 1, [(-0.50,-0.0),(-0.45,-0.02),(-0.41,-0.035)], [0.035,0.015,0.018], y=0.19))
+    P.append(sweep(C, 0, arc_pts(-0.21,-0.33,0.10,0.0,2*math.pi,32), 0.02, y=0.21, cap0=False, cap1=False))   # valve tubing coil
+    o, _ = chain(C, 0, -1, 0.005, 0.04, 0.21, cont=[(-0.40,-0.04),(-0.40,-0.16),(-0.34,-0.20)], radii=[0.03,0.024,0.022]); P.append(o)   # mouthpipe
+    P.append(collar(C, 1, -0.405, -0.10, 0.21, 0.03, w=0.014))
+    P.append(sweep(C, 1, [(-0.40,-0.10),(-0.45,-0.09),(-0.50,-0.08),(-0.515,-0.078)], [0.018,0.015,0.03,0.035], y=0.21))   # mouthpiece
     return P
 ''',
 f'''"""tuba materials"""
@@ -117,15 +125,22 @@ write('french_horn', dict(name='french_horn', section=137, tracks_regex=NEVER, p
 def build(C, variant=None):
     P = [C.prim('cyl', 0, loc=(0,0,0.015), rot=(0,math.pi/2,0), scale=(0.03,0.03,0.62), verts=32)]
     cx, cz = -0.02, -0.27
-    for R, r in ((0.21,0.018), (0.175,0.016), (0.14,0.015)):
-        P.append(sweep(C, 0, arc_pts(cx,cz,R,0.0,2*math.pi,40), r, y=0.215, n=16))
+    o, _ = chain(C, 0, 1, 0.015, 0.03, 0.21, cont=[(0.36,-0.03),(0.30,-0.07),(0.12,-0.09),(0.0,-0.15),(-0.01,-0.215)],
+                 radii=[0.026,0.022,0.02,0.019,0.018], n=16); P.append(o)                                 # lead pipe -> valve cluster
+    # valves -> ONE spiral wrap (clockwise, inner R .14 -> outer R .21) -> bell, leaving the wrap tangentially
+    ae = math.radians(19.5); sweep_a = math.radians(700.5)
+    sp = [(cx + (0.14+0.07*k/100)*math.cos(ae+sweep_a*(1-k/100)), cz + (0.14+0.07*k/100)*math.sin(ae+sweep_a*(1-k/100))) for k in range(101)]
+    P.append(sweep(C, 0, [(0.05,-0.24),(0.10,-0.245)] + sp, 0.017, y=0.21, n=16, smooth=2))
+    bx, bz = sp[-1]; tx, tz = math.sin(ae), -math.cos(ae)
     for i, x in enumerate((-0.07,-0.01,0.05)):
         P.append(C.prim('cyl', 0, loc=(x,0.2,-0.24), rot=(math.pi/2,0,0), scale=(0.028,0.028,0.07), verts=24))
         P.append(C.prim('cyl', 1, loc=(x,0.163,-0.24), rot=(math.pi/2,0,0), scale=(0.016,0.016,0.006), verts=16))
         P.append(bar(C, (x,-0.24), (x-0.10,-0.16+0.02*i), 0.012, 0.008, 1, 0.168))
         P.append(C.prim('cube', 1, loc=(x-0.10,0.168,-0.16+0.02*i), scale=(0.035,0.01,0.02), bevel=0.004))
-    P.append(sweep(C, 0, [(0.31,0.015),(0.36,-0.03),(0.30,-0.07),(0.12,-0.08)], 0.02, y=0.2))          # lead pipe into the coils
-    P += bell(C, 0, 2, (0.17,-0.42), (0.35,-1), 0.32, 0.02, 0.19, y=0.225, ymax=0.06)   # angled down so the rim stays in the showcase frame
+    P += bell(C, 0, 2, (bx,bz), (0.2,-1), 0.32, 0.017, 0.19, y=0.21, ymax=0.052, d0=(tx,tz))       # bell grows out of the outer wrap
+    o, (mx, my) = chain(C, 0, -1, 0.015, 0.03, 0.19); P.append(o)                                    # -> mouthpiece
+    P.append(collar(C, 1, mx-0.004, 0.015, my, 0.034, w=0.016))
+    P.append(sweep(C, 1, [(mx,0.015),(mx-0.05,0.015),(mx-0.09,0.015),(mx-0.10,0.015)], [0.013,0.011,0.024,0.027], y=my))
     return P
 ''',
 f'''"""french_horn materials"""
@@ -171,22 +186,26 @@ def sax(C, bell_r=0.15, neck='alto', straight=False, scale=1.0):
         P.append(C.prim('cyl', 2, loc=(x,-0.042,0.005), rot=(math.pi/2,0,0), scale=(0.013,0.013,0.004), verts=16))
     P.append(C.prim('cyl', 1, loc=(0,-0.035,-0.03), rot=(0,math.pi/2,0), scale=(0.004,0.004,0.56), verts=8))   # key rod
     if straight:
-        P += bell(C, 0, 3, (0.30,0.005), (1,0), 0.24, 0.04, bell_r, y=0.215)
-        P.append(sweep(C, 4, [(-0.44,0.005),(-0.39,0.005),(-0.33,0.005)], [0.012,0.02,0.026], y=0.19))
+        o, (bx, by) = chain(C, 0, 1, 0.005, 0.04, 0.215); P.append(o)
+        P += bell(C, 0, 3, (bx,0.005), (1,0), 0.24, 0.04, bell_r, y=by)
+        o, (mx, my) = chain(C, 0, -1, 0.005, 0.04, 0.2, cont=[(-0.35,0.005)], radii=[0.03]); P.append(o)
+        P.append(collar(C, 2, -0.333, 0.005, my, 0.034, w=0.014))
+        P.append(sweep(C, 4, [(-0.345,0.005),(-0.40,0.005),(-0.45,0.005)], [0.024,0.018,0.01], y=my))
         return P
     R = 0.12*scale; zb = 0.005 - 2*R
-    P.append(sweep(C, 0, arc_pts(0.31,0.005-R,R,math.pi/2,-math.pi/2,16), [0.042+0.008*k/16 for k in range(17)], y=0.215))   # bow
-    P.append(sweep(C, 0, [(0.31,zb),(0.06,zb)], [0.05,0.058], y=0.215))
-    P += bell(C, 0, 3, (0.06,zb), (-1,-0.25), 0.22*scale, 0.058, bell_r, y=0.222, ymax=0.06)
-    P.append(C.prim('cyl', 1, loc=(0.20,0.165,zb), rot=(math.pi/2,0,0), scale=(0.02,0.02,0.008), verts=16))
+    o, _ = chain(C, 0, 1, 0.005, 0.04, 0.215, cont=arc_pts(0.31,0.005-R,R,math.pi/2,-math.pi/2,16) + [(0.06,zb)],
+                 radii=[0.042+0.008*k/16 for k in range(17)] + [0.058], n=32); P.append(o)                  # bow + return tube: one piece
+    P += bell(C, 0, 3, (0.06,zb), (-1,-0.25), 0.22*scale, 0.058, bell_r, y=0.215, ymax=0.058, d0=(-1,0))
+    P.append(collar(C, 2, 0.06, zb, 0.215, 0.064, w=0.016, ymax=0.058))
+    P.append(C.prim('cyl', 1, loc=(0.20,0.16,zb), rot=(math.pi/2,0,0), scale=(0.02,0.02,0.008), verts=16))
     if neck == 'tenor':
         pts = [(-0.31,0.005),(-0.37,0.03),(-0.41,0.08),(-0.44,0.125),(-0.49,0.14),(-0.54,0.125)]
     else:
         pts = [(-0.31,0.005),(-0.37,0.025),(-0.42,0.06),(-0.46,0.09)]
-    P.append(sweep(C, 0, pts, [0.036,0.03,0.025,0.02,0.018,0.016][:len(pts)], y=0.2))
+    o, (_, ny) = chain(C, 0, -1, 0.005, 0.04, 0.2, cont=pts, radii=[0.036,0.03,0.025,0.02,0.018,0.016][:len(pts)]); P.append(o)   # body -> neck: one piece
     ex, ez = pts[-1]; dx, dz = pts[-1][0]-pts[-2][0], pts[-1][1]-pts[-2][1]; L = math.hypot(dx, dz)
-    P.append(sweep(C, 4, [(ex,ez),(ex+0.09*dx/L, ez+0.09*dz/L)], [0.02,0.012], y=0.2))                     # black mouthpiece
-    P.append(C.prim('cyl', 2, loc=(ex+0.02*dx/L,0.2,ez+0.02*dz/L), rot=(0,math.atan2(dx,dz),0), scale=(0.022,0.022,0.012), verts=16))  # ligature
+    P.append(sweep(C, 4, [(ex,ez),(ex+0.09*dx/L, ez+0.09*dz/L)], [0.02,0.012], y=ny))                     # black mouthpiece
+    P.append(C.prim('cyl', 2, loc=(ex+0.02*dx/L,ny,ez+0.02*dz/L), rot=(0,math.atan2(dx,dz),0), scale=(0.022,0.022,0.012), verts=16))  # ligature
     return P
 '''
 for folder, sec, num, kw, body_rgb, keys_rgb, desc in (

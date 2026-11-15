@@ -56,28 +56,95 @@ def _ring_mesh(C, name, rings, mi, cap0=False, cap1=False, angle=1.0):
     o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o); C._ensure_slots(o)
     for p in me.polygons: p.material_index = mi
     C.shade_by_angle(o, angle); return o
-def sweep(C, mi, pts, radii, y=0.22, ymax=0.058, n=24, cap0=True, cap1=True, name='tube'):
-    """tube along an XZ polyline pts=[(x,z)...] (radius per point or one float); Y radius clamped to ymax"""
-    rings = []
-    for i, (x, z) in enumerate(pts):
-        a = pts[max(i-1, 0)]; b = pts[min(i+1, len(pts)-1)]
-        tx, tz = b[0]-a[0], b[1]-a[1]; L = math.hypot(tx, tz) or 1.0; tx, tz = tx/L, tz/L; nx, nz = -tz, tx
-        r = radii[i] if isinstance(radii, (list, tuple)) else radii; ry = min(r, ymax)
-        rings.append([(x + r*nx*math.cos(t), y + ry*math.sin(t), z + r*nz*math.cos(t)) for t in [2*math.pi*k/n for k in range(n)]])
-    return _ring_mesh(C, name, rings, mi, cap0, cap1)
+def _v(a, b, s=1.0): return (a[0]+s*b[0], a[1]+s*b[1], a[2]+s*b[2])
+def _sub(a, b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+def _dot(a, b): return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
+def _cross(a, b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+def _unit(a):
+    L = math.sqrt(_dot(a, a)) or 1.0; return (a[0]/L, a[1]/L, a[2]/L)
+def _smooth(P, R, k):
+    # centripetal Catmull-Rom through every point (k sub-steps per segment): bends become round instead of cracked polyline corners
+    if k <= 1 or len(P) < 3: return P, R
+    E = [_v(P[0], _sub(P[0], P[1]))] + list(P) + [_v(P[-1], _sub(P[-1], P[-2]))]
+    oP, oR = [], []
+    for i in range(1, len(E)-2):
+        p0, p1, p2, p3 = E[i-1], E[i], E[i+1], E[i+2]
+        d = lambda a, b: max(math.sqrt(_dot(_sub(a, b), _sub(a, b)))**0.5, 1e-6)
+        t0 = 0.0; t1 = t0+d(p0, p1); t2 = t1+d(p1, p2); t3 = t2+d(p2, p3)
+        for s in range(k):
+            t = t1 + (t2-t1)*s/k
+            L = lambda a, b, ta, tb: tuple(((tb-t)*a[c] + (t-ta)*b[c])/(tb-ta) for c in range(3))
+            A1 = L(p0, p1, t0, t1); A2 = L(p1, p2, t1, t2); A3 = L(p2, p3, t2, t3)
+            B1 = L(A1, A2, t0, t2); B2 = L(A2, A3, t1, t3)
+            oP.append(L(B1, B2, t1, t2)); oR.append(R[i-1] + (R[i]-R[i-1])*s/k)
+    return oP + [P[-1]], oR + [R[-1]]
+def tube3(C, mi, pts, radii, n=24, ymax=None, cap0=True, cap1=True, name='tube', smooth=4, angle=1.0):
+    # one continuous swept tube along a 3-D path (rotation-minimising frames); Y offsets squashed to ymax when r > ymax
+    R = list(radii) if isinstance(radii, (list, tuple)) else [radii]*len(pts)
+    P, R = _smooth([tuple(p) for p in pts], R, smooth)
+    T = [_unit(_sub(P[min(i+1, len(P)-1)], P[max(i-1, 0)])) for i in range(len(P))]
+    ref = (0.0, 1.0, 0.0) if abs(T[0][1]) < 0.9 else (1.0, 0.0, 0.0)
+    N = _unit(_cross(ref, T[0])); rings = []
+    for i, p in enumerate(P):
+        if i: N = _unit(_sub(N, tuple(T[i][c]*_dot(N, T[i]) for c in range(3))))
+        Bv = _cross(T[i], N); r = R[i]; sq = (ymax/r) if (ymax is not None and r > ymax) else 1.0
+        ring = []
+        for k in range(n):
+            a = 2*math.pi*k/n; o = tuple(r*(N[c]*math.cos(a) + Bv[c]*math.sin(a)) for c in range(3))
+            ring.append((p[0]+o[0], p[1]+o[1]*sq, p[2]+o[2]))
+        rings.append(ring)
+    return _ring_mesh(C, name, rings, mi, cap0, cap1, angle)
+def sweep(C, mi, pts, radii, y=0.22, ymax=0.058, n=24, cap0=True, cap1=True, name='tube', smooth=4):
+    # tube along an XZ polyline at depth y (points may also be (x,y,z)); smoothed through the points
+    P = [(p[0], y, p[1]) if len(p) == 2 else tuple(p) for p in pts]
+    return tube3(C, mi, P, radii, n=n, ymax=ymax, cap0=cap0, cap1=cap1, name=name, smooth=smooth)
 def arc_pts(cx, cz, R, a0, a1, m=16):
     return [(cx + R*math.cos(a0 + (a1-a0)*k/m), cz + R*math.sin(a0 + (a1-a0)*k/m)) for k in range(m+1)]
-def bell(C, mi, dark, p0, d, L, r0, r1, y=0.22, ymax=0.058, power=3.0, m=18, name='bell'):
-    """flared bell from p0 along direction d (XZ), length L, throat r0 -> rim r1; dark disc just inside the rim"""
+def elbow_pts(side, zc, r, y1, x_edge=0.31, m=10, lead=0.03):
+    # 3-D path that leaves the striker tube end (local y=0, axis z=zc, radius r) and folds back into the backplate band WITHOUT
+    # leaving |x|<=x_edge inside the marble slab: bend +Y at x=side*(x_edge-r), run back, bend outward again at depth y1.
+    # Ends at (side*(x_edge-r+Rb), y1, zc) heading outward (side*+X).
+    Rb = 1.3*r; xc = x_edge - r; y1 = max(y1, 0.157 + Rb); pts = [(side*(xc-Rb-lead), 0.0, zc)]
+    for k in range(m+1):
+        a = 0.5*math.pi*k/m; pts.append((side*(xc-Rb+Rb*math.sin(a)), Rb-Rb*math.cos(a), zc))
+    for k in range(m+1):
+        a = 0.5*math.pi*k/m; pts.append((side*(xc+Rb-Rb*math.cos(a)), y1-Rb+Rb*math.sin(a), zc))
+    return pts, y1
+def chain(C, mi, side, zc, r, y1, cont=(), radii=None, n=24, ymax=0.058, cap1=True, name='chain'):
+    # striker-end elbow + continuation polyline (x,z) at depth y1 as ONE continuous mesh. Returns (obj, (x_exit, y1)).
+    E, y1 = elbow_pts(side, zc, r, y1); ex = E[-1][0]
+    C2 = [(x, z) for x, z in cont]
+    R2 = [r]*len(C2) if radii is None else ([radii]*len(C2) if not isinstance(radii, (list, tuple)) else list(radii))
+    while C2 and side*C2[0][0] <= side*ex + 0.004: C2.pop(0); R2.pop(0)
+    if not C2: C2, R2 = [(ex + side*0.006, zc)], [r]                       # stub past the exit so the next mesh overlaps (no seam)
+    rr = [r]*len(E) + R2
+    P = E + [(x, y1, z) for x, z in C2]
+    # elbow points are already dense: smooth only lightly
+    return tube3(C, mi, P, rr, n=n, ymax=ymax, cap0=True, cap1=cap1, name=name, smooth=2), (ex, y1)
+def yport(C, mi, x, z, r, y0=0.0, y1=0.2, verts=20):
+    # short straight tube along +Y joining a striker part to something in the backplate band (valve casings, braces, ties)
+    return C.prim('cyl', mi, loc=(x, (y0+y1)/2, z), rot=(math.pi/2, 0, 0), scale=(r, r, y1-y0), verts=verts)
+def collar(C, mi, x, z, y, r, w=0.012, d=(1,0), ymax=0.06):
+    # ferrule ring covering a join between two tube meshes (centre (x,z) at depth y, along direction d)
+    L = math.hypot(*d); dx, dz = d[0]/L, d[1]/L
+    return sweep(C, mi, [(x-dx*w/2, z-dz*w/2), (x+dx*w/2, z+dz*w/2)], r, y=y, ymax=ymax, n=32, smooth=1)
+def bell(C, mi, dark, p0, d, L, r0, r1, y=0.22, ymax=0.058, power=3.0, m=18, name='bell', d0=None):
+    # flared bell from p0 along direction d (XZ), length L, throat r0 -> rim r1; dark disc just inside the rim.
+    # d0: direction of the tube feeding the bell - the bell axis bends smoothly from d0 to d (quadratic Bezier) so the join has no kink;
+    # the throat starts 4 mm back inside the feeding tube so the meshes overlap instead of leaving a seam.
     dl = math.hypot(*d); dx, dz = d[0]/dl, d[1]/dl
-    pts = [(p0[0] + dx*L*k/m, p0[1] + dz*L*k/m) for k in range(m+1)]
+    if d0 is None: d0 = d
+    l0 = math.hypot(*d0); ux, uz = d0[0]/l0, d0[1]/l0
+    q0 = (p0[0] - ux*0.004, p0[1] - uz*0.004); q1 = (p0[0] + ux*L*0.45, p0[1] + uz*L*0.45); q2 = (q1[0] + dx*L*0.55, q1[1] + dz*L*0.55)
+    B = lambda t: tuple((1-t)**2*q0[c] + 2*(1-t)*t*q1[c] + t*t*q2[c] for c in range(2))
+    pts = [B(k/m) for k in range(m+1)]
     rad = [r0 + (r1-r0)*(k/m)**power for k in range(m+1)]
-    o = [sweep(C, mi, pts, rad, y, ymax, n=32, cap0=False, cap1=False, name=name)]
-    e = (p0[0] + dx*L*0.97, p0[1] + dz*L*0.97); r = r0 + (r1-r0)*0.97**power
-    o.append(sweep(C, dark, [(e[0]-dx*0.004, e[1]-dz*0.004), e], r*0.96, y, ymax*0.96, n=32, name=name+'_m'))
+    o = [sweep(C, mi, pts, rad, y, ymax, n=32, cap0=False, cap1=False, name=name, smooth=1)]
+    e = B(0.97); r = r0 + (r1-r0)*0.97**power
+    o.append(sweep(C, dark, [(e[0]-dx*0.004, e[1]-dz*0.004), e], r*0.96, y, ymax*0.96, n=32, name=name+'_m', smooth=1))
     return o
 def front_bell(C, mi, dark, x, z, r, y0=0.165, depth=0.11, r0=0.02, m=14, n=40, name='fbell'):
-    """bell facing the camera (axis -Y): rim radius r at y0, throat r0 at y0+depth"""
+    # bell facing the camera (axis -Y): rim radius r at y0, throat r0 at y0+depth
     rings = []
     for k in range(m+1):
         t = k/m; rr = r0 + (r-r0)*(1-t)**3; yy = y0 + depth*t
@@ -94,22 +161,26 @@ def sax(C, bell_r=0.15, neck='alto', straight=False, scale=1.0):
         P.append(C.prim('cyl', 2, loc=(x,-0.042,0.005), rot=(math.pi/2,0,0), scale=(0.013,0.013,0.004), verts=16))
     P.append(C.prim('cyl', 1, loc=(0,-0.035,-0.03), rot=(0,math.pi/2,0), scale=(0.004,0.004,0.56), verts=8))   # key rod
     if straight:
-        P += bell(C, 0, 3, (0.30,0.005), (1,0), 0.24, 0.04, bell_r, y=0.215)
-        P.append(sweep(C, 4, [(-0.44,0.005),(-0.39,0.005),(-0.33,0.005)], [0.012,0.02,0.026], y=0.19))
+        o, (bx, by) = chain(C, 0, 1, 0.005, 0.04, 0.215); P.append(o)
+        P += bell(C, 0, 3, (bx,0.005), (1,0), 0.24, 0.04, bell_r, y=by)
+        o, (mx, my) = chain(C, 0, -1, 0.005, 0.04, 0.2, cont=[(-0.35,0.005)], radii=[0.03]); P.append(o)
+        P.append(collar(C, 2, -0.333, 0.005, my, 0.034, w=0.014))
+        P.append(sweep(C, 4, [(-0.345,0.005),(-0.40,0.005),(-0.45,0.005)], [0.024,0.018,0.01], y=my))
         return P
     R = 0.12*scale; zb = 0.005 - 2*R
-    P.append(sweep(C, 0, arc_pts(0.31,0.005-R,R,math.pi/2,-math.pi/2,16), [0.042+0.008*k/16 for k in range(17)], y=0.215))   # bow
-    P.append(sweep(C, 0, [(0.31,zb),(0.06,zb)], [0.05,0.058], y=0.215))
-    P += bell(C, 0, 3, (0.06,zb), (-1,-0.25), 0.22*scale, 0.058, bell_r, y=0.222, ymax=0.06)
-    P.append(C.prim('cyl', 1, loc=(0.20,0.165,zb), rot=(math.pi/2,0,0), scale=(0.02,0.02,0.008), verts=16))
+    o, _ = chain(C, 0, 1, 0.005, 0.04, 0.215, cont=arc_pts(0.31,0.005-R,R,math.pi/2,-math.pi/2,16) + [(0.06,zb)],
+                 radii=[0.042+0.008*k/16 for k in range(17)] + [0.058], n=32); P.append(o)                  # bow + return tube: one piece
+    P += bell(C, 0, 3, (0.06,zb), (-1,-0.25), 0.22*scale, 0.058, bell_r, y=0.215, ymax=0.058, d0=(-1,0))
+    P.append(collar(C, 2, 0.06, zb, 0.215, 0.064, w=0.016, ymax=0.058))
+    P.append(C.prim('cyl', 1, loc=(0.20,0.16,zb), rot=(math.pi/2,0,0), scale=(0.02,0.02,0.008), verts=16))
     if neck == 'tenor':
         pts = [(-0.31,0.005),(-0.37,0.03),(-0.41,0.08),(-0.44,0.125),(-0.49,0.14),(-0.54,0.125)]
     else:
         pts = [(-0.31,0.005),(-0.37,0.025),(-0.42,0.06),(-0.46,0.09)]
-    P.append(sweep(C, 0, pts, [0.036,0.03,0.025,0.02,0.018,0.016][:len(pts)], y=0.2))
+    o, (_, ny) = chain(C, 0, -1, 0.005, 0.04, 0.2, cont=pts, radii=[0.036,0.03,0.025,0.02,0.018,0.016][:len(pts)]); P.append(o)   # body -> neck: one piece
     ex, ez = pts[-1]; dx, dz = pts[-1][0]-pts[-2][0], pts[-1][1]-pts[-2][1]; L = math.hypot(dx, dz)
-    P.append(sweep(C, 4, [(ex,ez),(ex+0.09*dx/L, ez+0.09*dz/L)], [0.02,0.012], y=0.2))                     # black mouthpiece
-    P.append(C.prim('cyl', 2, loc=(ex+0.02*dx/L,0.2,ez+0.02*dz/L), rot=(0,math.atan2(dx,dz),0), scale=(0.022,0.022,0.012), verts=16))  # ligature
+    P.append(sweep(C, 4, [(ex,ez),(ex+0.09*dx/L, ez+0.09*dz/L)], [0.02,0.012], y=ny))                     # black mouthpiece
+    P.append(C.prim('cyl', 2, loc=(ex+0.02*dx/L,ny,ez+0.02*dz/L), rot=(0,math.atan2(dx,dz),0), scale=(0.022,0.022,0.012), verts=16))  # ligature
     return P
 
 def build(C, variant=None):

@@ -62,12 +62,12 @@
  "look": "v5",
  "measured": {
   "default": {
-   "contact_top_z_at_origin": 0.04496,
+   "contact_top_z_at_origin": 0.04497,
    "bbox": [
     [
-     -0.38269999623298645,
+     -0.3824999928474426,
      -0.03200000151991844,
-     -0.2840999960899353
+     -0.2842999994754791
     ],
     [
      0.3100000023841858,
@@ -76,8 +76,8 @@
     ]
    ],
    "keepout_aabb_in_marble_slab": null,
-   "probe_points": 12229,
-   "triangles": 2064
+   "probe_points": 16277,
+   "triangles": 3228
   }
  }
 }

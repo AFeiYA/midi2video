@@ -43,10 +43,13 @@ def build(C, variant=None):
     for x in (-0.175,0.105): P.append(hole(C, 2, x, r, zc, 0.007))
     P.append(keyrod(C, 1, r, zc, dz=-0.55)); P.append(keyrod(C, 1, r, zc, -0.26, 0.20, dz=0.35, rr=0.0028))
     for x in (-0.22,-0.13,0.0,0.10,0.20): P.append(C.prim('cube', 1, loc=(x,-r*0.85,zc-0.012), scale=(0.004,0.006,0.02)))   # posts
-    P += bell(C, 0, 2, (0.30,zc), (1,0), 0.09, r, 0.05, y=0.19, ymax=0.033, power=2.5)
-    P.append(sweep(C, 1, [(0.385,zc),(0.393,zc)], 0.052, y=0.19, ymax=0.034))
-    P.append(sweep(C, 1, [(-0.31,zc),(-0.34,zc)], [0.016,0.012], y=0.19))                                   # reed well
-    P += double_reed(C, 3, 4, 5, -0.34, zc, y=0.19, scale=1.15)
+    o, (bx, by) = chain(C, 0, 1, zc, r, 0.195); P.append(o)                                                # body folds back into the bell
+    P += bell(C, 0, 2, (bx,zc), (1,0), 0.09, r, 0.05, y=by, ymax=0.036, power=2.5)
+    P.append(sweep(C, 1, [(bx+0.085,zc),(bx+0.093,zc)], 0.052, y=by, ymax=0.037, smooth=1))
+    o, (mx, my) = chain(C, 0, -1, zc, r, 0.195); P.append(o)
+    P.append(collar(C, 1, mx-0.003, zc, my, 0.035, w=0.012, ymax=0.036))
+    P.append(sweep(C, 1, [(mx,zc),(mx-0.03,zc)], [0.018,0.012], y=my))                                     # reed well
+    P += double_reed(C, 3, 4, 5, mx-0.03, zc, y=my, scale=1.15)
     return P
 ''',
   f"'keys': {metal('ob_keys', SILVER)}, 'dark': C.mat('ob_dark',(0.01,0.008,0.006),rough=0.6), "
@@ -66,13 +69,14 @@ def build(C, variant=None):
     for x in (-0.24,-0.19,-0.13,-0.08,0.04,0.09,0.15,0.21,0.26): P += keycup(C, 1, x, r, zc, rc=0.014)
     P.append(keyrod(C, 1, r, zc, dz=-0.55))
     prof = [(0.30,0.037),(0.33,0.042),(0.36,0.056),(0.40,0.066),(0.44,0.064),(0.475,0.05),(0.49,0.034),(0.497,0.026)]
-    P.append(sweep(C, 0, [(x,zc) for x,_ in prof], [rr for _,rr in prof], y=0.215, ymax=0.058, n=32))   # pear bulb bell
-    P.append(sweep(C, 2, [(0.497,zc),(0.499,zc)], 0.02, y=0.215, ymax=0.02))
-    P.append(sweep(C, 1, [(0.30,zc),(0.315,zc)], 0.043, y=0.215, ymax=0.045))
-    crook = [(-0.31,zc),(-0.35,zc+0.004),(-0.39,zc+0.02),(-0.42,zc+0.05),(-0.44,zc+0.09),(-0.45,zc+0.13)]
-    P.append(sweep(C, 1, crook, [0.008,0.0075,0.007,0.0065,0.006,0.006], y=0.19, n=12))
-    P.append(C.prim('cyl', 1, loc=(-0.315,0.19,zc), rot=(0,math.pi/2,0), scale=(0.018,0.018,0.016), verts=20))
-    P += double_reed(C, 3, 4, 5, -0.45, zc+0.13, y=0.19, dirx=-0.15, dirz=1.0, scale=1.15)                 # reed on top of the crook
+    o, (bx, by) = chain(C, 0, 1, zc, r, 0.215, cont=[(x,zc) for x,_ in prof], radii=[rr for _,rr in prof], n=32); P.append(o)   # body -> pear bulb bell, one piece
+    P.append(sweep(C, 2, [(0.497,zc),(0.499,zc)], 0.02, y=by, ymax=0.02, smooth=1))
+    P.append(collar(C, 1, 0.318, zc, by, 0.042, w=0.014))
+    o, (mx, my) = chain(C, 0, -1, zc, r, 0.2); P.append(o)
+    P.append(collar(C, 1, mx-0.004, zc, my, 0.02, w=0.018))                                                 # crook receiver
+    crook = [(mx,zc),(-0.35,zc+0.004),(-0.39,zc+0.02),(-0.42,zc+0.05),(-0.44,zc+0.09),(-0.45,zc+0.13)]
+    P.append(sweep(C, 1, crook, [0.009,0.0075,0.007,0.0065,0.006,0.006], y=my, n=12))
+    P += double_reed(C, 3, 4, 5, -0.45, zc+0.13, y=my, dirx=-0.15, dirz=1.0, scale=1.15)                    # reed on top of the crook
     return P
 ''',
   f"'keys': {metal('eh_keys', SILVER)}, 'dark': C.mat('eh_dark',(0.01,0.008,0.006),rough=0.6), "
@@ -92,18 +96,19 @@ def build(C, variant=None):
     for x in (-0.20,-0.12,0.05,0.13): P.append(hole(C, 2, x, r, zc, 0.01))
     for x in (-0.24,-0.16,0.0,0.09,0.20,0.26): P += keycup(C, 1, x, r, zc, rc=0.015)
     P.append(keyrod(C, 1, r, zc, dz=-0.6))
-    P.append(sweep(C, 0, [(0.30,zb),(-0.58,zb)], rb, y=0.215))                                               # bass joint (behind)
+    o, _ = chain(C, 0, 1, zc, r, 0.215, cont=arc_pts(0.31,(zc+zb)/2,(zc-zb)/2,math.pi/2,-math.pi/2,14) + [(0.25,zb),(-0.58,zb)],
+                 radii=[r]*15 + [rb, rb], n=32); P.append(o)                                                  # wing joint -> boot U-bend -> bass joint: one tube
     P.append(sweep(C, 3, [(-0.58,zb),(-0.62,zb)], rb+0.008, y=0.215, ymax=0.06))                          # ivory bell ring
     P.append(sweep(C, 2, [(-0.618,zb),(-0.621,zb)], rb*0.8, y=0.215, ymax=0.045))
     for x in (-0.15, 0.10): P.append(sweep(C, 1, [(x-0.007,zb),(x+0.007,zb)], rb+0.004, y=0.215, ymax=0.06))
-    P.append(sweep(C, 0, [(0.31,zc)] + arc_pts(0.31,(zc+zb)/2,(zc-zb)/2,math.pi/2,-math.pi/2,12)[1:] + [(0.30,zb)], 0.043, y=0.205))   # boot U-bend
     P.append(C.prim('cube', 0, loc=(0.40,0.215,(zc+zb)/2), scale=(0.11,0.09,0.20), bevel=0.03))            # boot joint
     P.append(C.prim('cube', 2, loc=(0.46,0.215,(zc+zb)/2), scale=(0.012,0.095,0.205), bevel=0.004))         # black boot cap
     for z in (zc-0.02, zb+0.03): P.append(C.prim('cyl', 1, loc=(0.36,0.163,z), rot=(math.pi/2,0,0), scale=(0.016,0.016,0.006), verts=20))
-    boc = [(-0.31,zc),(-0.34,zc),(-0.37,zc+0.02),(-0.38,zc+0.06),(-0.40,zc+0.09),(-0.44,zc+0.10),(-0.48,zc+0.11)]
-    P.append(sweep(C, 1, boc, [0.009,0.0085,0.008,0.0075,0.007,0.0065,0.006], y=0.19, n=12))
-    P.append(C.prim('cyl', 1, loc=(-0.315,0.19,zc), rot=(0,math.pi/2,0), scale=(0.022,0.022,0.014), verts=20))
-    P += double_reed(C, 4, 5, 6, -0.48, zc+0.11, y=0.19, scale=1.3)
+    o, (mx, my) = chain(C, 0, -1, zc, r, 0.2); P.append(o)
+    P.append(collar(C, 1, mx-0.004, zc, my, 0.024, w=0.018))                                                 # bocal receiver
+    boc = [(mx,zc),(-0.34,zc),(-0.37,zc+0.02),(-0.38,zc+0.06),(-0.40,zc+0.09),(-0.44,zc+0.10),(-0.48,zc+0.11)]
+    P.append(sweep(C, 1, boc, [0.01,0.0085,0.008,0.0075,0.007,0.0065,0.006], y=my, n=12))
+    P += double_reed(C, 4, 5, 6, -0.48, zc+0.11, y=my, scale=1.3)
     return P
 ''',
   f"'keys': {metal('bn_keys', SILVER)}, 'dark': C.mat('bn_dark',(0.012,0.01,0.01),rough=0.4,coat=0.5), "
@@ -124,14 +129,15 @@ def build(C, variant=None):
     for x in (-0.22,-0.16,-0.10, 0.05,0.11,0.17): P.append(C.prim('torus', 1, loc=(x,-(r-0.002),zc), rot=(math.pi/2,0,0), scale=(0.015,0.0025), verts=24))  # ring keys
     for x in (-0.27, 0.23, 0.27): P += keycup(C, 1, x, r, zc, rc=0.016, pad=3)
     P.append(keyrod(C, 1, r, zc, dz=-0.6)); P.append(keyrod(C, 1, r, zc, -0.25, 0.25, dz=0.4, rr=0.003))
-    P.append(sweep(C, 0, [(0.31,zc),(0.35,zc)], r, y=0.205))
-    P += bell(C, 0, 2, (0.35,zc), (1,0), 0.17, r, 0.085, y=0.215, ymax=0.058, power=2.2)
-    P.append(sweep(C, 1, [(0.508,zc),(0.522,zc)], 0.089, y=0.215, ymax=0.06))                               # silver bell rim
-    P.append(sweep(C, 0, [(-0.31,zc),(-0.33,zc),(-0.40,zc),(-0.42,zc)], [0.036,0.042,0.042,0.036], y=0.205))   # barrel
-    for x in (-0.332,-0.398): P.append(sweep(C, 1, [(x-0.006,zc),(x+0.006,zc)], 0.045, y=0.205, ymax=0.05))
-    P.append(sweep(C, 4, [(-0.42,zc),(-0.47,zc),(-0.51,zc+0.006),(-0.54,zc+0.012)], [0.028,0.026,0.02,0.01], y=0.2))  # beak mouthpiece
-    P.append(sweep(C, 1, [(-0.455,zc),(-0.48,zc)], 0.031, y=0.2, ymax=0.036))                                # ligature
-    P.append(sweep(C, 5, [(-0.43,zc-0.027),(-0.53,zc-0.016)], 0.004, y=0.2, ymax=0.018))                   # reed
+    o, (bx, by) = chain(C, 0, 1, zc, r, 0.215, cont=[(0.35,zc)]); P.append(o)                              # lower joint folds back to the bell
+    P += bell(C, 0, 2, (0.35,zc), (1,0), 0.17, r, 0.085, y=by, ymax=0.058, power=2.2)
+    P.append(collar(C, 1, 0.35, zc, by, r+0.005, w=0.014))
+    P.append(sweep(C, 1, [(0.508,zc),(0.522,zc)], 0.089, y=by, ymax=0.058, smooth=1))                        # silver bell rim
+    o, (mx, my) = chain(C, 0, -1, zc, r, 0.205, cont=[(-0.33,zc),(-0.40,zc),(-0.42,zc)], radii=[0.042,0.042,0.036]); P.append(o)   # upper joint -> barrel
+    for x in (-0.332,-0.398): P.append(collar(C, 1, x, zc, my, 0.046, w=0.012, ymax=0.048))
+    P.append(sweep(C, 4, [(-0.415,zc),(-0.47,zc),(-0.51,zc+0.006),(-0.54,zc+0.012)], [0.03,0.026,0.02,0.01], y=my))  # beak mouthpiece
+    P.append(collar(C, 1, -0.4675, zc, my, 0.031, w=0.025, ymax=0.036))                                    # ligature
+    P.append(sweep(C, 5, [(-0.43,zc-0.027),(-0.53,zc-0.016)], 0.004, y=my, ymax=0.018))                    # reed
     return P
 ''',
   f"'keys': {metal('cl_keys', (0.95,0.95,0.97), 0.08)}, 'dark': C.mat('cl_dark',(0.004,0.004,0.004),rough=0.6), "
@@ -178,14 +184,15 @@ def build(C, variant=None):
     P = [tube_x(C, 0, r, x0=-0.24, x1=0.25, zc=zc)]
     P.append(tube_x(C, 0, r+0.006, x0=-0.31, x1=-0.24, zc=zc-0.006))                       # head (wider, top flush)
     P.append(tube_x(C, 0, r+0.004, x0=0.25, x1=0.31, zc=zc-0.004))                          # foot socket
-    for x, w in ((-0.245,0.012),(-0.23,0.006),(0.0,0.012),(0.245,0.012),(0.305,0.01)): P.append(ferrule(C, 1, x, r+0.004, zc-0.004, w=w, extra=0.002))
+    for x, w in ((-0.245,0.012),(-0.23,0.006),(0.0,0.012),(0.245,0.012),(0.296,0.01)): P.append(ferrule(C, 1, x, r+0.004, zc-0.004, w=w, extra=0.002))
     P.append(C.prim('cube', 2, loc=(-0.275,-(r+0.002),zc+0.004), scale=(0.022,0.01,0.018)))               # window
     P.append(C.prim('cube', 3, loc=(-0.262,-(r+0.004),zc+0.004), rot=(0,0,0), scale=(0.004,0.008,0.018)))  # labium edge
     for x in (-0.17,-0.12,-0.07,0.05,0.10,0.15): P.append(hole(C, 2, x, r, zc, 0.0085))
     for x in (0.20,): P += [hole(C, 2, x-0.008, r, zc, 0.006), hole(C, 2, x+0.008, r, zc, 0.006)]
-    P.append(sweep(C, 0, [(-0.31,zc),(-0.36,zc+0.004),(-0.40,zc+0.012),(-0.43,zc+0.02)], [0.04,0.034,0.024,0.014], y=0.205, ymax=0.045))   # beak
-    P += bell(C, 0, 2, (0.31,zc), (1,0), 0.07, r+0.004, 0.055, y=0.2, ymax=0.045, power=1.8)
-    P.append(sweep(C, 1, [(0.375,zc),(0.385,zc)], 0.058, y=0.205, ymax=0.047))
+    o, _ = chain(C, 0, -1, zc-0.006, r+0.006, 0.215, cont=[(-0.36,zc-0.002),(-0.40,zc+0.008),(-0.43,zc+0.016)], radii=[0.036,0.026,0.014], ymax=0.045); P.append(o)   # head -> beak
+    o, (bx, by) = chain(C, 0, 1, zc-0.004, r+0.004, 0.215); P.append(o)
+    P += bell(C, 0, 2, (bx,zc-0.004), (1,0), 0.07, r+0.004, 0.055, y=by, ymax=0.045, power=1.8)
+    P.append(collar(C, 1, bx+0.066, zc-0.004, by, 0.058, w=0.01, ymax=0.047))
     return P
 ''',
   f"'ring': C.mat('rc_ring',(0.025,0.011,0.005),rough=0.25,coat=0.8), 'dark': C.mat('rc_dark',(0.01,0.006,0.003),rough=0.7), "
@@ -207,6 +214,7 @@ def build(C, variant=None):
         P.append(C.prim('cyl', 2, loc=(x,0.215,top-L/2), scale=(rp,rp,L), verts=24))
         P.append(C.prim('cyl', 3, loc=(x,0.215,top-0.002), scale=(rp*0.7,rp*0.7,0.006), verts=20))       # open top
         P.append(C.prim('cyl', 4, loc=(x,0.215,top-L+0.01), scale=(rp*1.06,rp*1.06,0.012), verts=24))   # closed node end
+    for k in range(12): P.append(yport(C, 1, -0.25+0.0455*k, zc, 0.005, 0.0, 0.215, verts=8))           # cord lashings: crossbar -> every pipe
     P.append(C.prim('cube', 1, loc=(0.0,0.19,-0.15), scale=(0.56,0.008,0.012)))                            # lower cord band
     P.append(C.prim('cube', 1, loc=(0.0,0.19,0.09), scale=(0.56,0.008,0.012)))
     for x in (-0.30, 0.30):                                                                                  # tassels
@@ -231,9 +239,9 @@ def build(C, variant=None):
     for x in (-0.12,-0.06,0.04,0.10): P.append(hole(C, 2, x, r, zc, 0.012))
     P.append(C.prim('cube', 3, loc=(-0.302,-0.02,zc+0.03), rot=(0,0,0), scale=(0.012,0.03,0.016), bevel=0.003))   # horn inlay
     P.append(C.prim('cyl', 2, loc=(-0.307,0,zc), rot=(0,math.pi/2,0), scale=(r*0.65,r*0.65,0.004), verts=24))
-    P.append(sweep(C, 0, [(0.31,zc),(0.35,zc-0.004),(0.39,zc-0.012),(0.42,zc-0.02),(0.435,zc-0.024)], [0.046,0.052,0.058,0.056,0.04], y=0.215))
-    for dx, dz in ((0.36,-0.05),(0.39,-0.06),(0.42,-0.055),(0.40,0.03),(0.37,0.035)):
-        P.append(C.prim('sphere', 1, loc=(dx,0.17,zc+dz), scale=(0.007,0.006,0.007), verts=12))
+    o, (bx, by) = chain(C, 0, 1, zc, r, 0.215, cont=[(0.35,zc-0.004),(0.39,zc-0.012),(0.42,zc-0.02),(0.435,zc-0.024)], radii=[0.05,0.056,0.054,0.04]); P.append(o)   # root end, same culm
+    for dx, dz in ((0.37,-0.05),(0.40,-0.055),(0.42,-0.045),(0.40,0.04),(0.37,0.045)):
+        P.append(C.prim('sphere', 1, loc=(dx,0.168,zc-0.01+dz), scale=(0.008,0.008,0.008), verts=12))
     P.append(sweep(C, 4, [(-0.25,zc-0.04),(-0.26,-0.10),(-0.24,-0.16),(-0.26,-0.20)], 0.004, y=0.19, n=8))
     P.append(sweep(C, 4, [(-0.26,-0.20),(-0.26,-0.28)], [0.006,0.02], y=0.19, ymax=0.02, n=16))
     P.append(C.prim('sphere', 4, loc=(-0.26,0.19,-0.197), scale=(0.012,0.012,0.012), verts=16))
@@ -255,7 +263,7 @@ def build(C, variant=None):
     P.append(C.prim('cube', 2, loc=(-0.215,-(rh-0.001),zh+0.004), scale=(0.024,0.008,0.016)))
     P.append(C.prim('cube', 3, loc=(-0.2,-(rh+0.001),zh+0.004), scale=(0.004,0.006,0.016)))
     for x in (-0.07,-0.02,0.03,0.10,0.15,0.20): P.append(hole(C, 2, x, r, zc, 0.0075))
-    P.append(sweep(C, 1, [(-0.31,zh),(-0.35,zh+0.005),(-0.38,zh+0.012)], [0.027,0.02,0.012], y=0.2, ymax=0.03))
+    o, _ = chain(C, 1, -1, zh, rh, 0.2, cont=[(-0.35,zh+0.004),(-0.38,zh+0.01)], radii=[0.02,0.012]); P.append(o)   # fipple head -> mouthpiece, one piece
     def leaf(cx, cz, a):
         o = []
         for s in (-0.45, 0.45):
