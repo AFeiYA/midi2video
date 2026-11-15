@@ -6,10 +6,10 @@ the marble springs off the front of the pad and, while it falls, turns gold, bur
 --subscribe-style rise (default, = ending v2) / fall (= ending v3).
 Edits a copy of the plan (marble/camera lists are extended; 'marble_y' + 'ending' are added; scene.py builds pad / text from
 P['ending'] via ending_pad.py) and writes the SFX cues to <out>.sfx.json (used by ending_sfx.py).
-usage: python ending.py plan.json out_plan.json [--hold 0.5] [--subscribe [--line1 SUBSCRIBE --line2 @LucaMarbleMusic]]
+usage: python ending.py plan.json out_plan.json [--hold 0.5] [--subscribe [--line1 SUBSCRIBE --line2 @LucaMarbleMusic --font F.ttf --text-color '#9E610F']]
   --land-after  seconds from the last hit to the pad contact     --pad-dx  pad centre x (world; 0 = screen centre)
   --pad-drop    pad top below the marble centre at the last hit  --cam-drop  camera eases this far down to frame the pad"""
-import json, argparse, math
+import json, argparse, math, os
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('out')
 ap.add_argument('--land-after', type=float, default=0.53); ap.add_argument('--hold', type=float, default=0.5, help='clean hold after the marble stops')
 ap.add_argument('--pad-dx', type=float, default=0.0); ap.add_argument('--pad-drop', type=float, default=1.28)
@@ -17,7 +17,10 @@ ap.add_argument('--pad-r', type=float, default=0.50); ap.add_argument('--pad-h',
 ap.add_argument('--pad-y', type=float, default=-0.26, help='pad centre y (wall face is at y=KD/2+0.12); leaves a gap the bracket spans')
 ap.add_argument('--cam-drop', type=float, default=0.35); ap.add_argument('--cam-ease', type=float, default=0.8)
 ap.add_argument('--rest-y', type=float, default=-0.52, help='marble rest y on the pad (toward the camera)')
-ap.add_argument('--subscribe', action='store_true'); ap.add_argument('--line1', default='SUBSCRIBE'); ap.add_argument('--line2', default='@LucaMarbleMusic')
+ap.add_argument('--subscribe', action='store_true')
+ap.add_argument('--line1', default='SUBSCRIBE', help='subscribe text, line 1 (big)'); ap.add_argument('--line2', default='@LucaMarbleMusic', help="line 2 (smaller); '' = one line only (rise style)")
+ap.add_argument('--font', default='', help='TTF/OTF for the 3D text (default Poppins ExtraBold, fallback DejaVu Sans Bold)')
+ap.add_argument('--text-color', default='', help="text base colour as hex, e.g. '#9E610F' (default: v4 warm gold)")
 ap.add_argument('--subscribe-style', choices=['rise', 'fall'], default='rise', help='rise (v2): settle + hold on the pad, then the marble lifts and bursts '
                 'into the text above the pad; fall (v3): the 2nd contact is the last bounce, the marble falls off the pad and morphs into the text, '
                 'camera follows down to empty wall')
@@ -107,6 +110,9 @@ E.update({'frame_last_hit': f0, 'frame_contact': fc, 'frames_hop': [int(round(t 
           'frame_hold_end': f_hold_end, 't_contact': fc / fps, 'rest': list(path(t_tot)),
           'pad': {'x': px, 'y': a.pad_y, 'z_top': pad_top, 'r': a.pad_r, 'h': a.pad_h}})
 if a.look != 'v2': E['look'] = a.look
+if a.subscribe and a.font: E['subscribe']['font'] = os.path.abspath(a.font)
+if a.subscribe and a.text_color:
+    h_ = a.text_color.lstrip('#'); E['subscribe']['color'] = [(int(h_[i:i + 2], 16) / 255) ** 2.2 for i in (0, 2, 4)]   # sRGB hex -> linear
 P['ending'] = E
 sfx = {'contact': fc / fps, 'hops': [[t, 10 ** (-(9 + 8 * i) / 20)] for i, t in enumerate(t_c[1:len(hops) + 1])], 'v_impact': vz_in,
        'last_hit': last['t'], 'duration': N / fps}

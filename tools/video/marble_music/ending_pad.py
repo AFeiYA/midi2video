@@ -6,6 +6,12 @@ flash) into extruded 3D gold text facing the camera."""
 import bpy, math, os, random
 from mathutils import Vector
 
+def _font(S):
+    """S['font'] (ending.py --font) first, then the defaults"""
+    for f in ([S['font']] if S.get('font') else []) + FONT_CANDIDATES:
+        if os.path.exists(f): return bpy.data.fonts.load(f)
+    return None
+
 FONT_CANDIDATES = ['/usr/share/fonts/truetype/sand-box/google/Poppins/Poppins-ExtraBold.ttf',
                    '/usr/share/fonts/truetype/sand-box/google/Poppins/Poppins-Bold.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf']
 
@@ -110,8 +116,8 @@ def build_subscribe_fall(P, mat, fps):
     S = P['ending']['subscribe']; f_r, fb, fl = S['frame_release'], S['frame_burst'], S['frame_land']; sc = bpy.context.scene
     nfr = len(P['marble']); cam, q, rt, up, fw, th, tv = _cam_frame(P, nfr - 1); full_w = S['full_w']
     path = {int(k): Vector(v) for k, v in S['path'].items()}
-    tm, tb = mat('end_text', (0.62, 0.38, 0.06), rough=0.30, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.66, 0.22, 1)
-    font = next((bpy.data.fonts.load(f) for f in FONT_CANDIDATES if os.path.exists(f)), None)
+    tm, tb = mat('end_text', tuple(S.get('color', (0.62, 0.38, 0.06))), rough=0.30, metal=S.get('metal', 1.0)); tb.inputs['Emission Color'].default_value = (*S.get('color', (1.0, 0.66, 0.22)), 1)
+    font = _font(S)
     objs = []
     for body, wf in ((S['line1'], 0.74), (S['line2'], S['width_frac'])):
         cu = bpy.data.curves.new(f'txt_{len(objs)}', 'FONT'); cu.body = body; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'
@@ -172,19 +178,22 @@ def build_subscribe_rise(P, mat, fps):
     def pt(sx, sy, d=D): return cam + d * ray(sx, sy)
     Pc = pt(*S['screen']); full_w = 2 * D * th
     V4L = P['ending'].get('look') == 'v4'                                   # v4: deeper warmer gold text, gold (not pale) marble glow
-    if V4L: tm, tb = mat('end_text', (0.62, 0.38, 0.06), rough=0.30, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.66, 0.22, 1)
+    if S.get('color'): tm, tb = mat('end_text', tuple(S['color']), rough=0.30, metal=S.get('metal', 1.0)); tb.inputs['Emission Color'].default_value = (*S['color'], 1)   # ending.py --text-color
+    elif V4L: tm, tb = mat('end_text', (0.62, 0.38, 0.06), rough=0.30, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.66, 0.22, 1)
     else: tm, tb = mat('end_text', (0.95, 0.60, 0.16), rough=0.22, metal=1.0); tb.inputs['Emission Color'].default_value = (1.0, 0.75, 0.32, 1)
-    font = next((bpy.data.fonts.load(f) for f in FONT_CANDIDATES if os.path.exists(f)), None)
+    font = _font(S)
     objs = []
-    for body, wf in ((S['line1'], 0.74), (S['line2'], S['width_frac'])):
+    for body, wf in [(b_, w_) for b_, w_ in ((S['line1'], 0.74), (S['line2'], S['width_frac'])) if b_]:   # --line2 '' = one line
         cu = bpy.data.curves.new(f'txt_{len(objs)}', 'FONT'); cu.body = body; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'
         if font: cu.font = font
         cu.size = 1.0; cu.extrude = 0.06; cu.bevel_depth = 0.018; cu.bevel_resolution = 3; cu.resolution_u = 8
         o = bpy.data.objects.new(f'txt_{len(objs)}', cu); sc.collection.objects.link(o); o.data.materials.append(tm)
         bpy.context.view_layer.update(); s = wf * full_w / max(o.dimensions.x, 1e-6); cu.size = s; cu.extrude = 0.06 * s; cu.bevel_depth = 0.018 * s
         bpy.context.view_layer.update(); objs.append((o, o.dimensions.y))
-    (o1, h1), (o2, h2) = objs; gap = 0.35 * h2
-    for o, c in ((o1, Pc + up * ((h2 + gap) / 2)), (o2, Pc - up * ((h1 + gap) / 2))):
+    if len(objs) == 2:
+        (o1, h1), (o2, h2) = objs; gap = 0.35 * h2; place = ((o1, Pc + up * ((h2 + gap) / 2)), (o2, Pc - up * ((h1 + gap) / 2)))
+    else: place = ((objs[0][0], Pc),)
+    for o, c in place:
         o.location = c; o.rotation_euler = q.to_euler()
     for k, (o, _) in enumerate(objs):                                        # pop in with a little overshoot (line 2 a beat later)
         f1 = ff + 1 + 3 * k
