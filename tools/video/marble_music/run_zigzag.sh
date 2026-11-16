@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Zig-zag marble-music pipeline (macOS / Linux). Resumable: already-rendered frames are skipped.
-# usage: run_zigzag.sh song.mid OUT_DIR START END [FPS] [SAMPLES] [RES] [LOOK=v5] [DEVICE]
+# usage: run_zigzag.sh song.mid OUT_DIR START END [FPS] [SAMPLES] [RES] [LOOK=v5] [DEVICE] [--intro] [--outro]
 # v5+: plan via fix_clearance.py (plan_zigzag.py + small extra drops until both 3D checks pass; writes plan_zz_v2.extra_drop.json)
 # v3+: instrument keep-out check (--strict); v5+: striker clearance check (--strict, whitelist assets/instruments/pairs_whitelist.json), then titles.py overlay + composite.sh -> *_titled.mp4
 # DEVICE also via MARBLE_DEVICE (AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP). GPU/AUTO: Metal, then OptiX/CUDA/HIP, else CPU.
@@ -8,8 +8,14 @@
 # SF2: path to GeneralUser GS soundfont (default: alongside this script). PY: python interpreter (default python3).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-MID=${1:?midi}; W=${2:?out_dir}; S=${3:-0}; E=${4:-15}; FPS=${5:-30}; SPP=${6:-12}; RES=${7:-1080x1920}; LOOK=${8:-v5}
-DEV=${9:-${MARBLE_DEVICE:-AUTO}}
+MID=${1:?midi}; W=${2:?out_dir}; S=${3:-0}; E=${4:-15}
+shift "$(($# < 4 ? $# : 4))"
+FPS=30; SPP=12; RES=1080x1920; LOOK=v5; DEV=${MARBLE_DEVICE:-AUTO}
+for option in FPS SPP RES LOOK DEV; do
+  if [[ $# -eq 0 || "$1" == --* ]]; then break; fi
+  if [[ -n "$1" ]]; then printf -v "$option" '%s' "$1"; fi
+  shift
+done
 if [[ -z "${BLENDER:-}" ]]; then
   if [[ -x /Applications/Blender.app/Contents/MacOS/Blender ]]; then
     BLENDER=/Applications/Blender.app/Contents/MacOS/Blender
@@ -34,6 +40,12 @@ if [ "$LN" -ge 3 ]; then
 fi
 if [ "$LN" -ge 5 ]; then
   "$PY" "$HERE/check_pairs.py" "$PLAN" --look "$LOOK" --out "$W/pairs_report_$LOOK.json" --strict
+fi
+if [[ $# -gt 0 ]]; then
+  "$HERE/render_audio.sh" "$MID" "$SF2" "$W/sequence_audio.wav" "$S" "$E"
+  exec "$PY" "$HERE/render_sequence.py" "$PLAN" "$W/sequence_audio.wav" "$W/marble_sequence.mp4" \
+    --blender "$BLENDER" --start "$S" --end "$E" --fps "$FPS" --samples "$SPP" \
+    --res "$RES" --look "$LOOK" --device "$DEV" "$@"
 fi
 [ -f "$W/audio.wav" ] || "$HERE/render_audio.sh" "$MID" "$SF2" "$W/audio.wav" "$S" "$E"
 NF=$("$PY" -c "print(int(round(($E-$S)*$FPS))-1)")
