@@ -1,105 +1,91 @@
 {
   "ok": true,
-  "strict_instrument_keepout_0_97R": false,
+  "strict_instrument_keepout_0_97R": true,
+  "strict_pairs_1cm": true,
   "rail": {
     "check": "authored guide samples, not a CAD mesh boolean",
     "floor_contact_m": {
-      "min": 0.1500000112256145,
-      "median": 0.15002396856557965,
-      "max": 0.15009254912865283
+      "min": 0.15000059807212238,
+      "median": 0.15001168366247503,
+      "max": 0.15006352012182972
     },
-    "obstacle_while_riding_m": 0.15910508992343164,
-    "obstacle_while_airborne_m": 0.15095802516484141,
+    "obstacle_while_riding_m": 0.15904140518032328,
+    "obstacle_while_airborne_m": 0.1676599816899518,
     "floor_target_m": 0.15,
-    "riding_frames": 15
+    "riding_frames": 17
+  },
+  "release": {
+    "ok": true,
+    "t_release": 4.633354080905672,
+    "release_on_frame": true,
+    "penetrated": false,
+    "closest_after": {
+      "dist_m": 0.15068652479608752,
+      "tau_s": 0.004145919094328043
+    },
+    "closest_rendered_frame": {
+      "dist_m": 0.19028314611566713,
+      "tau_s": 0.03331258576099483
+    },
+    "rendered_frames": 131
   },
   "instruments": {
-    "check": "subsampled library probes (stride 8), y-slab |y|<R, outside each key's own hit window",
+    "check": "full-resolution v5 y-slab probes, gravity-sag path, outside each key's own 1.2-frame hit window",
     "full_triangle_mesh": "not run",
-    "violations": [
-      {
-        "key": 1,
-        "asset": "glockenspiel",
-        "dist_m": 0.12825340341007543,
-        "frame": 30,
-        "check": "subsampled v5 probe cloud, y slab, not a full triangle sweep"
-      },
-      {
-        "key": 6,
-        "asset": "glockenspiel",
-        "dist_m": 0.12809918510819282,
-        "frame": 88,
-        "check": "subsampled v5 probe cloud, y slab, not a full triangle sweep"
-      },
-      {
-        "key": 7,
-        "asset": "glockenspiel",
-        "dist_m": 0.13603009417506126,
-        "frame": 99,
-        "check": "subsampled v5 probe cloud, y slab, not a full triangle sweep"
-      },
-      {
-        "key": 8,
-        "asset": "glockenspiel",
-        "dist_m": 0.11861756141990697,
-        "frame": 141,
-        "check": "subsampled v5 probe cloud, y slab, not a full triangle sweep"
-      },
-      {
-        "key": 9,
-        "asset": "glockenspiel",
-        "dist_m": 0.10529893453763595,
-        "frame": 128,
-        "check": "subsampled v5 probe cloud, y slab, not a full triangle sweep"
-      }
-    ],
+    "violations": [],
+    "clashes": [],
+    "pairs_ok": true,
     "closest": [
       {
+        "dist_m": 0.15456476043310174,
+        "key": 3,
+        "asset": "glockenspiel"
+      },
+      {
+        "dist_m": 0.15824552923201887,
         "key": 9,
-        "asset": "glockenspiel",
-        "dist_m": 0.10529893453763595
+        "asset": "glockenspiel"
       },
       {
+        "dist_m": 0.16020528256368377,
         "key": 8,
-        "asset": "glockenspiel",
-        "dist_m": 0.11861756141990697
+        "asset": "glockenspiel"
       },
       {
-        "key": 6,
-        "asset": "glockenspiel",
-        "dist_m": 0.12809918510819282
-      },
-      {
-        "key": 1,
-        "asset": "glockenspiel",
-        "dist_m": 0.12825340341007543
-      },
-      {
-        "key": 7,
-        "asset": "glockenspiel",
-        "dist_m": 0.13603009417506126
-      },
-      {
-        "key": 12,
-        "asset": "steel_drums",
-        "dist_m": 0.17585508303440225
-      },
-      {
+        "dist_m": 0.1607418184724504,
         "key": 14,
-        "asset": "steel_drums",
-        "dist_m": 0.19917413917797988
+        "asset": "steel_drums"
       },
       {
-        "key": 10,
-        "asset": "steel_drums",
-        "dist_m": 0.2011683029375268
+        "dist_m": 0.16722436845200195,
+        "key": 6,
+        "asset": "glockenspiel"
+      },
+      {
+        "dist_m": 0.1725487496951505,
+        "key": 12,
+        "asset": "steel_drums"
+      },
+      {
+        "dist_m": 0.17309305244050208,
+        "key": 7,
+        "asset": "glockenspiel"
+      },
+      {
+        "dist_m": 0.17841507491504507,
+        "key": 1,
+        "asset": "glockenspiel"
       }
     ]
   },
   "proxy_plate_clearance": "continuous capsule proxy (polynomial critical points + samples)",
+  "exemptions": {
+    "striker_hit": "within 1.2 frames of that key's own onset",
+    "rail_roll": "floor samples while the phase is capture or rail; walls and brackets are never exempt"
+  },
   "labels": {
     "guide": "authored channel samples along the centerline",
-    "strikers": "subsampled v5 probe clouds; 0.97R keep-out is reported separately and is not claimed when it fails",
+    "strikers": "full-resolution v5 probe clouds, same rule as check_keepout.py and check_pairs.py",
     "plates": "capsule proxy from the descent audit",
     "full_triangle_mesh": "not run"
   }

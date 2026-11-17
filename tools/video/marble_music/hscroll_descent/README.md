@@ -112,17 +112,23 @@ blender -b --python tools/video/marble_music/scene.py -- \
   --out /tmp/marble-guide-frames --res 960x540 --samples 4 --look v5
 ```
 
-Checked on the guided plan:
+Checked on the guided plan with the existing strict scripts (full probe clouds, not every 8th sample):
 
-- On the guide, distance to the inner floor is 0.150 m, the marble radius. That is the contact.
-- Wall samples stay at 0.195 m. Bracket samples stay at 0.159 m.
-- After the lip, the nearest guide sample is 0.151 m. That is a 1 mm graze, not a comfortable margin.
-- Striker probes, stride 8: five glockenspiel approaches from 0.105 m to 0.136 m. Strict 0.97 R keep-out is not passed. The rail-free capsule plan misses the same way. A full triangle mesh was not run.
-- `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid`, Blender, `/workspace/om_pkg`, and the `.blend`/`.glb` caches are not here. Do not treat this remix excerpt as a certificate for that 64-instrument file.
+```bash
+python3 check_keepout.py hscroll_descent/examples/guided_excerpt_plan.json --look v5 --strict --sub 8
+python3 check_pairs.py hscroll_descent/examples/guided_excerpt_plan.json --look v5 --strict
+```
+
+- `check_keepout.py` reports 0 violations. The closest non-hit approach is 1.03 R (0.155 m). Contact at the onset is about R (median 0.998 R).
+- `check_pairs.py` reports 0 new clashes. The closest instruments are 6.1 cm apart.
+- On the guide, distance to the inner floor is 0.150 m. That is the roll. Walls and brackets stay outside the marble and are not exempt.
+- The groove lets go on a frame. The next rendered frame is 0.190 m from every channel sample, 40 mm outside the marble. Samples in the first few milliseconds are the tangent liftoff and do not penetrate.
+- The only exemptions are a key's own onset (1.2 frames, the rule already in `check_keepout.py`) and floor contact while the phase is capture or rail.
+- A full triangle mesh was not run. `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid`, Blender, `/workspace/om_pkg`, and the `.blend`/`.glb` caches are not here. Do not treat this remix excerpt as a certificate for that 64-instrument file.
 
 ## Limits
 
 - Free strikes are point-mass frictionless impacts. Spin is modeled on the guide and then coasts. It does not push the center of mass.
 - The groove is planar in XZ. The bank is a taller back wall, not a 3D lean into the wall.
-- Plate clearance for the free hops is a capsule proxy.
+- Free hops are also checked as capsule proxies. The strict gate for this excerpt is the full v5 probe clouds.
 - `flute` v7/v8 and `frames_v5` are untouched.

@@ -25,6 +25,17 @@ import numpy as np
 
 from hscroll_descent.audit import audit_route
 from hscroll_descent.clearance import flight_plate_gap, plate_plate_gap, sampled_flight_gap
+from hscroll_descent.probes import (
+    PAIR_MIN,
+    SEARCH_KEEP,
+    Placement,
+    ProbeLibrary,
+    keepout_against,
+    obstacle_distance,
+    pair_distance,
+    sag_at,
+    sag_samples,
+)
 from hscroll_descent.physics import (
     flight_apex_z,
     flight_state,
@@ -40,9 +51,9 @@ CONTACT_OFFSET = MARBLE_RADIUS + PLATE_RADIUS
 ENTRY_VIN = (1.55, -4.50)
 ENTRY_PRE = 0.42
 LAYER_HALF_WIDTH = 1.55
-LAYER_HARD_HALF = 3.3
+LAYER_HARD_HALF = 5.5
 POOL_LIMIT = 36
-BACKTRACK_LIMIT = 180
+BACKTRACK_LIMIT = 600
 CLEARANCE_MARGIN = 0.016
 PLATE_MARGIN = 0.028
 
@@ -103,7 +114,9 @@ def _next_mount(i, n, layer, index_in, long_launch, pattern):
 
 
 def _target_dx(dt):
-    return float(np.clip(1.35 * dt, 0.34, 0.82))
+    # Strikers are about 0.67 m across. A short hop still aims past that width
+    # when the speed budget can pay for it.
+    return float(np.clip(2.4 * dt, 0.72, 1.35))
 
 
 def _kinematic(i, spec, state):
@@ -124,6 +137,10 @@ def _kinematic(i, spec, state):
     nxt = None if i == state["n"] - 1 else _next_mount(i, state["n"], state["layer"], state["index_in"], state["long_launch"], pattern)
     if state.get("lock_direction"):
         prefer = state.get("prefer0", 1.0)
+    elif state["layer"][i] == 0:
+        # The opening layer stays to the right. Folding back stacks the
+        # strikers on top of each other before the long drop has a clear lane.
+        prefer = 1.0
     else:
         prefer = 1.0 if state["index_in"][i] % 2 == 0 else -1.0
     upcoming_long = i + 1 < state["n"] and state["long_launch"][i + 1]
@@ -150,6 +167,7 @@ def _kinematic(i, spec, state):
                 reject("apex")
                 continue
             score = 0.55 * (1.0 - restitution) + 0.25 * max(0.0, 0.9 - dx) + 0.15 * max(0.0, dz + 0.15)
+            score += 0.40 * max(0.0, 1.15 - float(np.asarray(vout) @ np.asarray(normal)))
             out.append(dict(vout=vout, normal=normal, e=restitution, p1=None, v_next=None,
                             next_mount=None, dx=dx, dz=dz, kind="departure", pattern="departure",
                             adapted=False, score=score, dt=dt))
@@ -178,7 +196,7 @@ def _kinematic(i, spec, state):
                 reject("drop_shape")
                 continue
             if float(p1[1]) > layer_min - 0.40:
-                reject("drop_not_below_layer")
+                reject("drop_depth")
                 continue
             if float(v_next[1]) > -0.55:
                 reject("drop_arrival")
@@ -197,7 +215,8 @@ def _kinematic(i, spec, state):
             if prev_min is not None and (float(p1[1]) > prev_min - 0.30):
                 reject("shuttle_reenters_previous_layer")
                 continue
-            if abs(float(p1[0]) - float(anchor[0])) > LAYER_HARD_HALF:
+            half_limit = 3.3 if layer_id == 0 else LAYER_HARD_HALF
+            if abs(float(p1[0]) - float(anchor[0])) > half_limit:
                 reject("outside_layer")
                 continue
             if abs(dx) < min_step:
@@ -208,10 +227,11 @@ def _kinematic(i, spec, state):
             if over > 0.0:
                 score += 0.85 * over
         else:
-            if abs(float(p1[0]) - float(anchor[0])) > LAYER_HARD_HALF:
+            half_limit = 3.3 if layer_id == 0 else LAYER_HARD_HALF
+            if abs(float(p1[0]) - float(anchor[0])) > half_limit:
                 reject("outside_layer")
                 continue
-            if float(p1[1]) < open_z - 1.80 or float(p1[1]) > min(0.0, open_z + 0.02):
+            if float(p1[1]) < open_z - 1.80 or float(p1[1]) > min(0.0, open_z + 0.25):
                 reject("layer_band")
                 continue
             if abs(dx) < min_step:
@@ -234,6 +254,11 @@ def _kinematic(i, spec, state):
             score += 0.50 * max(0.0, 5.0 - speed_next)
         if adapted:
             score += 1.35
+        # Real strikers are wider than the capsule. Prefer a step that can
+        # separate them, and a departure with enough normal speed to leave the
+        # body before the 1.2-frame strike window closes.
+        score += 2.40 * max(0.0, 0.78 - abs(dx))
+        score += 0.40 * max(0.0, 1.15 - float(np.asarray(vout) @ np.asarray(normal)))
         out.append(dict(vout=np.array(vout), normal=np.array(normal), e=float(restitution),
                         p1=np.array(p1), v_next=np.array(v_next), next_mount=nxt,
                         dx=dx, dz=dz, kind=kind, pattern=pattern, adapted=adapted,
@@ -276,6 +301,247 @@ def _own_plate_ok(p0, velocity, dt, plate, g, ignore_start=0.0, ignore_end=0.0):
     return fast >= -1e-4
 
 
+def _pinned_at(state, t):
+    pins = state.get("pinned_frames") or {}
+    row = pins.get(round(float(t), 6))
+    if row is None:
+        return None
+    return np.asarray(row, dtype=float)
+
+
+def _pos_at(state, t, cand=None, index=None):
+    """Marble centre at a frame time, including a candidate that is not applied yet."""
+    pinned = _pinned_at(state, t)
+    if pinned is not None and (index is None or t < state["times"][index] - 1e-9):
+        return pinned
+    if cand is not None and index is not None and t >= state["times"][index] - 1e-12:
+        point, _vel = flight_state(state["pos"][index], cand["vout"], t - state["times"][index], state["g"])
+        return np.asarray(point, dtype=float)
+    chosen = state["flights"][0]
+    for flight in state["flights"]:
+        if flight["t0"] <= t + 1e-12:
+            chosen = flight
+        else:
+            break
+    point, _vel = flight_state(chosen["p0"], chosen["v"], max(0.0, t - chosen["t0"]), state["g"])
+    return np.asarray(point, dtype=float)
+
+
+def _visual_origin(state, index, cand):
+    """Plate origin that puts the contact on the sagged path at the MIDI onset."""
+    t = float(state["times"][index])
+    fps = float(state["fps"])
+    g = float(state["g"])
+    f0 = math.floor(t * fps + 1e-9)
+    u = t * fps - f0
+    p0 = _pos_at(state, f0 / fps, cand, index)
+    if u < 1e-8:
+        centre = p0
+    else:
+        p1 = _pos_at(state, (f0 + 1) / fps, cand, index)
+        centre = np.array([
+            p0[0] * (1.0 - u) + p1[0] * u,
+            p0[1] * (1.0 - u) + p1[1] * u + 0.5 * g * (u / fps) * ((1.0 - u) / fps),
+        ])
+    normal = np.asarray(cand["normal"], dtype=float)
+    return centre - normal * CONTACT_OFFSET, centre
+
+
+def _frames_through(state, index, cand):
+    t_end = float(state["times"][index] + cand["dt"])
+    fps = float(state["fps"])
+    t0 = float(state["flights"][0]["t0"])
+    # A resumed route has no frames before the guide landing. Extrapolating
+    # the 1 ms lead back to t=0 would invent a path the marble never flies.
+    first = 0 if t0 <= 0.0 else int(math.floor(t0 * fps + 1e-9))
+    last = int(math.floor(t_end * fps + 1e-9))
+    last = max(last, first)
+    rows = [_pos_at(state, k / fps, cand, index) for k in range(first, last + 1)]
+    return np.asarray(rows, dtype=float), first
+
+
+def _samples_from_frames(frames, first_index, fps, g, sub=8):
+    """Sag samples whose frame 0 is ``first_index``, not necessarily t=0."""
+    if len(frames) < 2:
+        return np.zeros((0, 3)), np.zeros(0)
+    fps = float(fps)
+    step = 1.0 / (fps * sub)
+    t0 = first_index / fps
+    t1 = (first_index + len(frames) - 1) / fps
+    ts = np.arange(t0, t1, step)
+    local = ts * fps - first_index
+    f0 = np.floor(local + 1e-12).astype(int)
+    u = local - f0
+    f1 = np.minimum(f0 + 1, len(frames) - 1)
+    x = frames[f0, 0] * (1.0 - u) + frames[f1, 0] * u
+    z = frames[f0, 1] * (1.0 - u) + frames[f1, 1] * u + 0.5 * float(g) * (u / fps) * ((1.0 - u) / fps)
+    return np.c_[x, np.zeros(len(ts)), z], ts
+
+
+def _probe_clear(i, cand, state):
+    """Full y-slab keep-out and stride-2 pair gap. Capsules are not enough."""
+    library = state.get("probe_lib")
+    if library is None:
+        return True
+    fails = state.setdefault("clear_fail", {})
+    hop_fails = state.setdefault("hop_fail", {})
+    name, variant, _j = state["assets"][i]
+    origin, _centre = _visual_origin(state, i, cand)
+    normal = cand["normal"]
+    margins = []
+    for other in state["placed"]:
+        gap = pair_distance(library, name, variant, origin, normal, other)
+        if gap < PAIR_MIN:
+            fails["probe_pair"] = fails.get("probe_pair", 0) + 1
+            hop_fails["probe_pair"] = hop_fails.get("probe_pair", 0) + 1
+            return False
+        margins.append(gap)
+    for cloud in state.get("obstacle_clouds") or []:
+        gap = obstacle_distance(cloud, origin, normal, library, name, variant)
+        if gap is not None and gap < PAIR_MIN:
+            fails["probe_rail"] = fails.get("probe_rail", 0) + 1
+            return False
+        if gap is not None:
+            margins.append(gap)
+    frames, first_index = _frames_through(state, i, cand)
+    samples, times = _samples_from_frames(frames, first_index, state["fps"], state["g"], sub=8)
+    extra_s = state.get("extra_samples")
+    extra_t = state.get("extra_times")
+    if extra_s is not None and len(extra_s):
+        samples = np.vstack([samples, extra_s]) if len(samples) else extra_s
+        times = np.concatenate([times, extra_t]) if len(times) else extra_t
+    own = Placement(library, name, variant, origin, normal, state["times"][i])
+    ok, dist = keepout_against(own, samples, times, state["fps"], SEARCH_KEEP)
+    if not ok:
+        fails["probe_own"] = fails.get("probe_own", 0) + 1
+        hop_fails["probe_own"] = hop_fails.get("probe_own", 0) + 1
+        if dist is not None:
+            state["own_dist"] = float(dist)
+        return False
+    if dist is not None:
+        margins.append(dist)
+    for other in state["placed"]:
+        ok, dist = keepout_against(other, samples, times, state["fps"], SEARCH_KEEP)
+        if not ok:
+            fails["probe_path"] = fails.get("probe_path", 0) + 1
+            hop_fails["probe_path"] = hop_fails.get("probe_path", 0) + 1
+            return False
+        if dist is not None:
+            margins.append(dist)
+    cand["visual_origin"] = np.asarray(origin, dtype=float)
+    cand["probe_margin"] = min(margins) if margins else 1.0
+    if i + 1 < state["n"] - 1 and state["long_launch"][i + 1] and cand.get("v_next") is not None:
+        dt_drop = float(state["times"][i + 2] - state["times"][i + 1])
+        layer_id = state["layer"][i + 1]
+        lows = [float(state["pos"][j][1]) for j in range(i + 1) if state["layer"][j] == layer_id]
+        lows.append(float(cand["p1"][1]))
+        own_plate = _plate(state["pos"][i], cand["normal"], state["plate_half"])
+        if not _can_drop(cand["v_next"], dt_drop, state["g"], state["tilt"], float(cand["p1"][1]), min(lows), state, cand["p1"], [own_plate]):
+            fails["drop_feed"] = fails.get("drop_feed", 0) + 1
+            hop_fails["drop_feed"] = hop_fails.get("drop_feed", 0) + 1
+            return False
+    if not _has_short_escape(state, i, cand, own):
+        fails["probe_escape"] = fails.get("probe_escape", 0) + 1
+        hop_fails["probe_escape"] = hop_fails.get("probe_escape", 0) + 1
+        return False
+    return True
+
+
+def _has_short_escape(state, i, cand, own):
+    """A landing that leaves no legal strike on a very short next note is a dead end.
+
+    The note after this flight is short enough that the marble is still inside
+    a glockenspiel unless the arrival can leave along the plate normal. Reject
+    the landing when no passive bounce does that.
+    """
+    if cand.get("p1") is None or i + 2 >= state["n"]:
+        return True
+    dt = float(state["times"][i + 2] - state["times"][i + 1])
+    if dt >= 0.22:
+        return True
+    library = state.get("probe_lib")
+    if library is None:
+        return True
+    pos = np.asarray(cand["p1"], dtype=float)
+    vin = np.asarray(cand["v_next"], dtype=float)
+    mount = cand.get("next_mount") or "floor"
+    name, variant, _j = state["assets"][i + 1]
+    g = state["g"]
+    hit_time = float(state["times"][i + 1])
+    grid = outgoing_grid(vin, mount, state["tilt"], np.array([0.85, 1.0]))
+    neighbors = list(state["placed"]) + [own]
+    fps = float(state["fps"])
+    tried = 0
+    for vout, normal, _e, _approach in grid:
+        if tried >= 36:
+            break
+        tried += 1
+        p1, v_next = flight_state(pos, vout, dt, g)
+        if mount == "floor" and float(v_next[1]) > -0.20:
+            continue
+        if abs(float(p1[0] - pos[0])) < 0.18:
+            continue
+        origin = pos - np.asarray(normal, dtype=float) * CONTACT_OFFSET
+        if any(pair_distance(library, name, variant, origin, normal, other) < PAIR_MIN for other in neighbors):
+            continue
+        item = Placement(library, name, variant, origin, normal, hit_time)
+        samples = []
+        times = []
+        for step in range(1, 8):
+            t = dt * step / 7.0
+            if t < 1.2 / fps:
+                continue
+            point, _vel = flight_state(pos, vout, t, g)
+            samples.append([point[0], 0.0, point[1]])
+            times.append(hit_time + t)
+        if not samples:
+            continue
+        samples = np.asarray(samples, dtype=float)
+        times = np.asarray(times, dtype=float)
+        ok, _dist = keepout_against(item, samples, times, fps, SEARCH_KEEP)
+        if not ok:
+            continue
+        if any(not keepout_against(other, samples, times, fps, SEARCH_KEEP)[0] for other in neighbors):
+            continue
+        if i + 3 < state["n"]:
+            dt_drop = float(state["times"][i + 3] - state["times"][i + 2])
+            if dt_drop >= state["long_note"] and not _can_drop(v_next, dt_drop, g, state["tilt"], float(p1[1]), float(p1[1]) - 0.40):
+                continue
+        return True
+    return False
+
+
+def _can_drop(vin, dt, g, tilt, z0, layer_min, state=None, pos=None, also=None):
+    """True when some passive bounce can open the next layer and its plate fits."""
+    others = []
+    if state is not None:
+        others.extend(state["plates"])
+    if also:
+        others.extend(also)
+    for vout, normal, _e, _approach in outgoing_grid(vin, "floor", tilt, np.array([0.85, 1.0])):
+        end, v_next = flight_state(np.array([0.0, z0]), vout, dt, g)
+        dx = float(end[0])
+        dz = float(end[1] - z0)
+        if dx < 0.45 or dz > -0.50 or float(v_next[1]) > -0.55:
+            continue
+        if float(end[1]) > layer_min - 0.40:
+            continue
+        if pos is not None and others:
+            plate = _plate(pos, normal, state["plate_half"])
+            blocked = False
+            for other in others:
+                if plate_plate_gap(plate, other, PLATE_RADIUS) < PLATE_MARGIN:
+                    blocked = True
+                    break
+                if not _gap_ok(pos, vout, dt, other, g):
+                    blocked = True
+                    break
+            if blocked:
+                continue
+        return True
+    return False
+
+
 def _clear(i, cand, state):
     g = state["g"]
     pos = state["pos"][i]
@@ -284,17 +550,21 @@ def _clear(i, cand, state):
     for other in state["plates"]:
         if plate_plate_gap(plate, other, PLATE_RADIUS) < PLATE_MARGIN:
             fails["pair"] = fails.get("pair", 0) + 1
+            state.setdefault("hop_fail", {})["pair"] = state["hop_fail"].get("pair", 0) + 1
             return False
     outgoing_dt = cand["dt"]
     for other in state["plates"]:
         if not _gap_ok(pos, cand["vout"], outgoing_dt, other, g):
             fails["path"] = fails.get("path", 0) + 1
+            state.setdefault("hop_fail", {})["path"] = state["hop_fail"].get("path", 0) + 1
             return False
-    if not _own_plate_ok(pos, cand["vout"], outgoing_dt, plate, g):
+    if not _own_plate_ok(pos, cand["vout"], outgoing_dt, plate, g, ignore_start=1.2 / state["fps"]):
         fails["own"] = fails.get("own", 0) + 1
+        state.setdefault("hop_fail", {})["own"] = state["hop_fail"].get("own", 0) + 1
         return False
     incoming = state["incoming"](i)
-    if not _own_plate_ok(incoming["p0"], incoming["v"], incoming["t1"] - incoming["t0"], plate, g):
+    if not _own_plate_ok(incoming["p0"], incoming["v"], incoming["t1"] - incoming["t0"], plate, g,
+                         ignore_end=1.2 / state["fps"]):
         fails["incoming"] = fails.get("incoming", 0) + 1
         return False
     # Later plates must not be built on top of the path already flown.
@@ -303,6 +573,7 @@ def _clear(i, cand, state):
             continue
         if not _gap_ok(flight["p0"], flight["v"], flight["t1"] - flight["t0"], plate, g):
             fails["history"] = fails.get("history", 0) + 1
+            state.setdefault("hop_fail", {})["history"] = state["hop_fail"].get("history", 0) + 1
             return False
     # Polynomial critical points. Samples can miss a minimum between them.
     gvec = gravity_vector(g)
@@ -333,7 +604,7 @@ def _clear(i, cand, state):
     if own_gap < -2e-5 or in_gap < -2e-5:
         fails["poly_own"] = fails.get("poly_own", 0) + 1
         return False
-    return True
+    return _probe_clear(i, cand, state)
 
 
 def _shallowest_drop(vin, pos, dt, g, tilt, restitutions):
@@ -397,10 +668,20 @@ def _impossible(i, state, blocker, searched):
         blocker=blocker,
         reject_counts=state.get("last_reject", {}),
         clear_fail=dict(state.get("clear_fail", {})),
+        hop_fail=dict(state.get("hop_fail") or {}),
+        hop_fail_at=state.get("hop_fail_at"),
+        debug_vin=state.get("debug_vin"),
+        kinematic_ok=state.get("kinematic_ok"),
+        own_dist=state.get("own_dist"),
+        debug_plates=[
+            dict(c=[float(p["center"][0]), float(p["center"][1])], n=[float(p["normal"][0]), float(p["normal"][1])])
+            for p in state["plates"]
+        ],
         position=[float(pos[0]), float(pos[1])],
         layer=int(state["layer"][i]),
         pattern=state["patterns"][state["layer"][i]],
         searched_candidates=int(searched),
+        pool_sizes=list(state.get("pool_sizes") or []),
         backtracks=int(state["backtracks"]),
         shallowest_passive_drop_m=None if shallow is None else float(shallow),
         preferred_drop_m=preferred,
@@ -421,6 +702,10 @@ def _search(state):
     while i < n:
         if pools[i] is None:
             state["last_reject"] = {}
+            state["hop_fail"] = {}
+            state["hop_fail_at"] = i
+            if i < len(state["vins"]):
+                state["debug_vin"] = [float(state["vins"][i][0]), float(state["vins"][i][1]), float(state["pos"][i][1])]
             pattern = state["patterns"][state["layer"][i]]
             if i == n - 1:
                 groups = [("departure", "departure", False)]
@@ -430,7 +715,9 @@ def _search(state):
                 groups = [(pattern, pattern, False)]
                 if pattern != "fold":
                     groups.append(("fold", "fold", True))
-                if pattern not in ("compact", "fold"):
+                # A fold that reverses into a striker it just left cannot clear
+                # the real mesh. Compact (keep going) is the adapted alternative.
+                if pattern != "compact":
                     groups.append(("compact", "compact", True))
             found = []
             for spec in groups:
@@ -452,12 +739,30 @@ def _search(state):
                 ranked = mixed + [cand for cand in ranked if id(cand) not in seen]
             state["kinematic_ok"] = len(ranked)
             cleared = []
-            for cand in ranked[:280]:
+            for cand in ranked[:500]:
                 if _clear(i, cand, state):
                     cleared.append(cand)
-                    if len(cleared) == 5:
+                    if len(cleared) >= 10:
                         break
-            pools[i] = cleared
+            sign = state.get("prefer0", 1.0) if state.get("lock_direction") else 1.0
+            if i <= 3 and not state.get("lock_direction") and cleared and cleared[0].get("p1") is not None:
+                # The opening run goes out in front so the first long drop
+                # falls beside the strikers. Later hops prefer a real gap.
+                cleared.sort(key=lambda cand: (-float(cand["p1"][0]), -cand.get("probe_margin", 0.0)))
+            else:
+                cleared.sort(key=lambda cand: -cand.get("probe_margin", 0.0))
+            forward = [cand for cand in cleared if cand.get("dx", sign) * sign >= 0.0][:3]
+            backward = [] if not state.get("lock_direction") else [cand for cand in cleared if cand.get("dx", sign) * sign < 0.0][:2]
+            picked = []
+            seen = set()
+            for cand in forward + backward + cleared:
+                if id(cand) in seen:
+                    continue
+                seen.add(id(cand))
+                picked.append(cand)
+                if len(picked) == 4:
+                    break
+            pools[i] = picked
             cursors[i] = 0
             state["pool_sizes"][i] = len(pools[i])
         if cursors[i] >= len(pools[i]):
@@ -491,6 +796,14 @@ def _apply(i, cand, state):
     plate = _plate(pos, normal, state["plate_half"])
     plate["contact"] = i
     state["plates"].append(plate)
+    if state.get("probe_lib") is not None:
+        origin = cand.get("visual_origin")
+        if origin is None:
+            origin, _centre = _visual_origin(state, i, cand)
+        name, variant, _j = state["assets"][i]
+        state["placed"].append(Placement(
+            state["probe_lib"], name, variant, origin, normal, state["times"][i],
+        ))
     contact = dict(
         i=i, time=float(state["times"][i]), p=[float(pos[0]), float(pos[1])],
         vin=[float(state["vins"][i][0]), float(state["vins"][i][1])],
@@ -520,6 +833,8 @@ def _apply(i, cand, state):
 
 def _undo(state):
     state["plates"].pop()
+    if state.get("placed"):
+        state["placed"].pop()
     state["contacts"].pop()
     flight = state["flights"].pop()
     if flight["end_contact"] is not None:
@@ -594,8 +909,26 @@ def plan_hits(hits, g=9.81, seed=4, fps=30, tilt_deg=60.0, long_note=0.60, max_d
         pos=[p0.copy()], vins=[vin0.copy()], mounts=["floor" if vin0[1] < 0 else "ceil"],
         plates=[], contacts=[], flights=[lead], lead=lead, backtracks=0, pool_sizes=[0] * n,
         tail=duration - times[-1], z_ceiling=z_ceiling, extra_plates=extra_plates or [],
-        prefer0=prefer0, lock_direction=lock_direction,
+        prefer0=prefer0, lock_direction=lock_direction, fps=int(fps),
+        long_note=float(long_note),
     )
+    probe_lib = ProbeLibrary("v5")
+    state["probe_lib"] = probe_lib
+    state["assets"] = probe_lib.assign(hits)
+    state["placed"] = []
+    pins = {}
+    for row in (resume or {}).get("pinned_frames") or []:
+        pins[round(float(row[0]), 6)] = [float(row[1]), float(row[2])]
+    state["pinned_frames"] = pins
+    extra = (resume or {}).get("extra_path")
+    if extra:
+        extra = np.asarray(extra, dtype=float)
+        state["extra_times"] = extra[:, 0]
+        state["extra_samples"] = np.c_[extra[:, 1], np.zeros(len(extra)), extra[:, 2]]
+    else:
+        state["extra_times"] = None
+        state["extra_samples"] = None
+    state["obstacle_clouds"] = list((resume or {}).get("obstacle_clouds") or [])
     state["incoming"] = lambda i: _incoming(state, i)
 
     def apex_cap(layer_id, prev_min, takeoff_z):
@@ -690,14 +1023,20 @@ def scene_plan(route, source_name=""):
     """Scene-style plan plus the descent audit block. Layout stays ``hscroll``."""
     frames = route.get("frame_override") or _frames(route)
     camera, rig = _camera(frames, route["fps"])
+    frame_arr = np.asarray(frames, dtype=float)
     keys = []
     for c in route["contacts"]:
-        normal = c["normal"]
+        normal = np.asarray(c["normal"], dtype=float)
+        # The rendered marble and check_keepout both follow the sagged frames.
+        # The plate is seated on that curve at the MIDI onset, not on the
+        # analytic corner the chord cuts off between frames.
+        centre = sag_at(frame_arr, c["time"], route["fps"], route["g"])
+        origin = centre - normal * CONTACT_OFFSET
         keys.append(dict(
-            i=c["i"], x=c["plate_center"][0], z=c["plate_center"][1],
-            nx=normal[0], nz=normal[1], ang=math.atan2(normal[0], normal[1]),
-            tilt=math.degrees(math.acos(max(-1.0, min(1.0, abs(normal[1]))))),
-            cx=c["p"][0], cz=c["p"][1], t=c["time"], t_audio=c["time"],
+            i=c["i"], x=float(origin[0]), z=float(origin[1]),
+            nx=float(normal[0]), nz=float(normal[1]), ang=math.atan2(float(normal[0]), float(normal[1])),
+            tilt=math.degrees(math.acos(max(-1.0, min(1.0, abs(float(normal[1])))))),
+            cx=float(centre[0]), cz=float(centre[1]), t=c["time"], t_audio=c["time"],
             note=route["hits"][c["i"]].get("note"), track=route["hits"][c["i"]]["track"],
             drum=route["hits"][c["i"]]["drum"], program=route["hits"][c["i"]].get("program"),
             side=1, family=f"L{c['layer']}", num=c["layer"] + 1,

@@ -215,7 +215,71 @@ def audit_transition(result, tol=1e-3):
     return dict(ok=not violations, violations=violations)
 
 
-def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
+def _release_target(t_release, t0, fps):
+    """Frame time at or just before ``t_release``, as a release clock.
+
+    The release has to land on that frame or up to 0.4 ms after it. A release
+    a fraction of a frame early would put a rendered frame in the 1 mm liftoff.
+    """
+    absolute = float(t0) + float(t_release)
+    frame = math.floor(absolute * fps + 1e-9) / fps
+    return frame - float(t0)
+
+
+def _snap_phi(center, radius, heading, speed, g, phi_hint, t_fall, slide_dur, dt, t0, fps):
+    """Move the lip angle so the groove lets go on a rendered frame."""
+    def duration(phi1):
+        rolled, fail = roll_circle(center, radius, heading, phi1, speed, g)
+        if fail is not None or rolled is None:
+            return None, None
+        return rolled["duration_s"], rolled
+
+    hint_dur, hint_roll = duration(phi_hint)
+    if hint_roll is None:
+        return None
+    target = _release_target(t_fall + slide_dur + hint_dur, t0, fps)
+    # Shorter rail: phi closer to heading. Longer rail: phi more negative.
+    lo, hi = phi_hint - 0.45, min(heading - 0.04, phi_hint + 0.45)
+    best = None
+    for _ in range(18):
+        mid = 0.5 * (lo + hi)
+        dur, rolled = duration(mid)
+        if rolled is None:
+            hi = mid
+            continue
+        release = t_fall + slide_dur + dur
+        err = release - target
+        best = (rolled, release, mid)
+        if abs(err) <= 4e-4 and err >= -1e-4:
+            return rolled, release
+        if release > target:
+            lo = mid
+        else:
+            hi = mid
+    if best is None:
+        return None
+    rolled, release, _mid = best
+    if abs(release - target) > 1.5e-3 or release + 1e-4 < target:
+        # One frame later, still on a frame, if the shorter lip will not sit.
+        target2 = target + 1.0 / fps
+        lo, hi = phi_hint - 0.55, min(heading - 0.04, phi_hint + 0.2)
+        for _ in range(18):
+            mid = 0.5 * (lo + hi)
+            dur, rolled = duration(mid)
+            if rolled is None:
+                hi = mid
+                continue
+            release = t_fall + slide_dur + dur
+            if abs(release - target2) <= 4e-4 and release + 1e-4 >= target2:
+                return rolled, release
+            if release > target2:
+                lo = mid
+            else:
+                hi = mid
+    return None
+
+
+def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC, t0=None, fps=None, accept=None):
     """Fall, slip into a roll, ride a descending U with an exit lip, then fly.
 
     ``dt`` is the musical gap. The landing position is wherever that budget
@@ -249,6 +313,14 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
                 if fail is not None:
                     refusals.append(fail)
                     continue
+                if t0 is not None and fps:
+                    snapped = _snap_phi(
+                        center, radius, heading, slide["speed_out"], g, phi1,
+                        float(t_fall), slide["duration_s"], dt, t0, fps,
+                    )
+                    if snapped is None:
+                        continue
+                    rolled, _release = snapped
                 t_left = dt - t_fall - slide["duration_s"] - rolled["duration_s"]
                 if t_left < 0.20:
                     continue
@@ -266,8 +338,11 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
                     continue
                 # Prefer a clearly visible fall, reversal, and lip.
                 score = abs(t_left - 0.48) + 0.5 * max(0.0, 0.6 - below)
+                packed = (score, t_fall, slide, rolled, p_cap, v_cap, p_rail, v_exit, p_land, v_land, t_left, radius, heading, center)
+                if accept is not None and not accept(packed):
+                    continue
                 if best is None or score < best[0]:
-                    best = (score, t_fall, slide, rolled, p_cap, v_cap, p_rail, v_exit, p_land, v_land, t_left, radius, heading, center)
+                    best = packed
     if best is None:
         return dict(
             status="refused", powered_kicker=False, energy_was_relaxed=False,
@@ -275,6 +350,17 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
             lip_refusals=len(refusals),
         )
     _, t_fall, slide, rolled, p_cap, v_cap, p_rail, v_exit, p_land, v_land, t_left, radius, heading, center = best
+    result = materialize_guide(
+        p0, v0, g, dt, omega0, mu, t_fall, slide, rolled, p_cap, v_cap, v_exit, t_left, radius, center,
+    )
+    result["audit"] = audit_transition(result)
+    if not result["audit"]["ok"]:
+        result["status"] = "audit_failed"
+    return result
+
+
+def materialize_guide(p0, v0, g, dt, omega0, mu, t_fall, slide, rolled, p_cap, v_cap, v_exit, t_left, radius, center):
+    """Build the phase dict for one already-accepted geometry."""
     # Rebuild the free-flight samples for the audit and the diagram.
     def flight_phase(name, p, v, duration, omega):
         count = max(12, int(duration / 0.02))
@@ -346,9 +432,6 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
             "Pinball habitrails are passive wire guides. A vertical up-kicker is a powered device and is not this transition.",
         ],
     )
-    result["audit"] = audit_transition(result)
-    if not result["audit"]["ok"]:
-        result["status"] = "audit_failed"
     return result
 
 

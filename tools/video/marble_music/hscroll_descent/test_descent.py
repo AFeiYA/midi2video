@@ -8,13 +8,16 @@ Run from tools/video/marble_music:
 import copy
 import json
 import os
+import subprocess
+import sys
 import unittest
 
 import numpy as np
 
 from hscroll_descent.audit import audit_route
 from hscroll_descent.physics import classify_bounce, reflect
-from hscroll_descent.plan import plan_document, plan_hits
+from hscroll_descent.plan import plan_document, plan_hits, scene_plan
+from hscroll_descent.probes import ProbeLibrary, release_clear, world_points
 from hscroll_descent.rail import audit_transition, plan_guided_hop, refusal_if_lip_too_high, static_deflector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -104,6 +107,93 @@ class DescentExcerpt(unittest.TestCase):
         self.assertGreater(refused["energy_deficit_j_per_kg"], 0.0)
         self.assertTrue(refused["tradeoffs"])
         self.assertNotIn("keys", refused)
+
+    def test_strict_scripts_accept_the_corrected_excerpt(self):
+        plan = scene_plan(self.route, source_name="excerpt")
+        path = os.path.join(HERE, "examples", "_probe_excerpt_plan.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(plan, handle)
+        root = os.path.dirname(HERE)
+        keep = subprocess.run(
+            [sys.executable, "check_keepout.py", path, "--look", "v5", "--strict", "--sub", "8"],
+            cwd=root, capture_output=True, text=True,
+        )
+        pairs = subprocess.run(
+            [sys.executable, "check_pairs.py", path, "--look", "v5", "--strict"],
+            cwd=root, capture_output=True, text=True,
+        )
+        os.remove(path)
+        self.assertEqual(keep.returncode, 0, keep.stdout[-600:])
+        self.assertEqual(pairs.returncode, 0, pairs.stdout[-600:])
+        self.assertIn("violations (<0.97R outside own hit window): 0", keep.stdout)
+        self.assertIn("new (not whitelisted) pairs: 0", pairs.stdout)
+
+
+# Distances measured by check_keepout.py --look v5 --strict --sub 8 on the
+# guided plan before this fix. 0.97 R is 0.1455 m.
+RECORDED_GLOCK_APPROACHES_M = (0.1440, 0.1449, 0.1445, 0.1438, 0.1437)
+# First rendered frame after the old tangent release: 7 ms, 1 mm outside R.
+RECORDED_LIP_GRAZE = (0.007, 0.151, True)
+
+
+class ProbeRegressions(unittest.TestCase):
+    def test_recorded_glock_approaches_fail_strict_keepout(self):
+        limit = 0.97 * 0.15
+        for dist in RECORDED_GLOCK_APPROACHES_M:
+            self.assertLess(dist, limit)
+
+    def test_point_at_the_old_miss_distance_is_inside_the_glock(self):
+        library = ProbeLibrary("v5")
+        slab = library.yslab("glockenspiel", "default")
+        # A centre 0.144 m from the nearest probe is the old failure mode.
+        probe = slab[0]
+        direction = np.array([1.0, 0.0, 0.0])
+        centre = probe + direction * 0.144
+        dist = np.linalg.norm(slab - centre, axis=1).min()
+        self.assertLess(dist, 0.97 * 0.15)
+        clear = probe + direction * 0.17
+        self.assertGreaterEqual(np.linalg.norm(slab - clear, axis=1).min(), 0.97 * 0.15)
+
+    def test_recorded_one_millimetre_lip_graze_fails_when_it_is_a_rendered_frame(self):
+        self.assertFalse(release_clear([RECORDED_LIP_GRAZE]))
+        # The same 1 mm at 7 ms is the continuous liftoff when it is not a frame.
+        # The next rendered frame has to be at least 12 mm clear.
+        self.assertTrue(release_clear([
+            (0.007, 0.151, False),
+            (1.0 / 30.0, 0.15 + 0.012, True),
+        ]))
+        self.assertFalse(release_clear([(0.01, 0.140, False)]))
+
+    def test_world_placement_matches_the_keepout_script(self):
+        local = np.array([[0.2, 0.0, -0.1]])
+        origin = np.array([1.0, 2.0])
+        normal = np.array([0.0, 1.0])
+        world = world_points(local, origin, normal)
+        # local x is the tangent (nz, -nx) = (1, 0); local z follows the normal.
+        self.assertAlmostEqual(world[0, 0], 1.2, places=6)
+        self.assertAlmostEqual(world[0, 2], 1.9, places=6)
+
+
+class GuidedPlanScripts(unittest.TestCase):
+    def test_committed_guided_plan_passes_strict_scripts_and_clears_the_lip(self):
+        path = os.path.join(HERE, "examples", "guided_excerpt_plan.json")
+        root = os.path.dirname(HERE)
+        keep = subprocess.run(
+            [sys.executable, "check_keepout.py", path, "--look", "v5", "--strict", "--sub", "8"],
+            cwd=root, capture_output=True, text=True,
+        )
+        pairs = subprocess.run(
+            [sys.executable, "check_pairs.py", path, "--look", "v5", "--strict"],
+            cwd=root, capture_output=True, text=True,
+        )
+        self.assertEqual(keep.returncode, 0, keep.stdout[-600:])
+        self.assertEqual(pairs.returncode, 0, pairs.stdout[-600:])
+        with open(path, encoding="utf-8") as handle:
+            plan = json.load(handle)
+        from hscroll_descent.probes import rail_release_samples
+        release = rail_release_samples(plan, sub=8)
+        self.assertTrue(release["ok"], release)
+        self.assertGreaterEqual(release["closest_rendered_frame"]["dist_m"], plan["R"] + 0.012)
 
 
 class RailTransition(unittest.TestCase):

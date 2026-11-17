@@ -1,9 +1,10 @@
 """Probe checks for a guided excerpt.
 
-Instrument strikers use the checked-in v5 probe clouds, subsampled. That is
-not a full triangle-mesh sweep. The guide uses the authored channel samples
-(floor, walls, brackets). During the ride the floor is the target surface;
-walls, brackets, and every other striker are obstacles.
+Strikers are judged by the same full-resolution v5 clouds as
+``check_keepout.py --look v5`` and ``check_pairs.py --look v5``. The guide
+uses the authored channel samples. Floor contact while the marble is on the
+capture or the groove is the intended roll. After release, every rendered
+frame must clear the channel by 12 mm. A full triangle mesh is still not run.
 """
 
 import json
@@ -89,79 +90,48 @@ def _phase_at(plan, t):
     return "exit_flight"
 
 
-def _instrument_keepout(plan, look="v5", stride=8):
-    library = _load_library()
-    metas = library.metas(look)
-    assigned = library.assign(plan["keys"], metas, plan.get("instrument_set"))
-    radius = plan["R"]
-    fps = plan["fps"]
-    marble = np.asarray(plan["marble"], float)
-    times = np.arange(len(marble)) / fps
-    probes = {}
-    violations = []
-    closest = []
-    for key, (name, variant, _j) in zip(plan["keys"], assigned):
-        meta = metas[name]
-        cloud = probes.get((name, variant))
-        if cloud is None:
-            cloud = np.load(os.path.join(meta["_dir"], f"probe_{variant}.npy")).astype(np.float64)[::stride]
-            probes[(name, variant)] = cloud
-        slab = cloud[np.abs(cloud[:, 1]) < radius]
-        if not len(slab):
-            continue
-        nx, nz = key["nx"], key["nz"]
-        tx, tz = nz, -nx
-        world = np.c_[
-            key["x"] + slab[:, 0] * tx + slab[:, 2] * nx,
-            slab[:, 1],
-            key["z"] + slab[:, 0] * tz + slab[:, 2] * nz,
-        ]
-        near = (np.abs(marble[:, 0] - key["x"]) < 1.4) & (np.abs(marble[:, 1] - key["z"]) < 1.4)
-        idx = np.flatnonzero(near & (np.abs(times - key["t"]) >= 1.2 / fps))
-        if not len(idx):
-            continue
-        best = np.inf
-        worst_i = None
-        for start in range(0, len(idx), 40):
-            block = idx[start:start + 40]
-            xyz = np.c_[marble[block, 0], np.zeros(len(block)), marble[block, 1]]
-            dist = np.linalg.norm(xyz[:, None, :] - world[None, :, :], axis=2).min(axis=1)
-            j = int(np.argmin(dist))
-            if dist[j] < best:
-                best = float(dist[j])
-                worst_i = int(block[j])
-        closest.append(dict(key=key["i"], asset=name, dist_m=best))
-        if best < 0.97 * radius:
-            violations.append(dict(key=key["i"], asset=name, dist_m=best, frame=worst_i,
-                                   check="subsampled v5 probe cloud, y slab, not a full triangle sweep"))
-    closest.sort(key=lambda row: row["dist_m"])
+def _instrument_keepout(plan, look="v5"):
+    from hscroll_descent.probes import audit_plan
+    report = audit_plan(plan, look=look, sub=8)
     return dict(
-        check="subsampled library probes (stride %d), y-slab |y|<R, outside each key's own hit window" % stride,
+        check="full-resolution v5 y-slab probes, gravity-sag path, outside each key's own 1.2-frame hit window",
         full_triangle_mesh="not run",
-        violations=violations,
-        closest=closest[:8],
+        violations=report["violations"],
+        clashes=report["clashes"],
+        pairs_ok=report["pairs_ok"],
+        closest=[dict(dist_m=row[0], key=row[1], asset=row[2]) for row in report["closest"][:8]],
     )
 
 
 def validate(plan, look="v5"):
+    from hscroll_descent.probes import rail_release_samples
     rail = _rail_clearance(plan)
     instruments = _instrument_keepout(plan, look=look)
+    release = rail_release_samples(plan, sub=8)
     radius = plan["R"]
-    guide_ok = (
+    riding_ok = (
         abs(rail["floor_contact_m"]["median"] - radius) < 0.02
         and rail["floor_contact_m"]["min"] > radius - 0.01
-        and (rail["obstacle_while_riding_m"] or 0) >= radius + 0.005
-        and (rail["obstacle_while_airborne_m"] or 0) >= radius - 0.002
+        and (rail["obstacle_while_riding_m"] or 0) >= radius + 0.004
     )
+    # Airborne samples include the continuous liftoff. The release report,
+    # not a single nearest sample, decides whether that liftoff is a graze.
+    ok = riding_ok and release["ok"] and not instruments["violations"] and instruments["pairs_ok"]
     return dict(
-        ok=guide_ok,
+        ok=ok,
         strict_instrument_keepout_0_97R=not instruments["violations"],
+        strict_pairs_1cm=instruments["pairs_ok"],
         rail=rail,
+        release=release,
         instruments=instruments,
         proxy_plate_clearance=plan["validation"].get("clearance"),
+        exemptions=dict(
+            striker_hit="within 1.2 frames of that key's own onset",
+            rail_roll="floor samples while the phase is capture or rail; walls and brackets are never exempt",
+        ),
         labels=dict(
             guide="authored channel samples along the centerline",
-            strikers="subsampled v5 probe clouds; 0.97R keep-out is reported separately and is not claimed when it fails",
+            strikers="full-resolution v5 probe clouds, same rule as check_keepout.py and check_pairs.py",
             plates="capsule proxy from the descent audit",
             full_triangle_mesh="not run",
         ),
