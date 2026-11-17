@@ -1,0 +1,95 @@
+{
+ "name": "shanai",
+ "section": 159,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 59 Shehnai: the conical dark-wood pipe (top line flush with the paddle) with brass bands and seven finger holes is the striker; a flared brass bell at the right; the brass staple with red thread and the double reed at the left, and spare reeds with an ivory pin and tassel hanging on a cord.",
+ "slots": [
+  "body",
+  "brass",
+  "dark",
+  "reed",
+  "thread",
+  "ivory",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  1.0,
+  0.85,
+  0.55
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.04496,
+   "bbox": [
+    [
+     -0.3089999854564667,
+     -0.10000000149011612,
+     -0.20000000298023224
+    ],
+    [
+     0.3095000088214874,
+     0.3100000023841858,
+     0.08900000154972076
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.23499999940395355,
+     -0.09049999713897705,
+     -0.20000000298023224
+    ],
+    [
+     0.3095000088214874,
+     0.08910000324249268,
+     0.08900000154972076
+    ]
+   ],
+   "probe_points": 19384,
+   "triangles": 3122
+  }
+ }
+}

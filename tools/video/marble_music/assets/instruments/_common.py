@@ -12,7 +12,7 @@ def _activate(o):
     for s in bpy.context.selected_objects: s.select_set(False)
     bpy.context.view_layer.objects.active = o; o.select_set(True)
 
-NSLOT = 8
+NSLOT = 16   # >= the longest meta.slots list (string_ensemble 13); 8 clamped slot indices >= 8 onto slot 7 at join time
 def _ensure_slots(o, n=NSLOT):
     """placeholder material slots __slot0..__slot{n-1} (same datablocks on every part): Blender clamps material_index to the
     slot count whenever a modifier/transform is applied or objects are joined, so parts need real slots from creation."""

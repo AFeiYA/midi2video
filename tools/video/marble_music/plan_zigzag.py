@@ -1,8 +1,15 @@
 """Zig-zag marble planner: angled paddles alternate LEFT/RIGHT; marble hits paddle i exactly on note i's frame.
 Between hits: ballistic parabola (gravity g, constant vx). Paddle normal bisects reversed-incoming and outgoing directions.
-usage: python plan_zigzag.py hits.json --fps 30 -o plan.json"""
+usage: python plan_zigzag.py hits.json --fps 30 -o plan.json   [--layout hscroll -> plan_hscroll.py, 16:9 horizontal long scroll]"""
 import json, argparse, math
 import numpy as np
+import sys as _sys
+if '--layout' in _sys.argv:                      # --layout hscroll -> 16:9 horizontal long-scroll planner (plan_hscroll.py); zigzag = this file
+    _i = _sys.argv.index('--layout'); _lay = _sys.argv[_i+1]; del _sys.argv[_i:_i+2]
+    if _lay == 'hscroll':
+        import os as _os; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import plan_hscroll
+        plan_hscroll.main(plan_hscroll.build_parser().parse_args(_sys.argv[1:])); _sys.exit(0)
+    elif _lay != 'zigzag': raise SystemExit(f'unknown --layout {_lay!r} (zigzag | hscroll)')
 ap=argparse.ArgumentParser(); ap.add_argument('hits'); ap.add_argument('--fps',type=int,default=30)
 ap.add_argument('--g',type=float,default=30.0); ap.add_argument('--half-gap',type=float,default=0.6,help='marble-centre x at contact = +-this')
 ap.add_argument('--drop-rate',type=float,default=5.0,help='max mean descent per second (long gaps become lobs)')

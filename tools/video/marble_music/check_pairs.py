@@ -22,7 +22,7 @@ for k, (n, v, j) in zip(K, asg):
         hx, hy, hz = library.hanging_world(k, h); T, Z = np.meshgrid(np.linspace(0, 2*np.pi, 24, endpoint=False), np.linspace(0, -h['length'], 30))
         pts = np.r_[pts, np.c_[hx + h['radius']*np.cos(T).ravel(), hy + h['radius']*np.sin(T).ravel(), hz + Z.ravel()]]
     for ap_ in M[n].get('aligned', []):                      # camera-aligned behind-plane parts at their hit-frame placement
-        fr = min(len(P['camera'])-1, int(round(k['t']*P['fps']))); (lx, ly, lz), ph, sc = library.aligned_local(k, P['camera'][fr], ap_)
+        fr = min(len(P['camera'])-1, int(round(k['t']*P['fps']))); (lx, ly, lz), ph, sc = library.aligned_local(k, P['camera'][fr], ap_, tuple((P.get('cam_rig') or {}).get('off', library.CAM_OFF)))
         L0 = np.hypot(ap_['b'][0]-ap_['a'][0], ap_['b'][2]-ap_['a'][2]); T, U = np.meshgrid(np.linspace(0, 2*np.pi, 20, endpoint=False), np.linspace(0, -L0, 30))
         r = ap_.get('radius', 0.06); mx_, my_, mz_ = U.ravel()*sc[0], r*np.cos(T).ravel()*sc[1], r*np.sin(T).ravel()*sc[2]
         c, s_ = np.cos(ph), np.sin(ph); qx = lx + c*mx_ + s_*mz_; qz = lz - s_*mx_ + c*mz_; qy = ly + my_   # rotation about local Y

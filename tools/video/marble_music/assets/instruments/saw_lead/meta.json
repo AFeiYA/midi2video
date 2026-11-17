@@ -1,0 +1,99 @@
+{
+ "name": "saw_lead",
+ "section": 163,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 63 Synth Lead Sawtooth: a vintage analog monosynth - brushed-aluminium top rail is the striker; black front panel with a row of knobs, a glowing cyan screen showing a pink sawtooth wave, walnut end cheeks and a mini keyboard; a pink neon SAWTOOTH sign on an acrylic plate hangs below on two chains.",
+ "slots": [
+  "body",
+  "cheek",
+  "panel",
+  "knob",
+  "cap",
+  "keyw",
+  "keyb",
+  "screen",
+  "neon",
+  "acryl",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.6,
+  0.9,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3075000047683716,
+     -0.08500000089406967,
+     -0.36000001430511475
+    ],
+    [
+     0.3075000047683716,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.3075000047683716,
+     -0.08500000089406967,
+     -0.36000001430511475
+    ],
+    [
+     0.3075000047683716,
+     0.07500000298023224,
+     -0.045099999755620956
+    ]
+   ],
+   "probe_points": 45894,
+   "triangles": 4586
+  }
+ }
+}
