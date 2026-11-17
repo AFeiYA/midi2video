@@ -1,0 +1,335 @@
+{
+ "midi": "projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid",
+ "start": 0.0,
+ "end": 14.0,
+ "tracks": [
+  "01. Glockenspiel",
+  "02. Steel Drums",
+  "03. Guitar",
+  "04. Ocarina",
+  "05. Kalimba",
+  "06. Flute"
+ ],
+ "hits": [
+  {
+   "time": 0.0,
+   "abs_time": 0.0,
+   "note": 76,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 0.30612,
+   "abs_time": 0.30612,
+   "note": 79,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 0.61224,
+   "abs_time": 0.61224,
+   "note": 72,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 1.07143,
+   "abs_time": 1.07143,
+   "note": 74,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 1.22449,
+   "abs_time": 1.22449,
+   "note": 76,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 2.44898,
+   "abs_time": 2.44898,
+   "note": 79,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 2.7551,
+   "abs_time": 2.7551,
+   "note": 79,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 3.06122,
+   "abs_time": 3.06122,
+   "note": 77,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 3.36734,
+   "abs_time": 3.36734,
+   "note": 74,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 3.67346,
+   "abs_time": 3.67346,
+   "note": 72,
+   "vel": 115,
+   "track": 1,
+   "track_name": "01. Glockenspiel",
+   "drum": false,
+   "program": 9
+  },
+  {
+   "time": 4.89795,
+   "abs_time": 4.89795,
+   "note": 67,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 5.20407,
+   "abs_time": 5.20407,
+   "note": 76,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 5.5102,
+   "abs_time": 5.5102,
+   "note": 74,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 5.81632,
+   "abs_time": 5.81632,
+   "note": 72,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 6.12244,
+   "abs_time": 6.12244,
+   "note": 67,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 7.04081,
+   "abs_time": 7.04081,
+   "note": 67,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 7.19387,
+   "abs_time": 7.19387,
+   "note": 67,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 7.34693,
+   "abs_time": 7.34693,
+   "note": 67,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 7.65305,
+   "abs_time": 7.65305,
+   "note": 76,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 7.95917,
+   "abs_time": 7.95917,
+   "note": 74,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 8.26529,
+   "abs_time": 8.26529,
+   "note": 72,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 8.57142,
+   "abs_time": 8.57142,
+   "note": 69,
+   "vel": 115,
+   "track": 2,
+   "track_name": "02. Steel Drums",
+   "drum": false,
+   "program": 114
+  },
+  {
+   "time": 9.7959,
+   "abs_time": 9.7959,
+   "note": 69,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 10.10203,
+   "abs_time": 10.10203,
+   "note": 77,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 10.40815,
+   "abs_time": 10.40815,
+   "note": 76,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 10.71427,
+   "abs_time": 10.71427,
+   "note": 74,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 11.02039,
+   "abs_time": 11.02039,
+   "note": 71,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 12.24488,
+   "abs_time": 12.24488,
+   "note": 79,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 12.551,
+   "abs_time": 12.551,
+   "note": 79,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 12.85712,
+   "abs_time": 12.85712,
+   "note": 77,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 13.16325,
+   "abs_time": 13.16325,
+   "note": 74,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  },
+  {
+   "time": 13.46937,
+   "abs_time": 13.46937,
+   "note": 76,
+   "vel": 115,
+   "track": 3,
+   "track_name": "03. Guitar",
+   "drum": false,
+   "program": 24
+  }
+ ]
+}

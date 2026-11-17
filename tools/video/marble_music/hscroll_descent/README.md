@@ -1,0 +1,93 @@
+# Descending-layer hscroll, plus one passive guide
+
+This is an optional 16:9 template. It does not replace portrait zigzag, hscroll v1, hscroll v2, or `landscape/`.
+
+Strikes are frictionless and passive: restitution is at most 1, so a plate never adds kinetic energy. Seeded noise only reorders candidates that already obey that bound. Layers open downward. Inside a layer the marble may lob, fold left/right, or shuttle, including a local rise, when the incoming speed pays for it. A long note is the ballistic arc onto the next lower layer. The camera may follow right and down. The song is not held in a fixed height band.
+
+The checked-in excerpt is the first 9 seconds of `projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid` (melody tracks, 22 hits). That is not a whole-song proof. The 0–14 second window was not certified: the bounded search does not always find a passive clearance-clean route, and the gap is reported instead of raising restitution. The inst64 file `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid` is not on this machine.
+
+## Free-flight excerpt
+
+From the repository root:
+
+```bash
+python3 tools/video/marble_music/extract_hits.py \
+  projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid \
+  --start 0 --end 9 \
+  -o tools/video/marble_music/hscroll_descent/examples/jingle_remix_0_9_melody.hits.json
+
+cd tools/video/marble_music
+python3 -m hscroll_descent.plan \
+  hscroll_descent/examples/jingle_remix_0_9_melody.hits.json \
+  -o hscroll_descent/examples/descent_excerpt_plan.json \
+  --seed 2 --tilt-max 60 --patterns fold,fold,compact,shuttle \
+  --report hscroll_descent/examples/descent_excerpt_audit.json
+python3 -m hscroll_descent.diagram \
+  hscroll_descent/examples/descent_excerpt_plan.json \
+  hscroll_descent/examples/descent_excerpt_diagram.svg
+python3 -m unittest hscroll_descent.test_descent -v
+```
+
+Equivalent integration entry, after `cd tools/video/marble_music`:
+
+```bash
+python3 plan_hscroll.py hscroll_descent/examples/jingle_remix_0_9_melody.hits.json \
+  --style descent --seed 2 --tilt-max 60 --patterns fold,fold,compact,shuttle \
+  -o hscroll_descent/examples/descent_excerpt_plan.json
+```
+
+`plan_zigzag.py --layout hscroll` forwards to `plan_hscroll.py`, so `--style descent` works there too.
+
+### What passed, and what did not
+
+| Check | Excerpt result |
+|---|---|
+| Contact time equals the MIDI time | yes |
+| Flight is the gravity parabola, including between frames | yes |
+| Approach from the free side, departure into it, normal along the impulse | yes |
+| Specific energy does not rise at a strike | yes |
+| Continuous capsule-proxy gap | yes, see the audit JSON |
+| Full triangle mesh | not run |
+| `check_keepout.py` / `check_pairs.py` probe points | not run |
+| Whole song, or the missing inst64 MIDI | not run |
+| Video | not run |
+
+The capsule is the contact bar (half-length `--plate-half`, default 0.15 m, radius 0.045 m). Instrument bodies extend past it. A proxy pass is not a mesh pass.
+
+v1's `--max-drop` is ignored. `--descent-max-drop` asks whether a shallower landing exists. If it does not, the command exits 2 and writes `*.impossible.json` with the energy deficit. It does not raise restitution.
+
+## Passive guide (not rendered)
+
+`rail.py` is one transition across the remix's 1.22449 s long note. It is not substituted into the 22-hit plan and `scene.py` does not read it.
+
+Sequence, in order:
+
+1. The strike has already given the marble velocity. It is not released from rest.
+2. Free fall. Gravity increases the speed. Spin, if any, stays constant and does not push the center of mass.
+3. Slip capture. Kinetic friction (μ = 0.40) runs until `v = ω R` for a solid sphere (`I = 2/5 m R²`). Position, speed, and spin are continuous. The friction does negative work. This is an impact-like dissipation spread over a short distance, not the later constraint force.
+4. Captive circular groove. The normal is a constraint force. Static friction maintains rolling. Both do no work while the contact point is instantaneously at rest, so `½(1+2/5)v² + g z` is constant. The path goes down through a valley and up an exit lip. Samples are allowed to rise.
+5. The groove ends. Velocity is the tangent. The remaining time is a free flight to a falling contact below the start.
+
+A lip above that budget returns `cannot_crest_lip` and a positive deficit. No spring is added. A static deflector is the separate one-plate impulse in `static_deflector`; restitution above 1 is reported as a powered kicker and refused.
+
+```bash
+cd tools/video/marble_music
+python3 -m hscroll_descent.rail --dt 1.22449 \
+  -o hscroll_descent/examples/rail_transition.json \
+  --svg hscroll_descent/examples/rail_transition.svg
+```
+
+### Mechanisms this follows
+
+- OpenStax, *University Physics Volume 1*, section 11.1, [Rolling Motion](https://openstax.org/books/university-physics-volume-1/pages/11-1-rolling-motion): rolling energy is translation plus rotation, and static friction does no work because the contact point is instantaneously at rest. Kinetic friction while slipping does negative work.
+- Pinball habitrails are bent-wire guides. The ball rolls and gravity supplies the acceleration. Exits that flare and drop keep speed; a ring or stopper throws it away. [Flipcommons habitrails](https://flipcommons.org/gameplay-features/habitrails), [Pinside on return speed](https://pinside.com/pinball/forum/topic/what-rampshabitrails-return-the-ball-at-full-speed), [Visual Pinball wire rails](https://docs.visualpinball.org/creators-guide/editor/wire-rails/index.html). A vertical up-kicker is powered. This prototype does not include one.
+- [Pinball Makers design notes](https://pinballmakers.com/wiki/Design): gravity only pulls downward, so a rise has to be paid for by speed already on the ball or by a powered device. The lip here is the first of those.
+
+The references describe real guides. They are not a claim that this curve copies a particular playfield.
+
+## Assumptions that limit a render
+
+- Free strikes are point-mass frictionless impacts. Spin is modeled only on the guide.
+- The groove is captive and planar (the marble's XZ plane). A 3D bank into the wall is not modeled.
+- Plate clearance is a capsule proxy.
+- No Blender scene, no mesh, no video.
