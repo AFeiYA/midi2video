@@ -1,0 +1,95 @@
+{
+ "name": "new_age_pad",
+ "section": 164,
+ "tracks_regex": "(?!)",
+ "pins": [
+  {
+   "x": -0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  },
+  {
+   "x": 0.15,
+   "z": 0.0,
+   "y_start": 0.05,
+   "radius": 0.02
+  }
+ ],
+ "description": "Jewelbox 64 Synth Pad New Age (Fantasia): a lilac opal crystal bar with gold end caps is the striker; a glowing crystal ball (violet nebula core in clear glass) hangs beneath it on three gold chains, held in a gold claw cradle with a tassel; little glowing stars hang from the bar on threads.",
+ "slots": [
+  "body",
+  "gold",
+  "glass",
+  "core",
+  "star",
+  "tassel",
+  "pin"
+ ],
+ "flash_slot": "body",
+ "flash_color": [
+  0.8,
+  0.7,
+  1.0
+ ],
+ "variants": [
+  "default"
+ ],
+ "variant_rule": "single",
+ "contact": {
+  "length": 0.62,
+  "thickness": 0.09,
+  "point": [
+   0,
+   0,
+   0.045
+  ],
+  "normal": [
+   0,
+   0,
+   1
+  ],
+  "tangent": [
+   1,
+   0,
+   0
+  ],
+  "note": "marble centre at hit = point + normal*R"
+ },
+ "scale": 1.0,
+ "license": "CC0-1.0 (original procedural geometry, written for this project)",
+ "author": "procedural (marble pipeline)",
+ "source_url": null,
+ "look": "v5",
+ "measured": {
+  "default": {
+   "contact_top_z_at_origin": 0.045,
+   "bbox": [
+    [
+     -0.3100000023841858,
+     -0.15000000596046448,
+     -0.4950000047683716
+    ],
+    [
+     0.3100000023841858,
+     0.3100000023841858,
+     0.04500000178813934
+    ]
+   ],
+   "keepout_aabb_in_marble_slab": [
+    [
+     -0.26750001311302185,
+     -0.15000000596046448,
+     -0.4950000047683716
+    ],
+    [
+     0.26750001311302185,
+     0.15000000596046448,
+     -0.04520000144839287
+    ]
+   ],
+   "probe_points": 32794,
+   "triangles": 6134
+  }
+ }
+}

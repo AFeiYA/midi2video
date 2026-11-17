@@ -47,3 +47,10 @@ __pycache__/
 /pan_flute/model*
 /shakuhachi/model*
 /tin_whistle/model*
+/sitar/model*
+/banjo/model*
+/shamisen/model*
+/shanai/model*
+/woodblock_castanets/model*
+/saw_lead/model*
+/new_age_pad/model*
