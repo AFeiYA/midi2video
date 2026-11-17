@@ -337,7 +337,10 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC, t0=No
                 if lip < 0.05:
                     continue
                 # Prefer a clearly visible fall, reversal, and lip.
-                score = abs(t_left - 0.48) + 0.5 * max(0.0, 0.6 - below)
+                # Prefer a lip whose free flight actually falls. A still-rising
+                # exit is a short straight slide. This does not raise the speed.
+                fall_from_lip = float(rolled["z_exit"]) - float(p_land[1])
+                score = abs(t_left - 0.48) + 0.5 * max(0.0, 0.6 - below) + 1.4 * max(0.0, 0.28 - fall_from_lip)
                 packed = (score, t_fall, slide, rolled, p_cap, v_cap, p_rail, v_exit, p_land, v_land, t_left, radius, heading, center)
                 if accept is not None and not accept(packed):
                     continue

@@ -9,8 +9,8 @@
       "median": 0.15001168366247503,
       "max": 0.15006352012182972
     },
-    "obstacle_while_riding_m": 0.15904140518032328,
-    "obstacle_while_airborne_m": 0.1676599816899518,
+    "obstacle_while_riding_m": 0.195414992593407,
+    "obstacle_while_airborne_m": 0.17276232216201048,
     "floor_target_m": 0.15,
     "riding_frames": 17
   },

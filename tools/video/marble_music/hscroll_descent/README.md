@@ -124,6 +124,8 @@ python3 check_pairs.py hscroll_descent/examples/guided_excerpt_plan.json --look 
 - On the guide, distance to the inner floor is 0.150 m. That is the roll. Walls and brackets stay outside the marble and are not exempt.
 - The groove lets go on a frame. The next rendered frame is 0.190 m from every channel sample, 40 mm outside the marble. Samples in the first few milliseconds are the tangent liftoff and do not penetrate.
 - The only exemptions are a key's own onset (1.2 frames, the rule already in `check_keepout.py`) and floor contact while the phase is capture or rail.
+- Descending layers share x, so the wall is one panel. Side-by-side families still get a divider. A reversed span used to lay two wall planes on top of each other; the brick shader on that overlap was the black-and-white triangle strip.
+- The channel floor stays on one side of the marble. The old capture join flipped the normal and the connecting quad cut through the ball. Brackets leave from the outer rim, and a tapered lip does not leave a zero-area quad on the floor.
 - A full triangle mesh was not run. `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid`, Blender, `/workspace/om_pkg`, and the `.blend`/`.glb` caches are not here. Do not treat this remix excerpt as a certificate for that 64-instrument file.
 
 ## Limits

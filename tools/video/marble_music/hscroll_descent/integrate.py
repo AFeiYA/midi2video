@@ -258,8 +258,6 @@ def build_guided_excerpt(document, seed=2, patterns="fold,fold,compact,shuttle",
         accepted = []
 
         def accept(packed, vout=vout, normal=normal):
-            if len(accepted) >= 4:
-                return False
             (_score, t_fall, slide, rolled, p_cap, v_cap, _p_rail, v_exit, _p_land, _v_land,
              t_left, radius, _heading, center) = packed
             guide = materialize_guide(
@@ -273,7 +271,14 @@ def build_guided_excerpt(document, seed=2, patterns="fold,fold,compact,shuttle",
                 return False
             if not _guide_respects_probes(base, guide, channel, launch_index, normal, library, prefix):
                 return False
-            accepted.append((guide, channel, np.asarray(normal, float), float(restitution), np.asarray(vout, float)))
+            fall = float(guide["phases"][2]["z_exit"]) - float(guide["landing"]["p"][1])
+            row = (fall, guide, channel, np.asarray(normal, float), float(restitution), np.asarray(vout, float))
+            if len(accepted) >= 6:
+                worst = min(range(len(accepted)), key=lambda i: accepted[i][0])
+                if fall <= accepted[worst][0]:
+                    return False
+                accepted.pop(worst)
+            accepted.append(row)
             return True
 
         guide = plan_guided_hop(
@@ -282,7 +287,10 @@ def build_guided_excerpt(document, seed=2, patterns="fold,fold,compact,shuttle",
         if guide.get("status") != "ok" or not accepted:
             continue
         # The hopper returns the best score. Prefer a candidate the probe gate kept.
-        for guide, channel, use_normal, use_e, use_vout in accepted:
+        # A lip that is still rising looks like a straight slide. Try the
+        # guides whose free flight falls the farthest first.
+        accepted.sort(key=lambda item: -item[0])
+        for _fall, guide, channel, use_normal, use_e, use_vout in accepted:
             suffix = _suffix_after(document, base, guide, channel, launch_index, previous_floor, g, seed, fps, tilt_deg, long_note)
             if suffix is None or suffix.get("status") != "ok":
                 continue
@@ -423,6 +431,7 @@ def _merge(base, suffix, guide, launch_index, duration, document, launch_contact
         not_a_manufactured_replica=True,
         verts=channel["verts"],
         faces=channel["faces"],
+        bracket_face_start=channel.get("bracket_face_start"),
         probes=channel["probes"],
         stations=channel["stations"],
         marble_radius_m=channel["marble_radius_m"],

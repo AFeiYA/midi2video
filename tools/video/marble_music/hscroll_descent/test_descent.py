@@ -136,6 +136,34 @@ RECORDED_GLOCK_APPROACHES_M = (0.1440, 0.1449, 0.1445, 0.1438, 0.1437)
 RECORDED_LIP_GRAZE = (0.007, 0.151, True)
 
 
+class WallPanels(unittest.TestCase):
+    def test_side_by_side_families_keep_a_divider_boundary(self):
+        from hscroll_descent.wall_spans import wall_spans
+        families = [
+            dict(family="F1", x0=0.0, x1=4.0),
+            dict(family="F2", x0=6.0, x1=10.0),
+        ]
+        panels = wall_spans(families, -2.0, 14.0)
+        self.assertEqual(len(panels), 2)
+        self.assertEqual(panels[0][2]["family"], "F1")
+        self.assertAlmostEqual(panels[0][1], 5.0)
+        self.assertAlmostEqual(panels[1][0], 5.0)
+
+    def test_overlapping_descent_layers_become_one_panel(self):
+        from hscroll_descent.wall_spans import wall_spans
+        # The guided excerpt: later layers run back across the same x.
+        families = [
+            dict(family="L0", x0=-0.1, x1=1.4),
+            dict(family="L1", x0=3.7, x1=9.2),
+            dict(family="L2", x0=8.2, x1=5.7),
+            dict(family="L3", x0=8.4, x1=2.7),
+        ]
+        panels = wall_spans(families, -12.0, 21.0)
+        self.assertEqual(len(panels), 1)
+        self.assertIsNone(panels[0][2])
+        self.assertLess(panels[0][0], panels[0][1])
+
+
 class ProbeRegressions(unittest.TestCase):
     def test_recorded_glock_approaches_fail_strict_keepout(self):
         limit = 0.97 * 0.15
@@ -194,6 +222,10 @@ class GuidedPlanScripts(unittest.TestCase):
         release = rail_release_samples(plan, sub=8)
         self.assertTrue(release["ok"], release)
         self.assertGreaterEqual(release["closest_rendered_frame"]["dist_m"], plan["R"] + 0.012)
+        from hscroll_descent.rail_geometry import mesh_clearance
+        gap = mesh_clearance(plan["guide_rail"], plan["R"])
+        self.assertEqual(gap["bowties"], 0)
+        self.assertGreaterEqual(gap["min_m"], plan["R"] - 0.004)
 
 
 class RailTransition(unittest.TestCase):
@@ -224,9 +256,16 @@ class RailTransition(unittest.TestCase):
         self.assertEqual(slip["force"], "kinetic_friction_over_a_finite_slip")
 
     def test_channel_is_the_path_and_not_a_flat_ribbon(self):
-        from hscroll_descent.rail_geometry import build_channel
+        from hscroll_descent.rail_geometry import build_channel, mesh_clearance
         guide = self.result
         channel = build_channel(guide)
+        clearance = mesh_clearance(channel, guide["marble_radius_m"])
+        self.assertEqual(clearance["bowties"], 0)
+        # Floor contact is the radius. A closer triangle is the sheet through the ball.
+        self.assertGreaterEqual(clearance["min_m"], guide["marble_radius_m"] - 0.004)
+        normals = [np.array(s["normal"]) for s in channel["stations"]]
+        for a, b in zip(normals, normals[1:]):
+            self.assertGreater(float(np.dot(a, b)), 0.0)
         for station in channel["stations"]:
             dx = station["floor"][0] - station["center"][0]
             dz = station["floor"][2] - station["center"][2]

@@ -85,21 +85,69 @@ def _box(origin, axis_u, axis_v, axis_w, hu, hv, hw):
     return corners, quads
 
 
+def _quad_area(verts, quad):
+    q = [np.asarray(verts[i], float) for i in quad]
+    n1 = np.cross(q[1] - q[0], q[2] - q[0])
+    n2 = np.cross(q[2] - q[0], q[3] - q[0])
+    return 0.5 * (float(np.linalg.norm(n1)) + float(np.linalg.norm(n2)))
+
+
+def _bowtie(verts, quad):
+    """True when the quad's two triangles face opposite ways."""
+    q = [np.asarray(verts[i], float) for i in quad]
+    n1 = np.cross(q[1] - q[0], q[2] - q[0])
+    n2 = np.cross(q[2] - q[0], q[3] - q[0])
+    return float(np.dot(n1, n2)) < 0.0
+
+
+def _orient_normals(rows, normals):
+    """Keep the floor on one side of the marble.
+
+    The circle normal points at the centre of curvature, so the floor sits
+    outside the turn. The straight capture used to pick the opposite sign, and
+    the one quad at that join cut through the ball.
+    """
+    normals = [np.array(n, float) for n in normals]
+    circle = [i for i, row in enumerate(rows) if row.get("on_circle")]
+    if circle:
+        # The first circle sample keeps the curvature normal. Everything else
+        # matches its neighbour so the floor cannot jump through the ball.
+        anchor = circle[0]
+        for i in range(anchor + 1, len(normals)):
+            if float(np.dot(normals[i], normals[i - 1])) < 0.0:
+                normals[i] = -normals[i]
+        for i in range(anchor - 1, -1, -1):
+            if float(np.dot(normals[i], normals[i + 1])) < 0.0:
+                normals[i] = -normals[i]
+    else:
+        for i in range(1, len(normals)):
+            if float(np.dot(normals[i], normals[i - 1])) < 0.0:
+                normals[i] = -normals[i]
+    return normals
+
+
 def build_channel(guide, marble_radius=MARBLE_RADIUS):
     rows = centerline_from_guide(guide)
+    raw = []
+    for row in rows:
+        point = np.array([row["p"][0], 0.0, row["p"][1]])
+        if row["on_circle"] and row["circle"] is not None:
+            center = np.array([row["circle"][0], 0.0, row["circle"][1]])
+            raw.append(_unit(center - point))
+        else:
+            raw.append(_up_normal(row["tangent"]))
+    normals = _orient_normals(rows, raw)
     verts, faces = [], []
+    bracket_faces = []
     probes = {"floor": [], "wall": [], "bracket": []}
     stations = []
+    profile_at = []
     distance = 0.0
     next_bracket = 0.15
     count = len(rows)
     for i, row in enumerate(rows):
         point = np.array([row["p"][0], 0.0, row["p"][1]])
-        if row["on_circle"] and row["circle"] is not None:
-            center = np.array([row["circle"][0], 0.0, row["circle"][1]])
-            normal = _unit(center - point)
-        else:
-            normal = _up_normal(row["tangent"])
+        normal = normals[i]
         tangent = _unit([row["tangent"][0], 0.0, row["tangent"][1]])
         lateral = _unit(np.cross(tangent, normal))
         if lateral[1] < 0:
@@ -117,7 +165,8 @@ def build_channel(guide, marble_radius=MARBLE_RADIUS):
             floor - lateral * hw - normal * FLOOR_THICK,
             floor + lateral * hw - normal * FLOOR_THICK,
         ]
-        base = len(verts)
+        profile_at.append(len(verts))
+        base = profile_at[-1]
         for vertex in profile:
             verts.append([float(v) for v in vertex])
         probes["floor"].append([float(v) for v in floor])
@@ -126,17 +175,24 @@ def build_channel(guide, marble_radius=MARBLE_RADIUS):
         if outer_h > 0.012:
             probes["wall"].append([float(v) for v in (floor + lateral * hw + normal * outer_h * 0.55)])
         if i:
-            prev = base - 6
+            prev = profile_at[-2]
+            prev_station = stations[-1]
             for a, b in ((0, 1), (4, 5), (0, 4), (1, 5), (0, 2), (1, 3)):
-                # Wall tops only connect when both stations still have a wall.
-                if a in (2, 3) or b in (2, 3):
-                    if inner_h <= 0.012 and a in (0, 2) and b in (0, 2):
-                        continue
-                faces.append([prev + a, prev + b, base + b, base + a])
+                # A wall that has already tapered off must not leave a
+                # zero-area quad coplanar with the floor. Those flicker.
+                if (a, b) == (0, 2) and (inner_h < 0.02 or prev_station["inner_h"] < 0.02):
+                    continue
+                if (a, b) == (1, 3) and (outer_h < 0.02 or prev_station["outer_h"] < 0.02):
+                    continue
+                quad = [prev + a, prev + b, base + b, base + a]
+                if _quad_area(verts, quad) < 1e-6 or _bowtie(verts, quad):
+                    continue
+                faces.append(quad)
             step = float(np.linalg.norm(point - np.array([rows[i - 1]["p"][0], 0.0, rows[i - 1]["p"][1]])))
             distance += step
             if distance >= next_bracket and open_scale > 0.4:
-                _bracket(floor, normal, lateral, verts, faces, probes["bracket"])
+                # Outer rim is past the marble (half-width 0.195, radius 0.15), then the wall.
+                _bracket(floor + lateral * HALF_WIDTH, normal, lateral, verts, bracket_faces, probes["bracket"])
                 next_bracket = distance + BRACKET_EVERY
         stations.append(dict(
             center=[float(point[0]), 0.0, float(point[2])],
@@ -144,8 +200,11 @@ def build_channel(guide, marble_radius=MARBLE_RADIUS):
             normal=[float(normal[0]), float(normal[1]), float(normal[2])],
             bank=bank, wall_open=open_scale, inner_h=float(inner_h), outer_h=float(outer_h),
         ))
+    bracket_face_start = len(faces)
+    faces.extend(bracket_faces)
     return dict(
         verts=verts, faces=faces, probes=probes, stations=stations,
+        bracket_face_start=bracket_face_start,
         marble_radius_m=marble_radius, half_width_m=HALF_WIDTH,
         material="jewelbox_satin_brass",
         support_material="jewelbox_satin_brass_bracket",
@@ -155,6 +214,71 @@ def build_channel(guide, marble_radius=MARBLE_RADIUS):
         ],
         not_a_manufactured_replica=True,
     )
+
+
+def _point_tri_distance(point, a, b, c):
+    ab = b - a
+    ac = c - a
+    ap = point - a
+    d1 = float(np.dot(ab, ap))
+    d2 = float(np.dot(ac, ap))
+    if d1 <= 0.0 and d2 <= 0.0:
+        return float(np.linalg.norm(ap))
+    bp = point - b
+    d3 = float(np.dot(ab, bp))
+    d4 = float(np.dot(ac, bp))
+    if d3 >= 0.0 and d4 <= d3:
+        return float(np.linalg.norm(bp))
+    vc = d1 * d4 - d3 * d2
+    if vc <= 0.0 and d1 >= 0.0 and d3 <= 0.0:
+        v = d1 / (d1 - d3)
+        return float(np.linalg.norm(point - (a + v * ab)))
+    cp = point - c
+    d5 = float(np.dot(ab, cp))
+    d6 = float(np.dot(ac, cp))
+    if d6 >= 0.0 and d5 <= d6:
+        return float(np.linalg.norm(cp))
+    vb = d5 * d2 - d1 * d6
+    if vb <= 0.0 and d2 >= 0.0 and d6 <= 0.0:
+        w = d2 / (d2 - d6)
+        return float(np.linalg.norm(point - (a + w * ac)))
+    va = d3 * d6 - d5 * d4
+    if va <= 0.0 and (d4 - d3) >= 0.0 and (d5 - d6) >= 0.0:
+        w = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+        return float(np.linalg.norm(point - (b + w * (c - b))))
+    denom = 1.0 / (va + vb + vc)
+    v = vb * denom
+    w = vc * denom
+    return float(np.linalg.norm(point - (a + ab * v + ac * w)))
+
+
+def mesh_clearance(channel, radius=MARBLE_RADIUS):
+    """Distance from each station centre to the triangle mesh.
+
+    The roll touches the floor at ``radius``. A smaller distance means a
+    triangle cuts through the marble (a flipped floor or a bowtie), which is
+    not the intended contact.
+    """
+    verts = np.asarray(channel["verts"], float)
+    tris = []
+    for face in channel["faces"]:
+        if len(face) == 4:
+            tris.append((face[0], face[1], face[2]))
+            tris.append((face[0], face[2], face[3]))
+        elif len(face) >= 3:
+            tris.append((face[0], face[1], face[2]))
+    gaps = []
+    bowties = 0
+    for face in channel["faces"]:
+        if len(face) != 4:
+            continue
+        if _bowtie(channel["verts"], face):
+            bowties += 1
+    for station in channel["stations"]:
+        centre = np.asarray(station["center"], float)
+        best = min(_point_tri_distance(centre, verts[i], verts[j], verts[k]) for i, j, k in tris)
+        gaps.append(best)
+    return dict(min_m=float(min(gaps)), median_m=float(np.median(gaps)), bowties=bowties)
 
 
 def _bracket(floor, normal, lateral, verts, faces, probes):
