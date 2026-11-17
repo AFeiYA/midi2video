@@ -79,15 +79,50 @@ python3 -m hscroll_descent.rail --dt 1.22449 \
 
 ### Mechanisms this follows
 
+- US5007876A, banked hairpin marble race toy: a U-turn reverses the marble and the track is banked through that turn. Here the wall toward the back of the stage is taller through the hairpin. This is not that toy.
+- US4874342A, jump chute marble race toy: a downhill speed run ends in an upturned lip and the marble leaves on a free trajectory. The lip in this plan is that idea. This is not that toy.
 - OpenStax, *University Physics Volume 1*, section 11.1, [Rolling Motion](https://openstax.org/books/university-physics-volume-1/pages/11-1-rolling-motion): rolling energy is translation plus rotation, and static friction does no work because the contact point is instantaneously at rest. Kinetic friction while slipping does negative work.
-- Pinball habitrails are bent-wire guides. The ball rolls and gravity supplies the acceleration. Exits that flare and drop keep speed; a ring or stopper throws it away. [Flipcommons habitrails](https://flipcommons.org/gameplay-features/habitrails), [Pinside on return speed](https://pinside.com/pinball/forum/topic/what-rampshabitrails-return-the-ball-at-full-speed), [Visual Pinball wire rails](https://docs.visualpinball.org/creators-guide/editor/wire-rails/index.html). A vertical up-kicker is powered. This prototype does not include one.
-- [Pinball Makers design notes](https://pinballmakers.com/wiki/Design): gravity only pulls downward, so a rise has to be paid for by speed already on the ball or by a powered device. The lip here is the first of those.
+- Pinball habitrails are passive wire guides. A vertical up-kicker is powered and is not used. [Flipcommons](https://flipcommons.org/gameplay-features/habitrails), [Pinside on return speed](https://pinside.com/pinball/forum/topic/what-rampshabitrails-return-the-ball-at-full-speed).
 
-The references describe real guides. They are not a claim that this curve copies a particular playfield.
+## Renderable guide inside the 9 second excerpt
 
-## Assumptions that limit a render
+Hit 9 to hit 10 (1.22449 s) is the guide. The marble already has velocity. The fall increases speed. The channel turns left, dips, and climbs a short lip inside the rolling budget. The tangent jump lands on the next MIDI onset. Later notes keep their onset times and drift with that exit instead of folding back across the groove.
 
-- Free strikes are point-mass frictionless impacts. Spin is modeled only on the guide.
-- The groove is captive and planar (the marble's XZ plane). A 3D bank into the wall is not modeled.
-- Plate clearance is a capsule proxy.
-- No Blender scene, no mesh, no video.
+`scene.py` builds the mesh only when `guide_rail` is present. The centerline is the marble path. Satin brass matches the hscroll divider `(0.62, 0.50, 0.30)` for the brackets and a brighter brass `(0.78, 0.62, 0.34)` for the channel.
+
+```bash
+cd tools/video/marble_music
+python3 -m hscroll_descent.integrate \
+  hscroll_descent/examples/jingle_remix_0_9_melody.hits.json \
+  -o hscroll_descent/examples/guided_excerpt_plan.json \
+  --seed 2 --launch-index 9
+python3 -m hscroll_descent.diagram \
+  hscroll_descent/examples/guided_excerpt_plan.json \
+  hscroll_descent/examples/guided_excerpt_diagram.svg
+python3 -m hscroll_descent.validate \
+  hscroll_descent/examples/guided_excerpt_plan.json \
+  -o hscroll_descent/examples/guided_excerpt_validation.json
+```
+
+Parent machine, low-resolution preview only. This VM does not run it:
+
+```bash
+blender -b --python tools/video/marble_music/scene.py -- \
+  --plan tools/video/marble_music/hscroll_descent/examples/guided_excerpt_plan.json \
+  --out /tmp/marble-guide-frames --res 960x540 --samples 4 --look v5
+```
+
+Checked on the guided plan:
+
+- On the guide, distance to the inner floor is 0.150 m, the marble radius. That is the contact.
+- Wall samples stay at 0.195 m. Bracket samples stay at 0.159 m.
+- After the lip, the nearest guide sample is 0.151 m. That is a 1 mm graze, not a comfortable margin.
+- Striker probes, stride 8: five glockenspiel approaches from 0.105 m to 0.136 m. Strict 0.97 R keep-out is not passed. The rail-free capsule plan misses the same way. A full triangle mesh was not run.
+- `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid`, Blender, `/workspace/om_pkg`, and the `.blend`/`.glb` caches are not here. Do not treat this remix excerpt as a certificate for that 64-instrument file.
+
+## Limits
+
+- Free strikes are point-mass frictionless impacts. Spin is modeled on the guide and then coasts. It does not push the center of mass.
+- The groove is planar in XZ. The bank is a taller back wall, not a 3D lean into the wall.
+- Plate clearance for the free hops is a capsule proxy.
+- `flute` v7/v8 and `frames_v5` are untouched.

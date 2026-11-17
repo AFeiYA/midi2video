@@ -86,6 +86,23 @@ def write_descent_svg(plan, path):
             f'font-family="ui-sans-serif,sans-serif" font-size="10">{label}</text>'
         )
     summary = plan["validation"]
+    if plan.get("guide_rail"):
+        rail = plan["guide_rail"]
+        pts = " ".join(
+            f"{X(s['center'][0]):.1f},{Y(s['center'][2]):.1f}" for s in rail["stations"]
+        )
+        parts.append(f'<polyline fill="none" stroke="#e07a8d" stroke-width="7" stroke-linecap="round" points="{pts}"/>')
+        for station in rail["stations"][::14]:
+            parts.append(
+                f'<line x1="{X(station["center"][0]):.1f}" y1="{Y(station["center"][2]):.1f}" '
+                f'x2="{X(station["center"][0]):.1f}" y2="{Y(station["center"][2]) + 18:.1f}" '
+                f'stroke="#c4a574" stroke-width="2"/>'
+            )
+        parts.append(
+            '<text x="50" y="148" fill="#e07a8d" font-family="ui-sans-serif,sans-serif" font-size="12">'
+            'Pink band: passive guide centerline (banked channel + jump lip). Brackets are the ticks. '
+            'The marble rides this curve; it is not a separate decoration.</text>'
+        )
     notes = [
         f"scope: {summary['scope']}",
         "check: continuous capsule proxy. Full triangle mesh: not run. Probe keep-out/pairs: not run.",

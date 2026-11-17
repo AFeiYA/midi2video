@@ -284,10 +284,19 @@ nt=mm.node_tree; vol=nt.nodes.new('ShaderNodeVolumeAbsorption'); vol.inputs['Col
 nt.links.new(vol.outputs[0],nt.nodes['Material Output'].inputs['Volume'])
 mb.data.materials.append(mm)
 prev=None; ang=0.0; angx=0.3; MY=P.get('marble_y') or [0.0]*len(P['marble'])   # ending.py: marble_y = bounce toward the camera
+SPINS=P.get('marble_spin')
 for f,(x,z) in enumerate(P['marble']):
-    if prev is not None: ang+= -(x-prev)/R; angx+= -(MY[f]-MY[f-1])/R
-    mb.location=(x,MY[f],z); mb.rotation_euler=(angx,ang,0)
-    mb.keyframe_insert('location',frame=f); mb.keyframe_insert('rotation_euler',frame=f); prev=x
+    if SPINS is None:
+        if prev is not None: ang+= -(x-prev)/R; angx+= -(MY[f]-MY[f-1])/R
+        mb.rotation_euler=(angx,ang,0)
+    else:
+        mb.rotation_euler=(0.0, SPINS[f], 0.0)   # guide plan: rolling angle about Y, coasting after the lip
+    mb.location=(x,MY[f],z); mb.keyframe_insert('location',frame=f); mb.keyframe_insert('rotation_euler',frame=f); prev=x
+if P.get('guide_rail'):   # optional passive channel; absent on portrait, v1, v2, and landscape plans
+    _here_=os.path.dirname(os.path.abspath(__file__))
+    if _here_ not in sys.path: sys.path.insert(0,_here_)
+    import hscroll_descent.rail_scene as _rail_scene
+    _rail_scene.build(P, mat)
 if P.get('ending'):   # ending.py: gold FINISH pad (END marker) the marble lands on
     _here_=os.path.dirname(os.path.abspath(__file__))
     if _here_ not in sys.path: sys.path.insert(0,_here_)

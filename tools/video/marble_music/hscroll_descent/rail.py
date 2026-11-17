@@ -17,7 +17,9 @@ Two different forces:
 A spring kicker is not implemented. Raising the exit speed above this budget
 is reported as energy injection, not as a passive rail.
 
-The scene builder does not read this file. Nothing here places a mesh.
+The scene builder reads ``guide_rail`` and sweeps this centerline into a
+satin-brass channel with a taller outer wall through the turn and an open
+lip. Portrait, v1, v2, and landscape plans do not carry that block.
 """
 
 import argparse
@@ -29,7 +31,7 @@ import numpy as np
 G = 9.81
 K_SPIN = 2.0 / 5.0          # solid sphere, I / (m R^2)
 MARBLE_RADIUS = 0.15
-MU_KINETIC = 0.40           # slipping capture only
+MU_KINETIC = 0.85           # slipping capture only; higher grip shortens the slide, it does not add energy
 MU_STATIC_NOTE = 0.45       # reported against the required rolling friction; not a motor
 
 
@@ -227,7 +229,7 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
                     message="This rail does not start a resting ball. It needs the incoming velocity.")
     best = None
     refusals = []
-    for t_fall in np.linspace(0.12, 0.34, 8):
+    for t_fall in np.linspace(0.28, 0.62, 8):
         p_cap, v_cap = _flight(p0, v0, float(t_fall), g)
         if float(v_cap[1]) > -0.15 or float(v_cap[0]) < 0.2:
             continue
@@ -237,9 +239,9 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
             continue
         slide_vec = slide["speed_out"] * np.array(slide["tangent"])
         p_rail = p_cap + np.array(slide["tangent"]) * slide["distance_m"]
-        for radius in (0.34, 0.46, 0.58, 0.72):
+        for radius in (0.32, 0.42, 0.55):
             center = p_rail - radius * np.array([-math.sin(heading), math.cos(heading)])
-            for extra in (0.22, 0.40, 0.62, 0.85):
+            for extra in (0.12, 0.22, 0.38, 0.55):
                 phi1 = -math.pi - extra
                 if phi1 >= heading:
                     continue
@@ -248,7 +250,7 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
                     refusals.append(fail)
                     continue
                 t_left = dt - t_fall - slide["duration_s"] - rolled["duration_s"]
-                if t_left < 0.10:
+                if t_left < 0.20:
                     continue
                 v_exit = rolled["speed_exit"] * np.array(rolled["tangent_exit"])
                 if float(v_exit[0]) > -0.15:
@@ -256,13 +258,14 @@ def plan_guided_hop(v0, dt, g=G, omega0=0.0, p0=(0.0, 0.0), mu=MU_KINETIC):
                 p_land, v_land = _flight(rolled["p_exit"], v_exit, t_left, g)
                 if float(v_land[1]) > -0.2:
                     continue
-                if float(p_land[1]) > float(p0[1]) - 0.25:
+                if float(p_land[1]) > float(p0[1]) - 0.15:
                     continue
+                below = rolled["z_valley"] - float(p_land[1])
                 lip = rolled["z_exit"] - rolled["z_valley"]
                 if lip < 0.05:
                     continue
                 # Prefer a clearly visible fall, reversal, and lip.
-                score = abs(t_fall - 0.28) + 0.15 * abs(lip - 0.22) + 0.05 * rolled["duration_s"]
+                score = abs(t_left - 0.48) + 0.5 * max(0.0, 0.6 - below)
                 if best is None or score < best[0]:
                     best = (score, t_fall, slide, rolled, p_cap, v_cap, p_rail, v_exit, p_land, v_land, t_left, radius, heading, center)
     if best is None:

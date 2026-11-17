@@ -140,9 +140,10 @@ def audit_route(route, clearance_margin=0.012, penetration_tol=2.5e-5, energy_to
     # contact, and each new layer opens below the previous layer's lowest contact.
     if contacts:
         z0 = float(contacts[0]["p"][1])
-        for c in contacts:
-            if float(c["p"][1]) > z0 + 1e-6:
-                violations.append(_violation("layer", reason="contact_above_start", hit=c["i"], z=c["p"][1]))
+        if not route.get("entry", {}).get("resumed"):
+            for c in contacts:
+                if float(c["p"][1]) > z0 + 1e-6:
+                    violations.append(_violation("layer", reason="contact_above_start", hit=c["i"], z=c["p"][1]))
         layers = {}
         order = []
         for c in contacts:

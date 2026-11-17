@@ -133,6 +133,20 @@ class RailTransition(unittest.TestCase):
         self.assertEqual(rail["force"], "constraint_normal_and_static_friction")
         self.assertEqual(slip["force"], "kinetic_friction_over_a_finite_slip")
 
+    def test_channel_is_the_path_and_not_a_flat_ribbon(self):
+        from hscroll_descent.rail_geometry import build_channel
+        guide = self.result
+        channel = build_channel(guide)
+        for station in channel["stations"]:
+            dx = station["floor"][0] - station["center"][0]
+            dz = station["floor"][2] - station["center"][2]
+            self.assertAlmostEqual((dx * dx + dz * dz) ** 0.5, 0.15, places=2)
+        self.assertGreater(max(s["outer_h"] for s in channel["stations"]),
+                           max(s["inner_h"] for s in channel["stations"]) + 0.04)
+        self.assertLess(channel["stations"][-1]["outer_h"], 0.03)
+        zs = [s["center"][2] for s in channel["stations"]]
+        self.assertGreater(zs[-1], min(zs) + 0.02)
+
     def test_injected_exit_speed_is_not_passive(self):
         tampered = copy.deepcopy(self.result)
         rail = tampered["phases"][2]

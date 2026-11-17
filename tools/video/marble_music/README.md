@@ -387,6 +387,6 @@ python3 -m unittest hscroll_descent.test_descent -v
 
 What the excerpt validates: exact MIDI times, continuous capsule-proxy clearance, frictionless approach/departure, and a passive energy budget (restitution at most 1), including a case that injects energy and must fail. It is the first 9 seconds of the checked-in six-instrument remix, not the whole song, and not a full triangle mesh or `check_keepout.py` / `check_pairs.py`. The parent's inst64 MIDI at `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid` is not on this machine. `landscape/` anchors for a 10-second window are a different template.
 
-A separate, unrendered guide prototype rides one long-note gap (1.22449 s): the marble already has speed, the fall speeds it up, a captive groove turns it left through a valley and up a lip, and the tangent exit flies to the next strike. No spring. See `hscroll_descent/README.md`.
+One long note in the 9 second excerpt is a renderable passive guide: the fall speeds the marble up, a banked channel turns it left, and the tangent lip jumps to the next onset. `scene.py` builds that mesh only when the plan contains `guide_rail`. Commands, the probe report, and the limits are in `hscroll_descent/README.md`.
 
 Details, rail references, and the limits are in `tools/video/marble_music/hscroll_descent/README.md`.

@@ -122,7 +122,10 @@ def _kinematic(i, spec, state):
     prev_min = None if layer_id == 0 else min(float(state["pos"][j][1]) for j in range(i) if state["layer"][j] == layer_id - 1)
     layer_min = min(float(state["pos"][j][1]) for j in range(i + 1) if state["layer"][j] == layer_id)
     nxt = None if i == state["n"] - 1 else _next_mount(i, state["n"], state["layer"], state["index_in"], state["long_launch"], pattern)
-    prefer = 1.0 if state["index_in"][i] % 2 == 0 else -1.0
+    if state.get("lock_direction"):
+        prefer = state.get("prefer0", 1.0)
+    else:
+        prefer = 1.0 if state["index_in"][i] % 2 == 0 else -1.0
     upcoming_long = i + 1 < state["n"] and state["long_launch"][i + 1]
     out = []
     reasons = state.setdefault("last_reject", {})
@@ -156,6 +159,9 @@ def _kinematic(i, spec, state):
         dz = float(p1[1] - pos[1])
         if float(p1[1]) > 1e-6:
             reject("above_start")
+            continue
+        if state.get("z_ceiling") is not None and float(p1[1]) > state["z_ceiling"] - 0.08:
+            reject("reenters_previous_layer")
             continue
         apex = flight_apex_z(pos[1], vout[1], dt, g)
         if apex > state["apex_cap"](layer_id, prev_min, float(pos[1])):
@@ -312,6 +318,16 @@ def _clear(i, cand, state):
         if gap < CLEARANCE_MARGIN:
             fails["poly_history"] = fails.get("poly_history", 0) + 1
             return False
+    for extra in state.get("extra_plates") or []:
+        if not _gap_ok(pos, cand["vout"], outgoing_dt, extra, g):
+            fails["guide"] = fails.get("guide", 0) + 1
+            return False
+        for flight in state["flights"]:
+            if flight.get("role") == "resume":
+                continue
+            if not _gap_ok(flight["p0"], flight["v"], flight["t1"] - flight["t0"], extra, g):
+                fails["guide"] = fails.get("guide", 0) + 1
+                return False
     own_gap = flight_plate_gap(pos, cand["vout"], outgoing_dt, gvec, plate, MARBLE_RADIUS)
     in_gap = flight_plate_gap(incoming["p0"], incoming["v"], incoming["t1"] - incoming["t0"], gvec, plate, MARBLE_RADIUS)
     if own_gap < -2e-5 or in_gap < -2e-5:
@@ -423,11 +439,12 @@ def _search(state):
             # Keep both directions near the front on intra-layer hops so a fold
             # is not trimmed away before clearance is known.
             if groups[0][0] not in ("drop", "departure"):
-                right = [cand for cand in ranked if cand["dx"] >= 0.0][:80]
-                left = [cand for cand in ranked if cand["dx"] < 0.0][:60]
+                sign = state.get("prefer0", 1.0) if state.get("lock_direction") else 1.0
+                primary = [cand for cand in ranked if cand["dx"] * sign >= 0.0][:90]
+                other = [cand for cand in ranked if cand["dx"] * sign < 0.0][:30]
                 seen = set()
                 mixed = []
-                for cand in right + left:
+                for cand in primary + other:
                     if id(cand) in seen:
                         continue
                     seen.add(id(cand))
@@ -513,8 +530,13 @@ def _undo(state):
 
 def plan_hits(hits, g=9.81, seed=4, fps=30, tilt_deg=60.0, long_note=0.60, max_drop=None,
               plate_half=0.15, patterns="", entry_vin=None, entry_pre=ENTRY_PRE, duration=None,
-              scope="excerpt"):
-    """Plan one marble. Returns a route dict with status 'ok' or 'impossible'."""
+              scope="excerpt", resume=None, extra_plates=None):
+    """Plan one marble. Returns a route dict with status 'ok' or 'impossible'.
+
+    ``resume`` continues after a guide. It is the arrival state at the first
+    hit: ``p``, ``v``, and optional ``z_ceiling`` (the previous layer must stay
+    above later contacts). There is no fresh drop from rest.
+    """
     if len(hits) < 1:
         raise ValueError("descent planner needs at least one hit")
     times = [float(h["time"]) for h in hits]
@@ -533,27 +555,54 @@ def plan_hits(hits, g=9.81, seed=4, fps=30, tilt_deg=60.0, long_note=0.60, max_d
     n_layers = layer[-1] + 1
     pattern_of = _as_patterns(patterns, n_layers, seed)
     layer_first = [layer.index(level) for level in range(n_layers)]
-    vin0 = np.array(ENTRY_VIN if entry_vin is None else entry_vin, dtype=float)
-    if vin0[1] >= -0.30:
-        raise ValueError("entry arrival must be falling (vin_z < -0.30) so the first plate is a floor")
-    release_p, release_v = release_from_arrival(np.zeros(2), vin0, entry_pre, g)
-    lead = dict(role="lead_in", t0=float(-entry_pre), t1=0.0,
-                p0=[float(release_p[0]), float(release_p[1])],
-                v=[float(release_v[0]), float(release_v[1])],
-                start_contact=None, end_contact=0)
-    # The lead-in is part of the flight list and must survive backtracking.
+    if resume is None:
+        vin0 = np.array(ENTRY_VIN if entry_vin is None else entry_vin, dtype=float)
+        if vin0[1] >= -0.30:
+            raise ValueError("entry arrival must be falling (vin_z < -0.30) so the first plate is a floor")
+        p0 = np.zeros(2)
+        release_p, release_v = release_from_arrival(p0, vin0, entry_pre, g)
+        lead = dict(role="lead_in", t0=float(-entry_pre), t1=0.0,
+                    p0=[float(release_p[0]), float(release_p[1])],
+                    v=[float(release_v[0]), float(release_v[1])],
+                    start_contact=None, end_contact=0)
+        z_ceiling = None
+        prefer0 = 1.0
+        lock_direction = False
+    else:
+        p0 = np.array(resume["p"], dtype=float)
+        vin0 = np.array(resume["v"], dtype=float)
+        if vin0[1] >= -0.05:
+            return dict(status="impossible", hit=0, time=times[0], blocker="resume_not_falling",
+                        energy_was_relaxed=False,
+                        message="The guide landing is not falling onto the next note. Exit speed was not increased.")
+        eps = 1e-3
+        accel = np.array([0.0, -g])
+        v_start = vin0 - accel * eps
+        p_start = p0 - v_start * eps - 0.5 * accel * eps * eps
+        lead = dict(role="resume", t0=float(times[0] - eps), t1=float(times[0]),
+                    p0=[float(p_start[0]), float(p_start[1])],
+                    v=[float(v_start[0]), float(v_start[1])],
+                    start_contact=None, end_contact=0)
+        z_ceiling = resume.get("z_ceiling")
+        entry_pre = 0.0
+        prefer0 = 1.0 if vin0[0] >= 0 else -1.0
+        lock_direction = True
     state = dict(
         g=g, n=n, times=times, seed=seed, tilt=float(tilt_deg), max_drop=max_drop,
         plate_half=float(plate_half), layer=layer, index_in=index_in, long_launch=long_launch,
         patterns=pattern_of, restitutions=np.linspace(0.08, 1.0, 24), layer_first=layer_first,
-        pos=[np.zeros(2)], vins=[vin0], mounts=["floor"], plates=[], contacts=[],
-        flights=[lead], lead=lead, backtracks=0, pool_sizes=[0] * n, tail=duration - times[-1],
+        pos=[p0.copy()], vins=[vin0.copy()], mounts=["floor" if vin0[1] < 0 else "ceil"],
+        plates=[], contacts=[], flights=[lead], lead=lead, backtracks=0, pool_sizes=[0] * n,
+        tail=duration - times[-1], z_ceiling=z_ceiling, extra_plates=extra_plates or [],
+        prefer0=prefer0, lock_direction=lock_direction,
     )
     state["incoming"] = lambda i: _incoming(state, i)
 
     def apex_cap(layer_id, prev_min, takeoff_z):
         # A passive lob may rise above its takeoff. It may not climb back into
         # a layer the marble has already left, and the opening lob stays bounded.
+        if layer_id == 0 and state.get("z_ceiling") is not None:
+            return state["z_ceiling"] - 0.10
         if layer_id == 0 or prev_min is None:
             return max(takeoff_z, 0.0) + 1.60
         return prev_min - 0.10
@@ -575,7 +624,8 @@ def plan_hits(hits, g=9.81, seed=4, fps=30, tilt_deg=60.0, long_note=0.60, max_d
         hits=hits_out, backtracks=int(state["backtracks"]),
         entry=dict(pre_s=float(entry_pre), release_p=lead["p0"], release_v=lead["v"],
                    arrival_v=[float(vin0[0]), float(vin0[1])],
-                   energy_j_per_kg=specific_energy(vin0, 0.0, g)),
+                   energy_j_per_kg=specific_energy(vin0, float(p0[1]), g),
+                   resumed=resume is not None),
     )
     report = audit_route(route)
     route["audit"] = report
@@ -638,7 +688,7 @@ def _frames(route):
 
 def scene_plan(route, source_name=""):
     """Scene-style plan plus the descent audit block. Layout stays ``hscroll``."""
-    frames = _frames(route)
+    frames = route.get("frame_override") or _frames(route)
     camera, rig = _camera(frames, route["fps"])
     keys = []
     for c in route["contacts"]:
@@ -705,6 +755,7 @@ def scene_plan(route, source_name=""):
             backtracks=route["backtracks"],
             per_flight_proxy_clearance_m=summary["per_flight_proxy_clearance_m"],
         ),
+        marble_spin=route.get("marble_spin_angle"),
     )
 
 
