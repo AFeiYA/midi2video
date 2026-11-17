@@ -10,11 +10,15 @@ ap=argparse.ArgumentParser(); ap.add_argument('--plan',default='plan.json'); ap.
 ap.add_argument('--start',type=int,default=0); ap.add_argument('--end',type=int,default=-1); ap.add_argument('--samples',type=int,default=24)
 ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default='',help='comma list of specific frames'); ap.add_argument('--save-blend',default='')
 ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays)')
+ap.add_argument('--aspect',default='auto',help='auto (= plan["aspect"], 9:16 if absent) | 9:16 | 16:9; 16:9 + layout hscroll = horizontal long-scroll rig (plan["cam_rig"]), long family-tinted wall')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc=bpy.context.scene
+ASPECT=P.get('aspect','9:16') if a.aspect=='auto' else a.aspect
+HS=(P.get('layout')=='hscroll')
+if ASPECT=='16:9' and a.res=='1080x1920': a.res='1920x1080'
 W,Hh=map(int,a.res.split('x'))
 sc.render.resolution_x=W; sc.render.resolution_y=Hh; sc.render.fps=fps
 sc.frame_start=0; sc.frame_end=len(P['marble'])-1
@@ -39,6 +43,7 @@ cy.samples=a.samples; cy.use_adaptive_sampling=True; cy.adaptive_threshold=0.03
 cy.use_denoising=True; cy.denoiser='OPENIMAGEDENOISE'; cy.max_bounces=8; cy.diffuse_bounces=2; cy.glossy_bounces=3; cy.transmission_bounces=8; cy.caustics_reflective=False; cy.caustics_refractive=False
 cy.blur_glossy=1.0
 sc.render.use_motion_blur=True; sc.render.motion_blur_shutter=0.4
+if HS: sc.render.motion_blur_shutter=0.25   # hscroll: the whole frame pans, a long shutter smears every striker
 sc.view_settings.view_transform='AgX'; sc.view_settings.look='AgX - Medium High Contrast'
 sc.render.image_settings.file_format='PNG'; sc.render.image_settings.color_depth='8'
 sc.render.threads_mode='AUTO'
@@ -115,12 +120,31 @@ def key_material(i,kind,note=60):
     return m,b
 # ---------- wall
 zs=[k['z'] for k in P['keys']]; zmin=min(zs)-12; zmax=max(zs)+8
-bpy.ops.mesh.primitive_plane_add(size=1,location=(0,KD/2+0.12,(zmin+zmax)/2),rotation=(math.pi/2,0,0))
-wall=bpy.context.object; wall.scale=(14,(zmax-zmin),1)
-wm,wb=mat('wall',(0.36,0.36,0.37),rough=0.8)
-nt=wm.node_tree; nz=nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value=60; bm=nt.nodes.new('ShaderNodeBump'); bm.inputs['Strength'].default_value=0.05
-tc=nt.nodes.new('ShaderNodeTexCoord'); nt.links.new(tc.outputs['Object'],nz.inputs[0]); nt.links.new(nz.outputs['Fac'],bm.inputs['Height']); nt.links.new(bm.outputs['Normal'],wb.inputs['Normal'])
-wall.data.materials.append(wm)
+def wall_mat(name,col):
+    wm,wb=mat(name,col,rough=0.8)
+    nt=wm.node_tree; nz=nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value=60; bm=nt.nodes.new('ShaderNodeBump'); bm.inputs['Strength'].default_value=0.05
+    tc=nt.nodes.new('ShaderNodeTexCoord'); nt.links.new(tc.outputs['Object'],nz.inputs[0]); nt.links.new(nz.outputs['Fac'],bm.inputs['Height']); nt.links.new(bm.outputs['Normal'],wb.inputs['Normal'])
+    return wm
+if not HS:
+    bpy.ops.mesh.primitive_plane_add(size=1,location=(0,KD/2+0.12,(zmin+zmax)/2),rotation=(math.pi/2,0,0))
+    wall=bpy.context.object; wall.scale=(14,(zmax-zmin),1)
+    wall.data.materials.append(wall_mat('wall',(0.36,0.36,0.37)))
+else:
+    # hscroll: one long wall, one segment per family (subtle tint of the v5 grey) + a slim satin-brass divider at each family change
+    FAM_TINT={'F1':(0.385,0.370,0.345),'F2':(0.385,0.355,0.330),'F3':(0.380,0.345,0.360),'F4':(0.390,0.365,0.310),
+              'F5':(0.335,0.370,0.345),'F6':(0.325,0.350,0.395),'finale':(0.360,0.340,0.395)}
+    fams=P.get('families') or [dict(family='F?',x0=P['keys'][0]['x'],x1=P['keys'][-1]['x'])]
+    cams=[c[0] for c in P['camera']]; xlo=min(min(cams),fams[0]['x0'])-12; xhi=max(max(cams),fams[-1]['x1'])+12
+    bounds=[xlo]+[(fams[q]['x1']+fams[q+1]['x0'])/2 for q in range(len(fams)-1)]+[xhi]
+    divm,_=mat('divider',(0.62,0.50,0.30),rough=0.35,metal=1.0)
+    for q,fm in enumerate(fams):
+        x0_,x1_=bounds[q],bounds[q+1]
+        bpy.ops.mesh.primitive_plane_add(size=1,location=((x0_+x1_)/2,KD/2+0.12,(zmin+zmax)/2),rotation=(math.pi/2,0,0))
+        wo=bpy.context.object; wo.name=f"wall_{fm['family']}_{q}"; wo.scale=(x1_-x0_,(zmax-zmin),1)
+        wo.data.materials.append(wall_mat(f"wall_{q}",FAM_TINT.get(fm['family'],(0.36,0.36,0.37))))
+        if q>0:
+            bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.10,(zmin+zmax)/2)); dv=bpy.context.object; dv.name=f'divider_{q}'
+            dv.scale=(0.05,0.05,(zmax-zmin)); dv.data.materials.append(divm)
 # ---------- keys + pins
 pinm,_=mat('pin',(0.7,0.7,0.72),rough=0.25,metal=1.0)
 def frame_of(t): return t*fps
@@ -182,7 +206,7 @@ for _ki,k in enumerate(P['keys']):
             fh_=int(round(fh)); fr_=[f for f in range(max(0,fh_-150),min(len(P['camera'])-1,fh_+150)+1,2) if abs(P['camera'][f][1]-k['z'])<4.0] or [min(max(fh_,0),len(P['camera'])-1)]   # never-hit keys (showcase t=-100) -> clamp
             prev=None
             for f in fr_:
-                lc,ph,scl=ALIB.aligned_local(k,P['camera'][f],ap_)
+                lc,ph,scl=ALIB.aligned_local(k,P['camera'][f],ap_,tuple((P.get('cam_rig') or {}).get('off',ALIB.CAM_OFF)))
                 if prev is not None: ph=prev+((ph-prev+math.pi)%(2*math.pi)-math.pi)   # unwrap: atan2 jumps +-pi -> a full spin + huge motion blur
                 prev=ph
                 ao.location=lc; ao.rotation_euler=(0,ph,0); ao.scale=scl
@@ -252,6 +276,8 @@ cam=bpy.data.objects.new('cam',cd); sc.collection.objects.link(cam); sc.camera=c
 off=Vector((0.7,-7.2,1.4)) if P.get('layout')=='zigzag' else Vector((1.3,-6.6,1.9))
 aim=Vector((0,0,0))
 if V2: off=Vector((0.5,-5.3,1.0)); aim=Vector((0,0,-0.9))
+if HS and P.get('cam_rig'):   # 16:9 horizontal long-scroll rig: rig x leads the marble (planner), camera square-on to the wall
+    CR=P['cam_rig']; off=Vector(CR['off']); aim=Vector(CR['aim']); cd.lens=CR.get('lens',40); cd.sensor_fit=CR.get('sensor_fit','VERTICAL'); cd.sensor_height=CR.get('sensor',36)
 cam.location=off
 cam.rotation_euler=(aim-off).to_track_quat('-Z','Y').to_euler()
 cd.dof.focus_distance=(aim-off).length

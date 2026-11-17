@@ -19,6 +19,17 @@ Font: Noto Sans CJK SC, SIL Open Font License 1.1 - bundled glyph subset fonts/N
 regenerate with fonts/make_subset.sh after adding names), else /usr/share/fonts/opentype/noto/NotoSansCJK-*.ttc index 2 = SC.
 All icons are drawn procedurally here with PIL primitives - no third-party images."""
 import json, os, re, sys, argparse, math, colorsys
+def _hscroll_delegate():                         # 16:9 horizontal long-scroll plans -> titles_hscroll.py (lower third + family progress bar)
+    lay = None
+    if '--layout' in sys.argv: lay = sys.argv[sys.argv.index('--layout')+1]
+    elif len(sys.argv) > 1 and sys.argv[1].endswith('.json') and os.path.isfile(sys.argv[1]):
+        try: lay = json.load(open(sys.argv[1])).get('layout')
+        except Exception: lay = None
+    if lay == 'hscroll':
+        import runpy; sys.argv[0] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'titles_hscroll.py')
+        runpy.run_path(sys.argv[0], run_name='__main__'); sys.exit(0)
+    if '--layout' in sys.argv: i = sys.argv.index('--layout'); del sys.argv[i:i+2]
+_hscroll_delegate()
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ap = argparse.ArgumentParser(); ap.add_argument('plan'); ap.add_argument('out', nargs='?', default='overlay')
 ap.add_argument('--start', type=int, default=0); ap.add_argument('--end', type=int, default=-1); ap.add_argument('--res', default='1080x1920')
