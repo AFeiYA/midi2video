@@ -19,6 +19,7 @@ ap.add_argument('--cam-drop', type=float, default=0.35); ap.add_argument('--cam-
 ap.add_argument('--rest-y', type=float, default=-0.52, help='marble rest y on the pad (toward the camera)')
 ap.add_argument('--subscribe', action='store_true')
 ap.add_argument('--line1', default='SUBSCRIBE', help='subscribe text, line 1 (big)'); ap.add_argument('--line2', default='@LucaMarbleMusic', help="line 2 (smaller); '' = one line only (rise style)")
+ap.add_argument('--line2-width', type=float, default=0.80, help='second line width as a fraction of the frame')
 ap.add_argument('--font', default='', help='TTF/OTF for the 3D text (default Poppins ExtraBold, fallback DejaVu Sans Bold)')
 ap.add_argument('--text-color', default='', help="text base colour as hex, e.g. '#9E610F' (default: v4 warm gold)")
 ap.add_argument('--subscribe-style', choices=['rise', 'fall'], default='rise', help='rise (v2): settle + hold on the pad, then the marble lifts and bursts '
@@ -65,7 +66,7 @@ if not FALL:
         f_m0 = f_hold_end - int(round(a.hold * fps)) + int(round(a.sub_wait * fps)); f_flash = f_m0 + int(round(a.sub_rise * fps))
         N = f_flash + 12 + int(round(a.sub_hold * fps)) + 1
         E['subscribe'] = {'style': 'rise', 'frame_morph': f_m0, 'frame_flash': f_flash, 'line1': a.line1, 'line2': a.line2,
-                          'screen': [0.5, 0.255], 'wall_gap': 0.3 if a.look == 'v2' else 0.15, 'width_frac': 0.80}
+                          'screen': [0.5, 0.255], 'wall_gap': 0.3 if a.look == 'v2' else 0.15, 'width_frac': a.line2_width}
     for f in range(fc + 1, N):
         x, y, z = path((f - fc) / fps); M.append([x, z]); Y.append(y)
     for f in range(f0 + 1, N): C.append(cam_pad(f))
@@ -103,7 +104,7 @@ else:
             tt = t - Tm; w = 2 * math.pi * 3.2; p = [Pc[0], Pc[1], Pc[2] + (v1[2] / w) * math.exp(-7 * tt) * math.sin(w * tt)]
         tpath[f] = p
     E['subscribe'] = {'style': 'fall', 'frame_release': f_lb, 'frame_burst': f_b, 'frame_land': f_land, 'line1': a.line1, 'line2': a.line2,
-                      'center': Pc, 'D': D, 'full_w': 2 * D * th, 'width_frac': 0.80, 'path': {str(k): v for k, v in tpath.items()}}
+                      'center': Pc, 'D': D, 'full_w': 2 * D * th, 'width_frac': a.line2_width, 'path': {str(k): v for k, v in tpath.items()}}
     E['frame_release'] = f_lb; hops = hops[:1]; f_stop = f_hold_end = None
 P['marble'] = M; P['camera'] = C; P['marble_y'] = Y; P['duration'] = round(N / fps, 3); P['camera_hold_from'] = f0
 E.update({'frame_last_hit': f0, 'frame_contact': fc, 'frames_hop': [int(round(t * fps)) for t in t_c[1:len(hops) + 1]], 'frame_stop': f_stop,

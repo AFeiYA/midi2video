@@ -271,6 +271,47 @@ tools/video/marble_music/run_zigzag.sh \
 - 流程：`extract_hits.py --tutti-min 3`（齐奏终章用一颗弹珠，同时起音合并成一次击打）→ `fix_clearance.py` → `hold_camera_end.py`（最后一击后相机缓停，结尾不会跟着弹珠拍空墙）→ `scene.py --look v5` → `titles.py` → `composite.sh`
 - `titles.py` 支持 `01/09.` 编号和 hook50 的乐器（13 管钟+响板、14 八音盒、15 古筝、16 8-bit 方波、17 风笛、18 齐奏终章），字体子集已用 `fonts/make_subset.sh` 重建。
 
+### 可选片头与片尾
+
+`run_zigzag.sh` 和 `run_marble.sh` 支持独立启用片头和片尾。片头约 1.6 秒，文字收成弹珠并接入 MIDI 演奏。片尾从最后一次击打接入，弹珠落上终点台并变成两行文字。打开片尾时，终点台和演奏段使用同一份场景计划，经过终点台时自然入画。
+
+| 开关 | 输出顺序 |
+|---|---|
+| `--no-intro --no-outro` | MIDI |
+| `--intro --no-outro` | 片头 → MIDI |
+| `--no-intro --outro` | MIDI → 片尾 |
+| `--intro --outro` | 片头 → MIDI → 片尾 |
+
+头尾默认关闭。使用这些开关时输出为指定目录下的 `marble_sequence.mp4`。想同时保留多种组合时，为各组合指定不同的输出目录。原有不带开关的命令继续使用原来的文件名。
+
+```bash
+tools/video/marble_music/run_zigzag.sh \
+  projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid \
+  work/jingle_bookended 0 176.3 30 12 1080x1920 v5 GPU \
+  --intro --outro \
+  --intro-title "Jingle Bells" \
+  --intro-subtitle "One Marble. Six Instruments." \
+  --outro-title "Merry Christmas!" \
+  --outro-subtitle "@LucaMarbleMusic" \
+  --lyrics-midi projects/jingle-bells-marble-music/source/jingle.mid
+```
+
+`--lyrics-midi` 可选，填入含歌词事件且与演奏时序一致的 MIDI。歌词按片头的实际帧数和选定的 MIDI 起始时间对齐，只显示在演奏时段。可通过 `--title-font` 和 `--lyrics-font` 指定 TTF 或 OTF 文件。
+
+#### 可开关的外挂歌词
+
+生成视频时省略 `--lyrics-midi`，再用 `midi_to_ytt.py` 导出独立字幕。观众可以在播放器里按需开启。使用含歌词事件的原始 MIDI（本例为 `jingle.mid`），并确保它和演奏版本的 MIDI 时间轴一致。
+
+```bash
+python3 tools/video/marble_music/midi_to_ytt.py \
+  projects/jingle-bells-marble-music/source/jingle.mid \
+  "Jingle Bells.en.ytt" --offset 1.6
+```
+
+- `.ytt` 是 YouTube 样式字幕，整句可见，当前词高亮。可按 [YTSubConverter 上传说明](https://github.com/arcusmaximus/YTSubConverter#uploading-to-the-video) 在 YouTube Studio 试传，实际样式以发布后的播放器为准。
+- 把输出扩展名改为 `.srt` 或 `.vtt` 即可得到逐句的普通字幕，作为兼容备选。
+- `--offset` 是片头时长减去从 MIDI 开始裁剪的时间。无片头、从 MIDI 零点开始时省略即可。剪辑版可用 `--start` / `--end` 限定成片上允许显示字幕的时间段。
+
 ### 结尾落点（ending.py，可选，v2）
 
 - `ending.py plan.json plan_end.json`：最后一击后弹珠划弧落到金色终点台（黑漆台身 + 棋盘格终点旗台面 + 金边 + 正面金星；台子离墙，由黄铜悬臂支架托住：上下两块带螺栓的墙板 + 台下横臂 + 两根斜撑），撞台时台子下沉、金光一闪、星星保持点亮；随后弹珠朝镜头方向在台面上小跳两下、滚到台面前部停住，再静止 `--hold` 秒（默认 0.5 s）。最后一帧就是交接帧，可导出给图生视频工具。相机缓降，让终点台落在画面中下部。

@@ -49,7 +49,7 @@ def place(y, t0, db, pan=0.0):
     i = int(round(t0 * sr)); y = y[:max(0, N - i)] * 10 ** (db / 20); L, R = np.cos((pan + 1) * np.pi / 4), np.sin((pan + 1) * np.pi / 4)
     S[i:i + len(y), 0] += y * L * 1.414; S[i:i + len(y), 1] += y * R * 1.414
 place(hit(sr), C['contact'], a.gain_db, 0.0)
-if a.tick_db > -60 and C.get('bounce2', 99) < C['duration'] - 0.1: place(hit(sr, 1.12, 0.35, 0.8), C['bounce2'], a.tick_db, -0.05)
+if a.tick_db > -60 and 'bounce2' in C and C['bounce2'] < C['duration'] - 0.1: place(hit(sr, 1.12, 0.35, 0.8), C['bounce2'], a.tick_db, -0.05)
 for i, (t_, gl) in enumerate(C.get('hops', [])):
     if t_ < C['duration'] - 0.05: place(hit(sr, 1.05 + 0.05 * i, 0.4 / (i + 1), 0.9), t_, a.gain_db + 20 * np.log10(gl), 0.0)
 def whoosh(dur):

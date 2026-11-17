@@ -12,6 +12,10 @@ ap.add_argument('--res',default='1080x1920'); ap.add_argument('--frames',default
 ap.add_argument('--look',default='v5',help='v1 = approved 15s sample look, v2 = studio reflectors + edge flash + piano black/ivory + closer camera, v3 = v2 + instrument asset library strikers, v4 = v3 + readability pass (asset overrides in <instrument>/v4/, world-vertical resonators, string flash), v5 = v4 + recognisable instrument silhouettes (<instrument>/v5/; pair with titles.py overlays)')
 ap.add_argument('--aspect',default='auto',help='auto (= plan["aspect"], 9:16 if absent) | 9:16 | 16:9; 16:9 + layout hscroll = horizontal long-scroll rig (plan["cam_rig"]), long family-tinted wall')
 ap.add_argument('--device',default=os.environ.get('MARBLE_DEVICE','AUTO'),help='AUTO|CPU|GPU|METAL|CUDA|OPTIX|HIP (GPU is an alias for AUTO)')
+ap.add_argument('--intro', action='store_true', help='render the title prelude as a separate sequence')
+ap.add_argument('--intro-font', default='', help='optional TTF or OTF for the prelude')
+ap.add_argument('--intro-title', default='Jingle Bells')
+ap.add_argument('--intro-subtitle', default='One Marble. Six Instruments.')
 a=ap.parse_args(argv)
 P=json.load(open(a.plan)); fps=P['fps']; R=P['R']; KW,KD,KH=P['KW'],P['KD'],P['KH']
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -334,12 +338,20 @@ if V2:
 _here=os.path.dirname(os.path.abspath(__file__))
 if _here not in sys.path: sys.path.insert(0,_here)
 from blender_compat import set_path_keyframe_interpolation
+if a.intro:
+    from opening_title import build
+    intro_frames = build(P, sc, mb, mat, a.intro_font, a.intro_title, a.intro_subtitle)
+else:
+    intro_frames = 0
 set_path_keyframe_interpolation()
 if a.save_blend: bpy.ops.wm.save_as_mainfile(filepath=a.save_blend)
 import time
-frames=[int(x) for x in a.frames.split(',') if x.strip()] or list(range(a.start,(a.end if a.end>=0 else sc.frame_end)+1))
+last_frame = intro_frames - 1 if a.intro else sc.frame_end
+frames=[int(x) for x in a.frames.split(',') if x.strip()] or list(range(a.start,(a.end if a.end>=0 else last_frame)+1))
+if a.intro and (not frames or any(f < 0 or f >= intro_frames for f in frames)):
+    ap.error(f'--intro frame range must stay within 0–{intro_frames - 1}')
 os.makedirs(a.out, exist_ok=True)
 for f in frames:
     if os.path.exists(f"{a.out}/{f:05d}.png") and os.path.getsize(f"{a.out}/{f:05d}.png")>1000: print(f"FRAME {f} skip",flush=True); continue
-    t0=time.time(); sc.frame_set(f); sc.render.filepath=f"{a.out}/{f:05d}.png"; bpy.ops.render.render(write_still=True)
+    t0=time.time(); sc.frame_set(f - intro_frames); sc.render.filepath=f"{a.out}/{f:05d}.png"; bpy.ops.render.render(write_still=True)
     print(f"FRAME {f} {time.time()-t0:.2f}s",flush=True)
