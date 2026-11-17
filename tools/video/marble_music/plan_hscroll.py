@@ -24,20 +24,25 @@ import library
 def build_parser(ap=None):
     ap = ap or argparse.ArgumentParser()
     ap.add_argument('hits'); ap.add_argument('--fps', type=int, default=30); ap.add_argument('-o', default='plan.json')
-    ap.add_argument('--g', type=float, default=14.0, help='gravity (lower than zigzag 30: whole-note lobs stay inside a 16:9 frame)')
+    ap.add_argument('--style', default='v1', choices=['v1', 'v2'], help='v1 = sawtooth staircase (this file); v2 = seeded motion-pattern system (plan_hscroll_v2.py)')
+    ap.add_argument('--g', type=float, default=None, help='gravity; default v1 14 (lower than zigzag 30: whole-note lobs stay inside a 16:9 frame), v2 10')
     ap.add_argument('--speed', type=float, default=2.8, help='preferred horizontal travel (m/s); hop = speed*dt unless the footprint needs more')
     ap.add_argument('--dx-max', type=float, default=3.0); ap.add_argument('--gap', type=float, default=0.06, help='footprint gap between neighbours (m)')
     ap.add_argument('--slope', type=float, default=0.12, help='target descent per metre of x inside a segment')
     ap.add_argument('--reset', default='instrument', choices=['instrument', 'family', 'none'])
     ap.add_argument('--max-drop', type=float, default=1.4); ap.add_argument('--vmin', type=float, default=1.6, help='min downward speed at contact (m/s)')
     ap.add_argument('--pair-gap', type=float, default=0.03); ap.add_argument('--fix-iters', type=int, default=40)
-    ap.add_argument('--look', default='v5'); ap.add_argument('--lead', type=float, default=0.8, help='camera leads the marble by this (m)')
-    ap.add_argument('--cam-sigma-x', type=float, default=0.6); ap.add_argument('--cam-sigma-z', type=float, default=0.9)
-    ap.add_argument('--cam-dist', type=float, default=4.3, help='camera distance in front of the marble plane')
+    ap.add_argument('--look', default='v5'); ap.add_argument('--lead', type=float, default=None, help='camera leads the marble by this (m); default v1 0.8, v2 0.45')
+    ap.add_argument('--cam-sigma-x', type=float, default=None); ap.add_argument('--cam-sigma-z', type=float, default=None)
+    ap.add_argument('--cam-dist', type=float, default=None, help='camera distance in front of the marble plane; default v1 4.3, v2 3.6')
     ap.add_argument('--snap', type=int, default=1); ap.add_argument('--verbose', type=int, default=0)
+    import plan_hscroll_v2; plan_hscroll_v2.add_args(ap)
     return ap
 R = 0.15; PL, KD, PT = 0.62, 0.36, 0.09
 def main(a):
+    V2 = (a.style == 'v2')
+    for k_, v1_, v2_ in (('g', 14.0, 10.0), ('lead', 0.8, 0.45), ('cam_sigma_x', 0.6, 0.8), ('cam_sigma_z', 0.9, 0.8), ('cam_dist', 4.3, 3.6)):
+        if getattr(a, k_) is None: setattr(a, k_, v2_ if V2 else v1_)
     H = json.load(open(a.hits)); hits = H['hits']; dur = H['end'] - H['start']; fps = a.fps; g = a.g
     iset = H.get('instrument_set')
     T = [(round(h['time']*fps)/fps if a.snap else h['time']) for h in hits]; n = len(T)
@@ -117,10 +122,11 @@ def main(a):
         vh = 2*a.cam_dist*math.tan(math.atan(18/40)); vw = vh*16/9         # visible height/width at the marble plane (lens 40, 36 mm vertical)
         cx = gauss(a.cam_sigma_x, arr[:, 0] + a.lead)
         for _ in range(6):                                            # marble between 22% and 62% of the frame width
-            cx = np.clip(cx, arr[:, 0] - (0.62 - 0.5)*vw, arr[:, 0] + (0.5 - 0.22)*vw); cx = gauss(0.15, cx)
-        aim_z = -0.35                                                 # image centre = rig z + aim_z: marble rides a bit above centre
+            xl, xr = (0.15, 0.85) if V2 else (0.22, 0.62)
+            cx = np.clip(cx, arr[:, 0] - (xr - 0.5)*vw, arr[:, 0] + (0.5 - xl)*vw); cx = gauss(0.15, cx)
+        aim_z = -0.15 if V2 else -0.35                                                # image centre = rig z + aim_z: marble rides a bit above centre
         cz = gauss(a.cam_sigma_z, arr[:, 1])
-        up, dn = 0.5*vh - 0.30 + aim_z, 0.5*vh*0.12 - aim_z           # marble <= 0.30 m below the top edge and at most 12% of the half-height below centre: strikers hanging under it stay above the lower third
+        up, dn = (0.5*vh - 0.35 + aim_z, 0.5*vh*0.45 - aim_z) if V2 else (0.5*vh - 0.30 + aim_z, 0.5*vh*0.12 - aim_z)          # marble <= 0.30 m below the top edge and at most 12% of the half-height below centre: strikers hanging under it stay above the lower third
         for _ in range(6):
             cz = np.clip(cz, arr[:, 1] - up, arr[:, 1] + dn); cz = gauss(0.15, cz)
 
@@ -128,7 +134,10 @@ def main(a):
     CAM_OFF = (0.0, -a.cam_dist, 0.8)
     from scipy.spatial import cKDTree
     extra_dx = {}; extra_d = {}
-    for it in range(a.fix_iters + 1):
+    if V2:
+        import plan_hscroll_v2
+        pads, segs, xs, zs, mount, pat_of, ph_pats, phrases, relax_levels, adapted = plan_hscroll_v2.plan_v2(a, H, hits, T, asg, M, probes, fam, num, dur, fps)
+    for it in range(0 if V2 else a.fix_iters + 1):
         xs, zs, segs, pads = build(extra_dx, extra_d)
         _a, _cx, _cz, *_ = camera(segs); camf = np.c_[_cx, _cz]
         Wd = [world(i, c, nn, cam=camf) for i, (c, nn) in enumerate(pads)]
@@ -160,13 +169,14 @@ def main(a):
             elif h == i: extra_d[h] = extra_d.get(h, 0.0) - 0.12     # leaving key i: steeper launch
             elif h >= 0: extra_dx[h] = extra_dx.get(h, 0.0) + 0.1
     else:
-        print('WARN: fix iterations exhausted', len(clash), len(ko))
+        if not V2: print('WARN: fix iterations exhausted', len(clash), len(ko))
     keys = []
     for i in range(n):
         c, nrm = pads[i]; tilt = math.degrees(math.acos(max(-1, min(1, nrm[1]))))
         keys.append(dict(i=i, x=float(c[0]), z=float(c[1]), nx=float(nrm[0]), nz=float(nrm[1]), ang=math.atan2(nrm[0], nrm[1]), tilt=tilt,
                          cx=xs[i], cz=zs[i], t=T[i], t_audio=hits[i]['time'], note=hits[i]['note'], track=hits[i]['track_name'], drum=hits[i]['drum'],
                          program=hits[i].get('program'), side=1, family=fam[i], num=num[i]))
+        if V2: keys[-1].update(mount=mount[i], pattern=pat_of[i], relax_level=relax_levels[i], pattern_adapted=adapted[i])
     nf = int(round(dur*fps)); ft = np.arange(nf + 1)/fps
     arr, cx, cz, vh, vw, aim_z = camera(segs)
     frames = arr.tolist()
@@ -188,7 +198,11 @@ def main(a):
         for k in keys: print(f"key {k['i']:3d} t={k['t']:.3f} x={k['cx']:7.2f} z={k['cz']:6.2f} tilt={k['tilt']:5.1f} {asg[k['i']][0]}")
     PLAN = dict(fps=fps, duration=dur, R=R, KW=PL, KD=KD, KH=PT, g=g, layout='hscroll', aspect='16:9', keys=keys, marble=frames, camera=cam,
                 cam_rig=dict(off=list(CAM_OFF), aim=[0.0, 0.0, aim_z], lens=40, sensor_fit='VERTICAL', sensor=36),
-                families=fams, instruments=insts, hscroll=dict(speed=a.speed, slope=a.slope, reset=a.reset, lead=a.lead))
+                families=fams, instruments=insts, hscroll=(dict(speed=a.speed, slope=a.slope, reset=a.reset, lead=a.lead) if not V2 else
+                         dict(style='v2', seed=a.seed, lead=a.lead, phrases=[dict(i0=p[0], i1=p[-1], pattern=ph_pats[q], t0=T[p[0]], t1=T[p[-1]]) for q, p in enumerate(phrases)])))
+    if V2:
+        PLAN['ballistics'] = [list(s_) for s_ in segs]
+        PLAN['physics'] = dict(gravity=g, tilt_max=a.tilt_max, vmin_dn=a.vmin_dn, vmin_up=a.vmin_up, kick_min=a.kick_min, kick_max=a.kick_max, apex_max=a.apex_max, band=a.band, row_max=a.row_max)
     if iset: PLAN['instrument_set'] = iset
     json.dump(PLAN, open(a.o, 'w'))
 if __name__ == '__main__':

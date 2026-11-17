@@ -300,3 +300,22 @@ bash composite.sh frames overlay audio.wav 30 0 out.mp4
 - 间距：跳距 = clamp(`--speed`×dt, 两个击打器探针点的 x 足迹 + gap, `--dx-max`)；之后用 3D 探针点做邻近击打器碰撞 + 弹珠避让检查，自动加宽 / 改陡对应跳并重建，直到干净（含长笛的相机对齐头管）。
 - 镜头：rig x = 平滑后的弹珠 x + `--lead`（弹珠在画面 22–62 % 宽度内），rig z = 平滑弹珠 z，限制在弹珠离上沿 ≥0.3 m、低于中心不超过 12 % 半高（下三分之一留给字幕）。机位写入 `plan['cam_rig']`，scene.py 和 check_pairs.py 都读它。
 - 墙：每个家族一段（v5 灰的轻微色调）+ 家族交界一条细缎面黄铜分隔条。
+
+### hscroll v2 — seeded compact motion phrases (prototype)
+
+```bash
+python plan_hscroll.py hits.json --style v2 --seed 4 -o plan_v2.json
+# Equivalent: plan_zigzag.py hits.json --layout hscroll --style v2 --seed 4 -o plan_v2.json
+python check_keepout.py plan_v2.json --look v5 --strict
+python check_pairs.py plan_v2.json --look v5 --strict
+python check_hscroll_physics.py plan_v2.json --strict --out physics_v2.json
+```
+
+- `plan_hscroll_v2.py` holds six proposal patterns: `stair_down`, `stair_up` (climbing floor/ceiling zipper), `shuttle` (upper/lower pincer), `zigzag_rev` (up-right / back-left), `cluster_spiral` (compact looping up-left / down-right, **not a literal smooth spiral**), and `long_glide`.
+- Phrases split at instrument changes, gaps >=0.85 s, or 9 hits. A NumPy seeded RNG chooses different adjacent phrase patterns, weights busier patterns with higher note density, steers back toward the height band, and jitters individual hops. Same inputs, assets, options and seed reproduce the plan. Geometry-aware candidate search/backtracking may adapt a proposal; every key records `pattern_adapted` and `relax_level`. Pattern labels name the requested motif, not a guarantee that every hop keeps that shape.
+- One constant gravity, **g=10 m/s²**, throughout v2. Exact ballistic segments are exported as `ballistics`. Floor hits arrive falling (vz <= -1); ceiling hits arrive rising (vz >= +0.8), with the contact normal facing down. Reflected directions bisect incoming/outgoing directions. Strikers are **powered/frictional, art-directed rebounds**, not passive elastic rigid bodies: speed may change at impact, not during a flight. World-hanging tubular-bell/vibraphone assets remain floor-only.
+- Normal tilt <=62° from the mount direction; speed ratio 0.45–2.4; ordinary apex <=1.1 m above the higher endpoint. If candidate search fails: L1 allows a level long-note lob (`g*dt²/8+0.1`) and 0.45 m more floor depth; L2 allows 8° more tilt, ratio 0.3–3.2 and ordinary apex +0.4 m. Gravity and signed approach direction never relax. All such hops are tagged/auditable. A 1.23 s hand-off may still reach ~1.9 m, but not v1's 3.6 m.
+- Pair and keep-out probe checks participate in placement; **always run both external strict checks afterwards** (placement uses a coarser probe subset). The independent physics check also verifies down-facing ceiling contacts, signed velocities, continuity, reflection and every exported frame against the gravity law.
+- v2 camera is closer, smoothly tracks both axes, and permits short leftward follow. Horizontal transport is net rightward, not monotonic. Stronger family tints/dividers, subtle wall panels and a left fill light apply only to hscroll. Labels choose the least-occupied of four title-safe corners per instrument using projected striker/marble coverage. This minimizes, but does not guarantee zero overlap.
+- **Scope/limits:** validated short cross-family test, not a certified all-song solver. Some seeds can hit a bounded-search dead end and exit with no plan; choose another seed or explicitly relax options. Patterns with large silhouettes often fall back to safer forward hops. Flute camera-aligned extensions are approximate inside the search, so final external strict pair validation is essential. Do not reuse v1's full-plan pass as evidence for v2.
+- Reproducible preview window: relay MIDI 44.08–68.55 s, track 1, markers, instrument set `jewelbox`; seed 4. 64 hits, instruments 10–14 across F1→F2. Render only 960x540 / 4 spp. A 15 fps review can sample every second frame of the 30 fps plan without changing its physics/timing; retain the 30 fps plan for collision checks.

@@ -2,9 +2,10 @@
 usage: python titles_hscroll.py PLAN.json OUT_DIR [--res 1920x1080] [--start F0 --end F1] [--still F --bg frame.png --png out.png]
        (also reachable as: titles.py PLAN.json OUT_DIR --layout hscroll; titles.py auto-delegates when the plan layout is hscroll)
 Layout (1920x1080 reference, scaled to --res; everything inside the 5 % title-safe area x 96..1824, y 54..1026):
-- lower third, bottom-left: translucent pill with the family-colour accent bar, big instrument number, Chinese name, English
+- lower third (default bottom-left; per instrument it moves to the safe-area corner that the projected strikers + marble cover
+  least - bottom-left/right, top-left/right): translucent pill with the family-colour accent bar, big instrument number, Chinese name, English
   name and a small family chip. Slides in (+fade) over 0.35 s at each instrument change while the previous one fades out.
-  The scene camera keeps the marble at most ~12 % of the half-height below centre, so the lower ~30 % of the frame is free.
+  v1 reserves the lower frame; v2 can use both rows, so placement minimizes projected overlap per instrument.
 - family progress bar along the bottom: one segment per family (F1..F6 + finale) sized by its instrument count, a tick per
   instrument, filled up to the current point of the relay (interpolated inside the current instrument); current family label
   bright, others dim; a small marble dot rides the fill edge.
@@ -58,6 +59,49 @@ def frac_in(q, t):
     it = INST[q]; tn = INST[q+1]['t0'] if q + 1 < len(INST) else it['t1'] + (it['t1'] - it['t0'])/max(1, it['i1'] - it['i0'])
     return max(0.0, min(1.0, (t - it['t0'])/max(1e-6, tn - it['t0'])))
 def rr(d, box, r, fill): d.rounded_rectangle([int(v*S) for v in box], radius=int(r*S), fill=fill)
+# ---- lower-third placement: project strikers + marble with the plan camera and pick, per instrument, the safe-area corner they
+#      cover least (bottom-left preferred; ties/near-ties keep the previous slot so the panel does not jump around)
+import numpy as np
+CR = P.get('cam_rig') or {'off': [0.0, -4.3, 0.8], 'aim': [0.0, 0.0, -0.35], 'lens': 40, 'sensor': 36}
+def project(pts, f):
+    cx, cz = P['camera'][min(f, len(P['camera'])-1)]
+    C = np.array([cx + CR['off'][0], CR['off'][1], cz + CR['off'][2]]); A = np.array([cx + CR['aim'][0], CR['aim'][1], cz + CR['aim'][2]])
+    fw = (A - C)/np.linalg.norm(A - C); rt = np.cross(fw, [0, 0, 1.0]); rt /= np.linalg.norm(rt); up = np.cross(rt, fw)
+    d = np.asarray(pts, float) - C; zc = d @ fw; k = CR.get('lens', 40)/CR.get('sensor', 36)*1080
+    return np.c_[960 + (d @ rt)/zc*k, 540 - (d @ up)/zc*k]            # 1920x1080 reference pixels
+KB = []
+for k in P['keys']:
+    nx, nz = k['nx'], k['nz']; tx, tz = nz, -nx; c = np.array([k['x'], k['z']])
+    KB.append(np.array([[c[0] + s_*tx + h*nx, 0.0, c[1] + s_*tz + h*nz] for s_ in (-0.5, 0.5) for h in (-0.6, 0.2)]))
+PANEL_H = 150
+def slots(w):
+    return {'bl': (96, 806, 96 + w, 956), 'br': (1824 - w, 806, 1824, 956), 'tl': (96, 64, 96 + w, 214), 'tr': (1824 - w, 64, 1824, 214)}
+BIAS = {'bl': 0.0, 'br': 0.08, 'tl': 0.15, 'tr': 0.2}
+_SLOT = {}
+def panel_w(q):
+    it = INST[q]; e = entry(it['track']) or {'zh': it['track'], 'en': '', 'family': 'F1'}
+    d = ImageDraw.Draw(Image.new('L', (8, 8))); fam = e['family'] if e['family'] in FAMC else 'finale'
+    return max(d.textlength(e['zh'], font=FB[58])/S, d.textlength(e['en'], font=FR[30])/S, d.textlength(fam + ' ' + FAMN[fam]['zh'], font=FB[22])/S + 20) + 250
+def slot_of(q):
+    if q in _SLOT: return _SLOT[q]
+    it = INST[q]; f0 = int(it['t0']*fps); f1 = int((INST[q+1]['t0'] if q + 1 < len(INST) else P['duration'])*fps)
+    w = panel_w(q); cost = {k_: 0.0 for k_ in slots(w)}; nfr = 0
+    for f in range(max(0, f0), min(len(P['camera']) - 1, f1) + 1, 3):
+        nfr += 1; mx, mz = P['marble'][f]; m = project([[mx, 0, mz]], f)[0]
+        boxes = [(*m - 22, *m + 22, 3.0)]
+        for kb in KB:
+            pr = project(kb, f); lo, hi = pr.min(0), pr.max(0)
+            if hi[0] < 0 or lo[0] > 1920 or hi[1] < 0 or lo[1] > 1080: continue
+            boxes.append((lo[0], lo[1], hi[0], hi[1], 1.0))
+        for k_, (x0, y0, x1, y1) in slots(w).items():
+            ar = (x1 - x0)*(y1 - y0)
+            for bx0, by0, bx1, by1, wt in boxes:
+                ox = max(0, min(x1, bx1) - max(x0, bx0)); oy = max(0, min(y1, by1) - max(y0, by0)); cost[k_] += wt*ox*oy/ar
+    best = min(cost, key=lambda k_: cost[k_]/max(1, nfr) + BIAS[k_])
+    prev = _SLOT.get(q - 1)
+    if prev and cost[prev]/max(1, nfr) + BIAS[prev] <= cost[best]/max(1, nfr) + BIAS[best] + 0.03: best = prev
+    _SLOT[q] = best; print(f'lower third {q} ({it["track"][:24]}): {best}  cover ' + ' '.join(f'{k_}={cost[k_]/max(1,nfr):.2f}' for k_ in cost), flush=True)
+    return best
 def lower_third(img, q, alpha, dx):
     it = INST[q]; e = entry(it['track']) or {'num': it.get('num', 0), 'zh': it['track'], 'en': '', 'family': it.get('family', 'F1')}
     fam = e['family'] if e['family'] in FAMC else 'finale'; col = FAMC[fam]
@@ -65,7 +109,7 @@ def lower_third(img, q, alpha, dx):
     zh, en = e['zh'], e['en']; num = f"{e['num']:02d}" if e.get('num') else ''
     wz = d.textlength(zh, font=FB[58])/S; we = d.textlength(en, font=FR[30])/S
     fz = f"{fam if fam != 'finale' else ''} {FAMN[fam]['zh']}".strip(); wf = d.textlength(fz, font=FB[22])/S
-    x0, y0 = 96 + dx, 806; w = max(wz, we, wf + 20) + 250
+    w = max(wz, we, wf + 20) + 250; sx0, sy0, _, _ = slots(w)[slot_of(q)]; x0, y0 = sx0 + dx, sy0
     rr(d, (x0, y0, x0 + w, y0 + 150), 22, (14, 14, 18, 150))
     rr(d, (x0, y0, x0 + 10, y0 + 150), 5, (*col, 255))
     d.text((int((x0 + 34)*S), int((y0 + 30)*S)), num, font=FB[66], fill=(*col, 255))
@@ -104,6 +148,7 @@ def frame(f):
     ease = 1 - (1 - min(1.0, max(0.0, u)))**3
     lower_third(img, q, ease, -40*(1 - ease))
     return img
+for _q in range(len(INST)): slot_of(_q)        # in order, so the 'keep previous slot' rule is the same for stills and sequences
 if a.still >= 0:
     im = frame(a.still)
     if a.bg: bg = Image.open(a.bg).convert('RGBA').resize((W, H)); bg.alpha_composite(im); im = bg

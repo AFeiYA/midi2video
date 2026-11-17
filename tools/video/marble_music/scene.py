@@ -131,8 +131,8 @@ if not HS:
     wall.data.materials.append(wall_mat('wall',(0.36,0.36,0.37)))
 else:
     # hscroll: one long wall, one segment per family (subtle tint of the v5 grey) + a slim satin-brass divider at each family change
-    FAM_TINT={'F1':(0.385,0.370,0.345),'F2':(0.385,0.355,0.330),'F3':(0.380,0.345,0.360),'F4':(0.390,0.365,0.310),
-              'F5':(0.335,0.370,0.345),'F6':(0.325,0.350,0.395),'finale':(0.360,0.340,0.395)}
+    FAM_TINT={'F1':(0.46,0.42,0.34),'F2':(0.45,0.34,0.27),'F3':(0.43,0.32,0.36),'F4':(0.46,0.39,0.25),
+              'F5':(0.31,0.41,0.34),'F6':(0.28,0.35,0.45),'finale':(0.37,0.31,0.45)}
     fams=P.get('families') or [dict(family='F?',x0=P['keys'][0]['x'],x1=P['keys'][-1]['x'])]
     cams=[c[0] for c in P['camera']]; xlo=min(min(cams),fams[0]['x0'])-12; xhi=max(max(cams),fams[-1]['x1'])+12
     bounds=[xlo]+[(fams[q]['x1']+fams[q+1]['x0'])/2 for q in range(len(fams)-1)]+[xhi]
@@ -141,10 +141,30 @@ else:
         x0_,x1_=bounds[q],bounds[q+1]
         bpy.ops.mesh.primitive_plane_add(size=1,location=((x0_+x1_)/2,KD/2+0.12,(zmin+zmax)/2),rotation=(math.pi/2,0,0))
         wo=bpy.context.object; wo.name=f"wall_{fm['family']}_{q}"; wo.scale=(x1_-x0_,(zmax-zmin),1)
-        wo.data.materials.append(wall_mat(f"wall_{q}",FAM_TINT.get(fm['family'],(0.36,0.36,0.37))))
-        if q>0:
-            bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.10,(zmin+zmax)/2)); dv=bpy.context.object; dv.name=f'divider_{q}'
-            dv.scale=(0.05,0.05,(zmax-zmin)); dv.data.materials.append(divm)
+        wm_=wall_mat(f"wall_{q}",FAM_TINT.get(fm['family'],(0.36,0.36,0.37)))
+        # wall detail: large panels (1.6 x 0.8 m) with fine recessed seams (bump + slight darkening) + slow colour drift
+        nt_=wm_.node_tree; bs_=nt_.nodes['Principled BSDF']; tc_=nt_.nodes.new('ShaderNodeTexCoord')
+        br=nt_.nodes.new('ShaderNodeTexBrick'); br.inputs['Scale'].default_value=1.0; br.inputs['Mortar Size'].default_value=0.006
+        br.inputs['Brick Width'].default_value=1.6; br.inputs['Row Height'].default_value=0.8; br.offset=0.5
+        br.inputs['Color1'].default_value=(1,1,1,1); br.inputs['Color2'].default_value=(0.93,0.93,0.93,1); br.inputs['Mortar'].default_value=(0.55,0.55,0.55,1)
+        mp_=nt_.nodes.new('ShaderNodeMapping'); mp_.inputs['Rotation'].default_value=(math.pi/2,0,0)
+        nt_.links.new(tc_.outputs['Object'],mp_.inputs[0]); nt_.links.new(mp_.outputs[0],br.inputs['Vector'])
+        mul=nt_.nodes.new('ShaderNodeMix'); mul.data_type='RGBA'; mul.blend_type='MULTIPLY'; mul.inputs[0].default_value=1.0
+        mul.inputs[6].default_value=(*FAM_TINT.get(fm['family'],(0.36,0.36,0.37)),1); nt_.links.new(br.outputs['Color'],mul.inputs[7])
+        nt_.links.new(mul.outputs[2],bs_.inputs['Base Color'])
+        bm2=nt_.nodes.new('ShaderNodeBump'); bm2.inputs['Strength'].default_value=0.35; bm2.inputs['Distance'].default_value=0.004
+        nt_.links.new(br.outputs['Fac'],bm2.inputs['Height'])
+        old_b=[l_ for l_ in nt_.links if l_.to_socket==bs_.inputs['Normal']]
+        if old_b: nt_.links.new(old_b[0].from_socket,bm2.inputs['Normal'])
+        nt_.links.new(bm2.outputs['Normal'],bs_.inputs['Normal'])
+        wo.data.materials.append(wm_)
+        if q>0:   # family divider: satin-brass pilaster (0.14 m) with a thin glowing inlay in the new family's colour
+            bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.11,(zmin+zmax)/2)); dv=bpy.context.object; dv.name=f'divider_{q}'
+            dv.scale=(0.14,0.03,(zmax-zmin)); bv_=dv.modifiers.new('bev','BEVEL'); bv_.width=0.008; bv_.segments=2; dv.data.materials.append(divm)
+            bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.094,(zmin+zmax)/2)); il=bpy.context.object; il.name=f'divider_inlay_{q}'
+            il.scale=(0.02,0.006,(zmax-zmin)); ilm,ilb=mat(f'inlay_{q}',FAM_TINT.get(fm['family'],(0.5,0.5,0.5)),rough=0.3)
+            ilb.inputs['Emission Color'].default_value=(*[min(1,c*2.2) for c in FAM_TINT.get(fm['family'],(0.4,0.4,0.4))],1); ilb.inputs['Emission Strength'].default_value=1.5
+            il.data.materials.append(ilm)
 # ---------- keys + pins
 pinm,_=mat('pin',(0.7,0.7,0.72),rough=0.25,metal=1.0)
 def frame_of(t): return t*fps
@@ -291,6 +311,7 @@ def light(name,typ,loc,energy,size,color=(1,1,1)):
 kl=light('key','AREA',(-3.0,-4.0,4.0),380,3.0,(1.0,0.95,0.88)); kl.data.spread=math.radians(70)
 light('fill','AREA',(4.0,-5.0,0.0),70,5.0,(0.85,0.9,1.0))
 light('rim','AREA',(0.5,-0.8,5.0),90,2.0)
+if HS: light('fill_left','AREA',(-4.6,-3.6,0.6),170,4.0,(1.0,0.97,0.93))   # hscroll: the wide frame's left third fell into shadow
 if V2:
     def reflector(name,loc,energy,sx,sy,color=(1,1,1)):
         o=light(name,'AREA',loc,energy,sx,color); o.data.shape='RECTANGLE'; o.data.size=sx; o.data.size_y=sy
