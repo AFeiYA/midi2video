@@ -360,3 +360,33 @@ python check_hscroll_physics.py plan_v2.json --strict --out physics_v2.json
 - v2 camera is closer, smoothly tracks both axes, and permits short leftward follow. Horizontal transport is net rightward, not monotonic. Stronger family tints/dividers, subtle wall panels and a left fill light apply only to hscroll. Labels choose the least-occupied of four title-safe corners per instrument using projected striker/marble coverage. This minimizes, but does not guarantee zero overlap.
 - **Scope/limits:** validated short cross-family test, not a certified all-song solver. Some seeds can hit a bounded-search dead end and exit with no plan; choose another seed or explicitly relax options. Patterns with large silhouettes often fall back to safer forward hops. Flute camera-aligned extensions are approximate inside the search, so final external strict pair validation is essential. Do not reuse v1's full-plan pass as evidence for v2.
 - Reproducible preview window: relay MIDI 44.08–68.55 s, track 1, markers, instrument set `jewelbox`; seed 4. 64 hits, instruments 10–14 across F1→F2. Render only 960x540 / 4 spp. A 15 fps review can sample every second frame of the 30 fps plan without changing its physics/timing; retain the 30 fps plan for collision checks.
+
+### hscroll descent — passive descending layers (optional)
+
+Another 16:9 template. v1, v2, the portrait zigzag planner, and `landscape/` stay as they are. `--style descent` does not reset height to the top and does not speed the marble up at a plate.
+
+```bash
+python3 tools/video/marble_music/extract_hits.py \
+  projects/jingle-bells-marble-music/source/jingle_remix_6inst_16beat.mid \
+  --start 0 --end 9 \
+  -o tools/video/marble_music/hscroll_descent/examples/jingle_remix_0_9_melody.hits.json
+
+cd tools/video/marble_music
+python3 -m hscroll_descent.plan \
+  hscroll_descent/examples/jingle_remix_0_9_melody.hits.json \
+  -o hscroll_descent/examples/descent_excerpt_plan.json \
+  --seed 2 --tilt-max 60 --patterns fold,fold,compact,shuttle \
+  --report hscroll_descent/examples/descent_excerpt_audit.json
+python3 -m hscroll_descent.diagram \
+  hscroll_descent/examples/descent_excerpt_plan.json \
+  hscroll_descent/examples/descent_excerpt_diagram.svg
+python3 -m unittest hscroll_descent.test_descent -v
+```
+
+`plan_hscroll.py hits.json --style descent` is the same planner. Through that entry the shared `--tilt-max` default is 62°, a face-tilt limit, not an energy grant. The excerpt command above passes 60°.
+
+What the excerpt validates: exact MIDI times, continuous capsule-proxy clearance, frictionless approach/departure, and a passive energy budget (restitution at most 1), including a case that injects energy and must fail. It is the first 9 seconds of the checked-in six-instrument remix, not the whole song, and not a full triangle mesh or `check_keepout.py` / `check_pairs.py`. The parent's inst64 MIDI at `/workspace/marble/inst64/01_Jingle_Bells_64_Instruments_SingleStaff_Relay.mid` is not on this machine. `landscape/` anchors for a 10-second window are a different template.
+
+One long note in the 9 second excerpt is a renderable passive guide: the fall speeds the marble up, a banked channel turns it left, and the tangent lip jumps to the next onset. `scene.py` builds that mesh only when the plan contains `guide_rail`. Commands, the probe report, and the limits are in `hscroll_descent/README.md`.
+
+Details, rail references, and the limits are in `tools/video/marble_music/hscroll_descent/README.md`.

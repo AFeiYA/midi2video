@@ -24,7 +24,7 @@ import library
 def build_parser(ap=None):
     ap = ap or argparse.ArgumentParser()
     ap.add_argument('hits'); ap.add_argument('--fps', type=int, default=30); ap.add_argument('-o', default='plan.json')
-    ap.add_argument('--style', default='v1', choices=['v1', 'v2'], help='v1 = sawtooth staircase (this file); v2 = seeded motion-pattern system (plan_hscroll_v2.py)')
+    ap.add_argument('--style', default='v1', choices=['v1', 'v2', 'descent'], help='v1 = sawtooth staircase (this file); v2 = seeded motion-pattern system (plan_hscroll_v2.py); descent = passive descending layers (hscroll_descent/)')
     ap.add_argument('--g', type=float, default=None, help='gravity; default v1 14 (lower than zigzag 30: whole-note lobs stay inside a 16:9 frame), v2 10')
     ap.add_argument('--speed', type=float, default=2.8, help='preferred horizontal travel (m/s); hop = speed*dt unless the footprint needs more')
     ap.add_argument('--dx-max', type=float, default=3.0); ap.add_argument('--gap', type=float, default=0.06, help='footprint gap between neighbours (m)')
@@ -37,9 +37,15 @@ def build_parser(ap=None):
     ap.add_argument('--cam-dist', type=float, default=None, help='camera distance in front of the marble plane; default v1 4.3, v2 3.6')
     ap.add_argument('--snap', type=int, default=1); ap.add_argument('--verbose', type=int, default=0)
     import plan_hscroll_v2; plan_hscroll_v2.add_args(ap)
+    import hscroll_descent.plan as _descent; _descent.add_args(ap)
     return ap
 R = 0.15; PL, KD, PT = 0.62, 0.36, 0.09
 def main(a):
+    if a.style == 'descent':
+        if a.g is None:
+            a.g = 9.81
+        import hscroll_descent.plan as _descent
+        return _descent.run_from_namespace(a)
     V2 = (a.style == 'v2')
     for k_, v1_, v2_ in (('g', 14.0, 10.0), ('lead', 0.8, 0.45), ('cam_sigma_x', 0.6, 0.8), ('cam_sigma_z', 0.9, 0.8), ('cam_dist', 4.3, 3.6)):
         if getattr(a, k_) is None: setattr(a, k_, v2_ if V2 else v1_)

@@ -138,11 +138,14 @@ else:
     FAM_TINT={'F1':(0.46,0.42,0.34),'F2':(0.45,0.34,0.27),'F3':(0.43,0.32,0.36),'F4':(0.46,0.39,0.25),
               'F5':(0.31,0.41,0.34),'F6':(0.28,0.35,0.45),'finale':(0.37,0.31,0.45)}
     fams=P.get('families') or [dict(family='F?',x0=P['keys'][0]['x'],x1=P['keys'][-1]['x'])]
-    cams=[c[0] for c in P['camera']]; xlo=min(min(cams),fams[0]['x0'])-12; xhi=max(max(cams),fams[-1]['x1'])+12
-    bounds=[xlo]+[(fams[q]['x1']+fams[q+1]['x0'])/2 for q in range(len(fams)-1)]+[xhi]
+    cams=[c[0] for c in P['camera']]
+    xs=[fm['x0'] for fm in fams]+[fm['x1'] for fm in fams]
+    xlo=min(min(cams), min(xs))-12; xhi=max(max(cams), max(xs))+12
+    import hscroll_descent.wall_spans as _wall_spans
+    panels=_wall_spans.wall_spans(fams, xlo, xhi)
     divm,_=mat('divider',(0.62,0.50,0.30),rough=0.35,metal=1.0)
-    for q,fm in enumerate(fams):
-        x0_,x1_=bounds[q],bounds[q+1]
+    for q,(x0_,x1_,fm) in enumerate(panels):
+        if fm is None: fm=dict(family='wall')
         bpy.ops.mesh.primitive_plane_add(size=1,location=((x0_+x1_)/2,KD/2+0.12,(zmin+zmax)/2),rotation=(math.pi/2,0,0))
         wo=bpy.context.object; wo.name=f"wall_{fm['family']}_{q}"; wo.scale=(x1_-x0_,(zmax-zmin),1)
         wm_=wall_mat(f"wall_{q}",FAM_TINT.get(fm['family'],(0.36,0.36,0.37)))
@@ -162,7 +165,7 @@ else:
         if old_b: nt_.links.new(old_b[0].from_socket,bm2.inputs['Normal'])
         nt_.links.new(bm2.outputs['Normal'],bs_.inputs['Normal'])
         wo.data.materials.append(wm_)
-        if q>0:   # family divider: satin-brass pilaster (0.14 m) with a thin glowing inlay in the new family's colour
+        if q>0 and fm.get('family') != 'wall':   # divider only between side-by-side families
             bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.11,(zmin+zmax)/2)); dv=bpy.context.object; dv.name=f'divider_{q}'
             dv.scale=(0.14,0.03,(zmax-zmin)); bv_=dv.modifiers.new('bev','BEVEL'); bv_.width=0.008; bv_.segments=2; dv.data.materials.append(divm)
             bpy.ops.mesh.primitive_cube_add(size=1,location=(x0_,KD/2+0.094,(zmin+zmax)/2)); il=bpy.context.object; il.name=f'divider_inlay_{q}'
@@ -284,10 +287,19 @@ nt=mm.node_tree; vol=nt.nodes.new('ShaderNodeVolumeAbsorption'); vol.inputs['Col
 nt.links.new(vol.outputs[0],nt.nodes['Material Output'].inputs['Volume'])
 mb.data.materials.append(mm)
 prev=None; ang=0.0; angx=0.3; MY=P.get('marble_y') or [0.0]*len(P['marble'])   # ending.py: marble_y = bounce toward the camera
+SPINS=P.get('marble_spin')
 for f,(x,z) in enumerate(P['marble']):
-    if prev is not None: ang+= -(x-prev)/R; angx+= -(MY[f]-MY[f-1])/R
-    mb.location=(x,MY[f],z); mb.rotation_euler=(angx,ang,0)
-    mb.keyframe_insert('location',frame=f); mb.keyframe_insert('rotation_euler',frame=f); prev=x
+    if SPINS is None:
+        if prev is not None: ang+= -(x-prev)/R; angx+= -(MY[f]-MY[f-1])/R
+        mb.rotation_euler=(angx,ang,0)
+    else:
+        mb.rotation_euler=(0.0, SPINS[f], 0.0)   # guide plan: rolling angle about Y, coasting after the lip
+    mb.location=(x,MY[f],z); mb.keyframe_insert('location',frame=f); mb.keyframe_insert('rotation_euler',frame=f); prev=x
+if P.get('guide_rail'):   # optional passive channel; absent on portrait, v1, v2, and landscape plans
+    _here_=os.path.dirname(os.path.abspath(__file__))
+    if _here_ not in sys.path: sys.path.insert(0,_here_)
+    import hscroll_descent.rail_scene as _rail_scene
+    _rail_scene.build(P, mat)
 if P.get('ending'):   # ending.py: gold FINISH pad (END marker) the marble lands on
     _here_=os.path.dirname(os.path.abspath(__file__))
     if _here_ not in sys.path: sys.path.insert(0,_here_)
